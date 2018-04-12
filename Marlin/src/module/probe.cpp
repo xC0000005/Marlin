@@ -52,7 +52,7 @@
 
 float zprobe_zoffset; // Initialized by settings.load()
 
-#if HAS_Z_SERVO_ENDSTOP
+#if HAS_Z_SERVO_PROBE
   #include "../module/servo.h"
   const int z_servo_angle[2] = Z_SERVO_ANGLES;
 #endif
@@ -299,7 +299,7 @@ float zprobe_zoffset; // Initialized by settings.load()
 #if ENABLED(BLTOUCH)
 
   void bltouch_command(const int angle) {
-    MOVE_SERVO(Z_ENDSTOP_SERVO_NR, angle);  // Give the BL-Touch the command and wait
+    MOVE_SERVO(Z_PROBE_SERVO_NR, angle);  // Give the BL-Touch the command and wait
     safe_delay(BLTOUCH_DELAY);
   }
 
@@ -433,9 +433,9 @@ bool set_probe_deployed(const bool deploy) {
 
         dock_sled(!deploy);
 
-      #elif HAS_Z_SERVO_ENDSTOP && DISABLED(BLTOUCH)
+      #elif HAS_Z_SERVO_PROBE && DISABLED(BLTOUCH)
 
-        MOVE_SERVO(Z_ENDSTOP_SERVO_NR, z_servo_angle[deploy ? 0 : 1]);
+        MOVE_SERVO(Z_PROBE_SERVO_NR, z_servo_angle[deploy ? 0 : 1]);
 
       #elif ENABLED(Z_PROBE_ALLEN_KEY)
 
@@ -539,17 +539,21 @@ static bool do_probe_move(const float z, const float fr_mm_m) {
  *
  * @return The raw Z position where the probe was triggered
  */
-static float run_z_probe() {
+  static float run_z_probe() {
 
   #if ENABLED(DEBUG_LEVELING_FEATURE)
     if (DEBUGGING(LEVELING)) DEBUG_POS(">>> run_z_probe", current_position);
   #endif
 
+  // Stop the probe before it goes too low to prevent damage.
+  // If Z isn't known then probe to -10mm.
+  const float z_probe_low_point = axis_known_position[Z_AXIS] ? -zprobe_zoffset + Z_PROBE_LOW_POINT : -10.0;
+
   // Double-probing does a fast probe followed by a slow probe
   #if MULTIPLE_PROBING == 2
 
     // Do a first probe at the fast speed
-    if (do_probe_move(-10, Z_PROBE_SPEED_FAST)) return NAN;
+    if (do_probe_move(z_probe_low_point, Z_PROBE_SPEED_FAST)) return NAN;
 
     float first_probe_z = current_position[Z_AXIS];
 
@@ -580,7 +584,7 @@ static float run_z_probe() {
   #endif
 
       // Move down slowly to find bed, not too far
-      if (do_probe_move(-10, Z_PROBE_SPEED_SLOW)) return NAN;
+      if (do_probe_move(z_probe_low_point, Z_PROBE_SPEED_SLOW)) return NAN;
 
   #if MULTIPLE_PROBING > 2
       probes_total += current_position[Z_AXIS];
@@ -669,8 +673,9 @@ float probe_pt(const float &rx, const float &ry, const ProbePtRaise raise_after/
   if (!DEPLOY_PROBE()) {
     measured_z = run_z_probe() + zprobe_zoffset;
 
-    if (raise_after == PROBE_PT_RAISE)
-      do_blocking_move_to_z(current_position[Z_AXIS] + Z_CLEARANCE_BETWEEN_PROBES, MMM_TO_MMS(Z_PROBE_SPEED_FAST));
+    const bool big_raise = raise_after == PROBE_PT_BIG_RAISE;
+    if (big_raise || raise_after == PROBE_PT_RAISE)
+      do_blocking_move_to_z(current_position[Z_AXIS] + (big_raise ? 25 : Z_CLEARANCE_BETWEEN_PROBES), MMM_TO_MMS(Z_PROBE_SPEED_FAST));
     else if (raise_after == PROBE_PT_STOW)
       if (STOW_PROBE()) measured_z = NAN;
   }
@@ -700,7 +705,7 @@ float probe_pt(const float &rx, const float &ry, const ProbePtRaise raise_after/
   return measured_z;
 }
 
-#if HAS_Z_SERVO_ENDSTOP
+#if HAS_Z_SERVO_PROBE
 
   void servo_probe_init() {
     /**
@@ -715,6 +720,6 @@ float probe_pt(const float &rx, const float &ry, const ProbePtRaise raise_after/
     STOW_Z_SERVO();
   }
 
-#endif // HAS_Z_SERVO_ENDSTOP
+#endif // HAS_Z_SERVO_PROBE
 
 #endif // HAS_BED_PROBE
