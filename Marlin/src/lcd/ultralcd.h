@@ -25,12 +25,10 @@
 
 #include "../inc/MarlinConfig.h"
 
-#if ENABLED(ULTRA_LCD) || ENABLED(MALYAN_LCD)
+#if ENABLED(ULTRA_LCD)
+
   void lcd_init();
   bool lcd_detected();
-#endif
-
-#if ENABLED(ULTRA_LCD)
 
   #include "../Marlin.h"
 
@@ -230,6 +228,20 @@
     bool is_lcd_clicked();
     void wait_for_release();
   #endif
+
+#elif ENABLED(MALYAN_LCD)
+
+  void lcd_init();
+  bool lcd_detected();
+  inline bool lcd_detected() { return true; }
+  void lcd_update();
+  inline void lcd_refresh() {}
+  inline void lcd_buttons_update() {}
+  inline bool lcd_hasstatus() { return false; }
+  inline void lcd_setstatusPGM(const char* const message, const int8_t level=0) { UNUSED(message); UNUSED(level); }
+  inline void lcd_setstatus(const char* const message, const bool persist=false) { UNUSED(message); UNUSED(persist); }
+  void lcd_setalertstatusPGM(const char* message);
+  inline void lcd_reset_alert_level() {}
 
 #else // no LCD
 
