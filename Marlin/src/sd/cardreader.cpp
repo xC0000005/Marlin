@@ -345,12 +345,17 @@ void CardReader::openAndPrintFile(const char *name) {
   enqueue_and_echo_commands_P(PSTR("M24"));
 }
 
-void CardReader::startFileprint() {
+void CardReader::startFileprint(
+  #if ENABLED(Z_BASED_RECOVERY)
+    const bool z_based_recovery/*=false*/
+  #endif
+) {
   if (cardOK) {
     sdprinting = true;
     #if SD_RESORT
       flush_presort();
     #endif
+    zbasedrecovery = z_based_recovery;
   }
 }
 
@@ -367,6 +372,7 @@ void CardReader::stopSDPrint(
   #if SD_RESORT
     if (re_sort) presort();
   #endif
+  zbasedrecovery = false;
 }
 
 void CardReader::openLogFile(char* name) {
@@ -983,6 +989,7 @@ void CardReader::printingHasFinished() {
     #if ENABLED(SD_REPRINT_LAST_SELECTED_FILE)
       lcd_reselect_last_file();
     #endif
+    zbasedrecovery = false;
   }
 }
 

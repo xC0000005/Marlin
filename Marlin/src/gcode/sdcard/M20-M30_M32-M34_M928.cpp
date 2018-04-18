@@ -78,11 +78,26 @@ void GcodeSuite::M23() {
  * M24: Start or Resume SD Print
  */
 void GcodeSuite::M24() {
+  #if ENABLED(Z_BASED_RECOVERY)
+    bool z_based_recovery = false;
+  #endif
+
   #if ENABLED(PARK_HEAD_ON_PAUSE)
     resume_print();
   #endif
 
-  card.startFileprint();
+  #if ENABLED(Z_BASED_RECOVERY)
+    if (parser.seen('R')) {
+      z_based_recovery = parser.value_bool();
+      SERIAL_ECHOPAIR(PSTR("Z Based Recovery"), z_based_recovery);
+    }
+  #endif
+
+  card.startFileprint(
+    #if ENABLED(Z_BASED_RECOVERY)
+    z_based_recovery
+    #endif
+  );
   print_job_timer.start();
 }
 

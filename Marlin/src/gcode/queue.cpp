@@ -26,15 +26,21 @@
 
 #include "queue.h"
 #include "gcode.h"
+#include "parser.h"
 
 #include "../lcd/ultralcd.h"
 #include "../sd/cardreader.h"
 #include "../module/planner.h"
+#include "../module/stepper.h"
 #include "../module/temperature.h"
 #include "../Marlin.h"
 
 #if HAS_COLOR_LEDS
   #include "../feature/leds/leds.h"
+#endif
+
+#if ENABLED(Z_BASED_RECOVERY)
+GCodeParser recovery_parser;
 #endif
 
 /**
@@ -397,6 +403,45 @@ inline void get_serial_commands() {
   } // queue has space, serial has data
 }
 
+#if ENABLED(Z_BASED_RECOVERY)
+
+  /**
+   * in z based recovery mode, any temperature commands can be played through.
+   * as can home commands for X and Y axis. Anything else cannot be, as
+   * or until the end of the file is reached. The special character '#'
+   * can also interrupt buffering.
+   */
+  inline RecoveryState check_recovery_command() {
+    if (command_queue[cmd_queue_index_w][0] != 'G'){
+      //SERIAL_ECHOLNPAIR("Processing",command_queue[cmd_queue_index_w]);
+      return PROCESS_AND_CONTINUE;
+    }
+
+    // Check if it has a Z component and if the Z is equal or higher than the current position.
+    // instantiate the parser to process this.
+    recovery_parser.reset();
+    recovery_parser.parse(command_queue[cmd_queue_index_w]);
+    if (recovery_parser.seen('Z')) {
+      //SERIAL_ECHOLNPAIR("Evaluating",command_queue[cmd_queue_index_w]);
+      float zvalue = recovery_parser.value_float();
+      float z_position = stepper.get_axis_position_mm(X_AXIS);
+      if (zvalue >= z_position) {
+        SERIAL_ECHOLNPAIR("Processing Completed At",command_queue[cmd_queue_index_w]);
+        return PROCESS_AND_COMPLETE;
+      }
+      else {
+        char value[256];
+        sprintf(value, "Skipping Z %f movement because less than %f",zvalue, z_position);
+        SERIAL_ECHOLN(value);
+      }
+    }
+
+    //SERIAL_ECHOLNPAIR("Skipping",command_queue[cmd_queue_index_w]);
+    return SKIP_AND_CONTINUE;
+  }
+
+#endif
+
 #if ENABLED(SDSUPPORT)
 
   /**
@@ -408,7 +453,22 @@ inline void get_serial_commands() {
     static bool stop_buffering = false,
                 sd_comment_mode = false;
 
-    if (!IS_SD_PRINTING) return;
+    #if ENABLED(Z_BASED_RECOVERY)
+      static RecoveryState z_recovery_state = UNKNOWN;
+    #endif
+
+    if (!IS_SD_PRINTING) {
+      if (z_recovery_state != UNKNOWN)
+        z_recovery_state = UNKNOWN;
+      return;
+    }
+
+    if (z_recovery_state == UNKNOWN) {
+      if (card.zbasedrecovery)
+        z_recovery_state = PROCESSING;
+      else
+        z_recovery_state = COMPLETE;
+    }
 
     /**
      * '#' stops reading from SD to the buffer prematurely, so procedural
@@ -470,6 +530,19 @@ inline void get_serial_commands() {
 
         command_queue[cmd_queue_index_w][sd_count] = '\0'; // terminate string
         sd_count = 0; // clear sd line buffer
+
+#if ENABLED(Z_BASED_RECOVERY)
+        if (z_recovery_state != COMPLETE) {
+          switch (check_recovery_command()){
+            case SKIP_AND_CONTINUE: continue;
+            case PROCESS_AND_CONTINUE: break;
+            case PROCESS_AND_COMPLETE: {
+              z_recovery_state = COMPLETE;
+              break;
+            }
+          }
+        }
+#endif
 
         _commit_command(false);
       }

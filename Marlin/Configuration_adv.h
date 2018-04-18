@@ -225,7 +225,7 @@
  * Multiple extruders can be assigned to the same pin in which case
  * the fan will turn on when any selected extruder is above the threshold.
  */
-#define E0_AUTO_FAN_PIN -1
+#define E0_AUTO_FAN_PIN PB8
 #define E1_AUTO_FAN_PIN -1
 #define E2_AUTO_FAN_PIN -1
 #define E3_AUTO_FAN_PIN -1
@@ -775,7 +775,7 @@
 // The minimum pulse width (in µs) for stepping a stepper.
 // Set this if you find stepping unreliable, or if using a very fast CPU.
 // 0 is OK for AVR, 0 is OK for A4989 drivers, 2 is needed for DRV8825 drivers
-#define MINIMUM_STEPPER_PULSE 2 // (µs)   DRV8825 on 32bit CPUs
+#define MINIMUM_STEPPER_PULSE 4 // (µs)   DRV8825 on 32bit CPUs
 
 // @section temperature
 

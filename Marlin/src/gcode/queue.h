@@ -126,4 +126,15 @@ void get_available_commands();
  */
 void advance_command_queue();
 
+typedef enum
+{
+    UNKNOWN = 0,              /**< unknown */
+    SKIP_AND_CONTINUE = 1,    /**< skip this command */
+    PROCESS_AND_CONTINUE = 2, /**< process and continue recovery */
+    PROCESS_AND_COMPLETE = 3, /**< process and complete recovery */
+    PROCESSING,               /**< being processed */
+    COMPLETE,                 /**< complete */
+  } RecoveryState;
+
+
 #endif // GCODE_QUEUE_H

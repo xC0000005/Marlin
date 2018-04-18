@@ -51,7 +51,11 @@ public:
   void closefile(bool store_location=false);
   void release();
   void openAndPrintFile(const char *name);
-  void startFileprint();
+  void startFileprint(
+    #if ENABLED(Z_BASED_RECOVERY)
+      const bool z_based_recovery=false
+    #endif
+  );
   void stopSDPrint(
     #if SD_RESORT
       const bool re_sort=false
@@ -130,7 +134,7 @@ public:
   #endif
 
 public:
-  bool saving, logging, sdprinting, cardOK, filenameIsDir;
+  bool saving, logging, sdprinting, cardOK, filenameIsDir, zbasedrecovery;
   char filename[FILENAME_LENGTH], longFilename[LONG_FILENAME_LENGTH];
   int autostart_index;
 private:
