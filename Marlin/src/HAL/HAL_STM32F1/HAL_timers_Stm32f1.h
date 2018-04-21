@@ -74,21 +74,21 @@ timer_dev* get_timer_dev(int number);
 #define PULSE_TIMER_NUM STEP_TIMER_NUM
 #define PULSE_TIMER_PRESCALE STEPPER_TIMER_PRESCALE
 
-#define TEMP_TIMER_PRESCALE     1000 // prescaler for setting Temp timer, 72Khz
+#define TEMP_TIMER_PRESCALE     1 // prescaler for setting Temp timer, 72Khz
 #define TEMP_TIMER_FREQUENCY    1000 // temperature interrupt frequency
 
 #define STEP_TIMER_MIN_INTERVAL    8 // minimum time in µs between stepper interrupts
 
-#define ENABLE_STEPPER_DRIVER_INTERRUPT() {}
-#define DISABLE_STEPPER_DRIVER_INTERRUPT() {}
+#define ENABLE_STEPPER_DRIVER_INTERRUPT() timer_enable_irq(STEP_TIMER_DEV, STEP_TIMER_CHAN)
+#define DISABLE_STEPPER_DRIVER_INTERRUPT() timer_disable_irq(STEP_TIMER_DEV, STEP_TIMER_CHAN)
 #define STEPPER_ISR_ENABLED() HAL_timer_interrupt_enabled(STEP_TIMER_NUM)
 
-#define ENABLE_TEMPERATURE_INTERRUPT() {}
-#define DISABLE_TEMPERATURE_INTERRUPT() {}
+#define ENABLE_TEMPERATURE_INTERRUPT() timer_enable_irq(TEMP_TIMER_DEV, TEMP_TIMER_CHAN)
+#define DISABLE_TEMPERATURE_INTERRUPT() timer_disable_irq(TEMP_TIMER_DEV, TEMP_TIMER_CHAN)
 
 #define HAL_timer_get_count(timer_num) timer_get_count(TIMER_DEV(timer_num))
 
-#define HAL_ENABLE_ISRs() {}
+#define HAL_ENABLE_ISRs() do { if (thermalManager.in_temp_isr)DISABLE_TEMPERATURE_INTERRUPT(); else ENABLE_TEMPERATURE_INTERRUPT(); ENABLE_STEPPER_DRIVER_INTERRUPT(); } while(0)
 // TODO change this
 
 

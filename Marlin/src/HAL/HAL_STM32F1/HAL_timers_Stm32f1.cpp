@@ -110,8 +110,6 @@ void HAL_timer_start(const uint8_t timer_num, const uint32_t frequency) {
       break;
   }
 
-  // By default, the chip is in priority group two, which means two bits are for pre-empt
-  // and two are for sub priority. The lowest value wins.
   nvic_irq_set_priority(irq_num, timer_num == TEMP_TIMER_NUM ? 0xF : 0x5); // Set stepper to run at higher priority
 
   switch (timer_num) {

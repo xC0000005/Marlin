@@ -38,6 +38,7 @@
   #include "../../gcode/queue.h"
 #endif
 
+extern float recovery_z;
 /**
  * M20: List SD card to serial output
  */
@@ -78,24 +79,28 @@ void GcodeSuite::M23() {
  * M24: Start or Resume SD Print
  */
 void GcodeSuite::M24() {
-  #if ENABLED(Z_BASED_RECOVERY)
-    bool z_based_recovery = false;
-  #endif
-
   #if ENABLED(PARK_HEAD_ON_PAUSE)
     resume_print();
   #endif
 
   #if ENABLED(Z_BASED_RECOVERY)
+    recovery_z = 0;
+
     if (parser.seen('R')) {
-      z_based_recovery = parser.value_bool();
-      SERIAL_ECHOPAIR(PSTR("Z Based Recovery"), z_based_recovery);
+      if(parser.value_bool()) {
+        SERIAL_ECHOLN(PSTR("Z Based Recovery Enabled"));
+
+        if (parser.seen('Z'))
+          recovery_z = parser.value_float();
+        else
+          recovery_z = stepper.get_axis_position_mm(Z_AXIS);
+      }
     }
   #endif
 
   card.startFileprint(
     #if ENABLED(Z_BASED_RECOVERY)
-    z_based_recovery
+    recovery_z != 0
     #endif
   );
   print_job_timer.start();

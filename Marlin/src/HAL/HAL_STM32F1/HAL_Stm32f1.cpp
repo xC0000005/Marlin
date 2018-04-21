@@ -128,6 +128,91 @@ uint16_t HAL_adc_results[ADC_PIN_COUNT];
 // Public functions
 // --------------------------------------------------------------------------
 
+/** \brief  Get Priority Grouping
+
+  This function gets the priority grouping from NVIC Interrupt Controller.
+  Priority grouping is SCB->AIRCR [10:8] PRIGROUP field.
+
+    \return                Priority grouping field
+ */
+#define __I
+#define __IO
+ typedef struct
+ {
+   __I  uint32_t CPUID;                   /*!< Offset: 0x000 (R/ )  CPUID Base Register                                   */
+   __IO uint32_t ICSR;                    /*!< Offset: 0x004 (R/W)  Interrupt Control and State Register                  */
+   __IO uint32_t VTOR;                    /*!< Offset: 0x008 (R/W)  Vector Table Offset Register                          */
+   __IO uint32_t AIRCR;                   /*!< Offset: 0x00C (R/W)  Application Interrupt and Reset Control Register      */
+   __IO uint32_t SCR;                     /*!< Offset: 0x010 (R/W)  System Control Register                               */
+   __IO uint32_t CCR;                     /*!< Offset: 0x014 (R/W)  Configuration Control Register                        */
+   __IO uint8_t  SHP[12];                 /*!< Offset: 0x018 (R/W)  System Handlers Priority Registers (4-7, 8-11, 12-15) */
+   __IO uint32_t SHCSR;                   /*!< Offset: 0x024 (R/W)  System Handler Control and State Register             */
+   __IO uint32_t CFSR;                    /*!< Offset: 0x028 (R/W)  Configurable Fault Status Register                    */
+   __IO uint32_t HFSR;                    /*!< Offset: 0x02C (R/W)  HardFault Status Register                             */
+   __IO uint32_t DFSR;                    /*!< Offset: 0x030 (R/W)  Debug Fault Status Register                           */
+   __IO uint32_t MMFAR;                   /*!< Offset: 0x034 (R/W)  MemManage Fault Address Register                      */
+   __IO uint32_t BFAR;                    /*!< Offset: 0x038 (R/W)  BusFault Address Register                             */
+   __IO uint32_t AFSR;                    /*!< Offset: 0x03C (R/W)  Auxiliary Fault Status Register                       */
+   __I  uint32_t PFR[2];                  /*!< Offset: 0x040 (R/ )  Processor Feature Register                            */
+   __I  uint32_t DFR;                     /*!< Offset: 0x048 (R/ )  Debug Feature Register                                */
+   __I  uint32_t ADR;                     /*!< Offset: 0x04C (R/ )  Auxiliary Feature Register                            */
+   __I  uint32_t MMFR[4];                 /*!< Offset: 0x050 (R/ )  Memory Model Feature Register                         */
+   __I  uint32_t ISAR[5];                 /*!< Offset: 0x060 (R/ )  Instruction Set Attributes Register                   */
+        uint32_t RESERVED0[5];
+   __IO uint32_t CPACR;                   /*!< Offset: 0x088 (R/W)  Coprocessor Access Control Register                   */
+ } SCB_Type;
+
+ /* Memory mapping of Cortex-M3 Hardware */
+ #define SCS_BASE            (0xE000E000UL)                            /*!< System Control Space Base Address  */
+ #define ITM_BASE            (0xE0000000UL)                            /*!< ITM Base Address                   */
+ #define CoreDebug_BASE      (0xE000EDF0UL)                            /*!< Core Debug Base Address            */
+ #define SysTick_BASE        (SCS_BASE +  0x0010UL)                    /*!< SysTick Base Address               */
+ #define NVIC_BASE           (SCS_BASE +  0x0100UL)                    /*!< NVIC Base Address                  */
+ #define SCB_BASE            (SCS_BASE +  0x0D00UL)                    /*!< System Control Block Base Address  */
+
+ #define SCnSCB              ((SCnSCB_Type    *)     SCS_BASE      )   /*!< System control Register not in SCB */
+ #define SCB                 ((SCB_Type       *)     SCB_BASE      )   /*!< SCB configuration struct           */
+
+ /* SCB Application Interrupt and Reset Control Register Definitions */
+ #define SCB_AIRCR_VECTKEY_Pos              16                                             /*!< SCB AIRCR: VECTKEY Position */
+ #define SCB_AIRCR_VECTKEY_Msk              (0xFFFFUL << SCB_AIRCR_VECTKEY_Pos)            /*!< SCB AIRCR: VECTKEY Mask */
+
+ #define SCB_AIRCR_PRIGROUP_Pos              8                                             /*!< SCB AIRCR: PRIGROUP Position */
+ #define SCB_AIRCR_PRIGROUP_Msk             (7UL << SCB_AIRCR_PRIGROUP_Pos)                /*!< SCB AIRCR: PRIGROUP Mask */
+
+uint32_t NVIC_GetPriorityGrouping(void)
+{
+  return ((SCB->AIRCR & SCB_AIRCR_PRIGROUP_Msk) >> SCB_AIRCR_PRIGROUP_Pos);   /* read priority grouping field */
+}
+
+/** \brief  Set Priority Grouping
+
+  This function sets the priority grouping field using the required unlock sequence.
+  The parameter PriorityGroup is assigned to the field SCB->AIRCR [10:8] PRIGROUP field.
+  Only values from 0..7 are used.
+  In case of a conflict between priority grouping and available
+  priority bits (__NVIC_PRIO_BITS) the smallest possible priority group is set.
+
+    \param [in]      PriorityGroup  Priority grouping field
+ */
+static void NVIC_SetPriorityGrouping(uint32_t PriorityGroup)
+{
+  uint32_t reg_value;
+  uint32_t PriorityGroupTmp = (PriorityGroup & (uint32_t)0x07);               /* only values 0..7 are used          */
+
+  reg_value  =  SCB->AIRCR;                                                   /* read old register configuration    */
+  reg_value &= ~(SCB_AIRCR_VECTKEY_Msk | SCB_AIRCR_PRIGROUP_Msk);             /* clear bits to change               */
+  reg_value  =  (reg_value                                 |
+                ((uint32_t)0x5FA << SCB_AIRCR_VECTKEY_Pos) |
+                (PriorityGroupTmp << 8));                                     /* Insert write key and priorty group */
+  SCB->AIRCR =  reg_value;
+}
+
+void HAL_init()
+{
+  NVIC_SetPriorityGrouping(0x7);
+}
+
 /* VGPV Done with defines
 // disable interrupts
 void cli(void) { noInterrupts(); }

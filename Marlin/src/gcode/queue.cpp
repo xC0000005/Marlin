@@ -41,6 +41,7 @@
 
 #if ENABLED(Z_BASED_RECOVERY)
 GCodeParser recovery_parser;
+float recovery_z;
 #endif
 
 /**
@@ -412,32 +413,53 @@ inline void get_serial_commands() {
    * can also interrupt buffering.
    */
   inline RecoveryState check_recovery_command() {
-    if (command_queue[cmd_queue_index_w][0] != 'G'){
-      //SERIAL_ECHOLNPAIR("Processing",command_queue[cmd_queue_index_w]);
-      return PROCESS_AND_CONTINUE;
-    }
+    static float last_e = 0;
 
-    // Check if it has a Z component and if the Z is equal or higher than the current position.
-    // instantiate the parser to process this.
+    // First off, if it isn't a move command, let it play through.
+    if (command_queue[cmd_queue_index_w][0] != 'G')
+      return PROCESS_AND_CONTINUE;
+
     recovery_parser.reset();
     recovery_parser.parse(command_queue[cmd_queue_index_w]);
-    if (recovery_parser.seen('Z')) {
-      //SERIAL_ECHOLNPAIR("Evaluating",command_queue[cmd_queue_index_w]);
-      float zvalue = recovery_parser.value_float();
-      float z_position = stepper.get_axis_position_mm(X_AXIS);
-      if (zvalue >= z_position) {
-        SERIAL_ECHOLNPAIR("Processing Completed At",command_queue[cmd_queue_index_w]);
-        return PROCESS_AND_COMPLETE;
-      }
-      else {
-        char value[256];
-        sprintf(value, "Skipping Z %f movement because less than %f",zvalue, z_position);
-        SERIAL_ECHOLN(value);
-      }
-    }
 
-    //SERIAL_ECHOLNPAIR("Skipping",command_queue[cmd_queue_index_w]);
-    return SKIP_AND_CONTINUE;
+    switch(recovery_parser.codenum) {
+      case  0: /* fast linear move */
+      case  1: /* normal linear move */
+            if (recovery_parser.seen('Z')) {
+              char message[256];
+              float zvalue = recovery_parser.value_axis_units(Z_AXIS);
+
+              // The last E check here makes sure we skip startup code that primes on low recoveries
+              if (zvalue >= recovery_z && last_e) {
+                SERIAL_ECHOLNPAIR("Processing Completed at: ", command_queue[cmd_queue_index_w]);
+                current_position[E_AXIS] = last_e;
+                sync_plan_position_e();
+                set_current_from_steppers_for_axis(ALL_AXES);
+                SYNC_PLAN_POSITION_KINEMATIC();
+                report_current_position();
+
+                SERIAL_ECHOLNPAIR("E initialized to: ", last_e);
+                return PROCESS_AND_COMPLETE;
+              }
+
+              sprintf (message, "Skipping move to %f because it is less than %f", zvalue, recovery_z);
+              SERIAL_ECHOLN(message);
+            }
+
+            /* this command will be skiped, but record the e value. */
+            if (recovery_parser.seen('E')) {
+              last_e = recovery_parser.value_axis_units(E_AXIS);
+            }
+
+            return SKIP_AND_CONTINUE;
+      case 20: /* inch units -- TODO: error out. */
+      case 21: /* metric units */
+      case 90: /* relative positioning */
+      case 91: /* absolute positioning */
+        return PROCESS_AND_CONTINUE;
+      default:
+        return SKIP_AND_CONTINUE;
+    }
   }
 
 #endif
@@ -464,8 +486,11 @@ inline void get_serial_commands() {
     }
 
     if (z_recovery_state == UNKNOWN) {
-      if (card.zbasedrecovery)
+      if (card.zbasedrecovery) {
         z_recovery_state = PROCESSING;
+
+        SERIAL_ECHOLNPAIR("Recovery Z set to : ", recovery_z);
+      }
       else
         z_recovery_state = COMPLETE;
     }

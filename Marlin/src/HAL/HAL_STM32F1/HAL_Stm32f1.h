@@ -117,6 +117,10 @@ extern USBSerial SerialUSB;
 // On AVR this is in math.h?
 #define square(x) ((x)*(x))
 
+#define HAL_INIT
+
+void HAL_init(); 
+
 #ifndef strncpy_P
   #define strncpy_P(dest, src, num) strncpy((dest), (src), (num))
 #endif
