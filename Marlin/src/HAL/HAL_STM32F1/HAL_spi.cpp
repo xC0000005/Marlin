@@ -27,10 +27,10 @@
  */
 
 /**
- * Adapted to the STM32F1 HAL
+ * Adapted to the STM32F4 HAL
  */
 
-#ifdef __STM32F1__
+#ifdef STM32F1
 
 // --------------------------------------------------------------------------
 // Includes
@@ -76,33 +76,28 @@ static SPISettings spiConfig;
  *
  * @details Only configures SS pin since libmaple creates and initialize the SPI object
  */
-void spiBegin() {
+void spiBegin(void) {
   #if !PIN_EXISTS(SS)
-    #error "SS_PIN not defined!"
+    #error SS_PIN not defined!
   #endif
-  WRITE(SS_PIN, HIGH);
+
   SET_OUTPUT(SS_PIN);
+  WRITE(SS_PIN, HIGH);
 }
 
-/**
- * @brief  Initializes SPI port to required speed rate and transfer mode (MSB, SPI MODE 0)
- *
- * @param  spiRate Rate as declared in HAL.h (speed do not match AVR)
- * @return Nothing
- *
- * @details
- */
+/** Configure SPI for specified SPI speed */
 void spiInit(uint8_t spiRate) {
-  uint8_t  clock;
+  // Use datarates Marlin uses
+  uint32_t clock;
   switch (spiRate) {
-  case SPI_FULL_SPEED:    clock = SPI_CLOCK_DIV2 ; break;
-  case SPI_HALF_SPEED:    clock = SPI_CLOCK_DIV4 ; break;
-  case SPI_QUARTER_SPEED: clock = SPI_CLOCK_DIV8 ; break;
-  case SPI_EIGHTH_SPEED:  clock = SPI_CLOCK_DIV16; break;
-  case SPI_SPEED_5:       clock = SPI_CLOCK_DIV32; break;
-  case SPI_SPEED_6:       clock = SPI_CLOCK_DIV64; break;
+  case SPI_FULL_SPEED:    clock = 20000000; break; // 13.9mhz=20000000  6.75mhz=10000000  3.38mhz=5000000  .833mhz=1000000
+  case SPI_HALF_SPEED:    clock =  5000000; break;
+  case SPI_QUARTER_SPEED: clock =  2500000; break;
+  case SPI_EIGHTH_SPEED:  clock =  1250000; break;
+  case SPI_SPEED_5:       clock =   625000; break;
+  case SPI_SPEED_6:       clock =   300000; break;
   default:
-    clock = SPI_CLOCK_DIV2; // Default from the SPI library
+    clock = 4000000; // Default from the SPI libarary
   }
   spiConfig = SPISettings(clock, MSBFIRST, SPI_MODE0);
   SPI.begin();
@@ -133,7 +128,7 @@ uint8_t spiRec(void) {
  */
 void spiRead(uint8_t* buf, uint16_t nbyte) {
   SPI.beginTransaction(spiConfig);
-  SPI.dmaTransfer(0, const_cast<uint8*>(buf), nbyte);
+  SPI.dmaTransfer(0, const_cast<uint8_t*>(buf), nbyte);
   SPI.endTransaction();
 }
 
@@ -146,7 +141,7 @@ void spiRead(uint8_t* buf, uint16_t nbyte) {
  */
 void spiSend(uint8_t b) {
   SPI.beginTransaction(spiConfig);
-  SPI.send(b);
+  SPI.transfer(b);
   SPI.endTransaction();
 }
 
@@ -160,18 +155,11 @@ void spiSend(uint8_t b) {
  */
 void spiSendBlock(uint8_t token, const uint8_t* buf) {
   SPI.beginTransaction(spiConfig);
-  SPI.send(token);
-  SPI.dmaSend(const_cast<uint8*>(buf), 512);
+  SPI.transfer(token);
+  SPI.dmaSend(const_cast<uint8_t*>(buf), 512);
   SPI.endTransaction();
-}
-
-/** Begin SPI transaction, set clock, bit order, data mode */
-void spiBeginTransaction(uint32_t spiClock, uint8_t bitOrder, uint8_t dataMode) {
-  spiConfig = SPISettings(spiClock, (BitOrder)bitOrder, dataMode);
-
-  SPI.beginTransaction(spiConfig);
 }
 
 #endif // SOFTWARE_SPI
 
-#endif // __STM32F1__
+#endif // STM32F4

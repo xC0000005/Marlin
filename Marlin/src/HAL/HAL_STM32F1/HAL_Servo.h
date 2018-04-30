@@ -4,6 +4,7 @@
  *
  * Based on Sprinter and grbl.
  * Copyright (C) 2011 Camiel Gubbels / Erik van der Zalm
+ * Copyright (C) 2017 Victor Perez
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,34 +21,21 @@
  *
  */
 
-/**
- * HAL for stm32duino.com based on Libmaple and compatible (STM32F1)
- */
+#ifndef HAL_SERVO_H
+#define HAL_SERVO_H
 
-#ifdef __STM32F1__
+#include <Servo.h>
 
-#include "../../inc/MarlinConfig.h"
+// Inherit and expand on the official library
+class libServo : public Servo {
+public:
+    int8_t attach(const int pin);
+    int8_t attach(const int pin, const int min, const int max);
+    void move(const int value);
+private:
+    uint16_t min_ticks;
+    uint16_t max_ticks;
+    uint8_t servoIndex;               // index into the channel data for this servo
+};
 
-#if ENABLED(USE_WATCHDOG)
-
-#include <libmaple/iwdg.h>
-#include "watchdog_Stm32f1.h"
-
-void watchdogSetup(void) {
-  // do whatever. don't remove this function.
-}
-
-/**
- * @brief  Initialized the independent hardware watchdog.
- *
- * @return No return
- *
- * @details The watchdog clock is 40Khz. We need a 4 seconds interval, so use a /256 preescaler and 625 reload value (counts down to 0)
- */
-void watchdog_init(void) {
-  //iwdg_init(IWDG_PRE_256, STM32F1_WD_RELOAD);
-}
-
-#endif // USE_WATCHDOG
-
-#endif // __STM32F1__
+#endif // HAL_SERVO_STM32F4_H

@@ -2,6 +2,9 @@
 * Marlin 3D Printer Firmware
 * Copyright (C) 2016 MarlinFirmware [https://github.com/MarlinFirmware/Marlin]
 *
+* Based on Sprinter and grbl.
+* Copyright (C) 2011 Camiel Gubbels / Erik van der Zalm
+*
 * This program is free software: you can redistribute it and/or modify
 * it under the terms of the GNU General Public License as published by
 * the Free Software Foundation, either version 3 of the License, or
@@ -17,25 +20,14 @@
 *
 */
 
-#ifndef SPI_PINS_H_
-#define SPI_PINS_H_
+#ifndef WATCHDOG_H
+#define WATCHDOG_H
 
+#include "../../inc/MarlinConfig.h"
 
-/**
- * Define SPI Pins: SCK, MISO, MOSI, SS
- *
- */
-#ifndef SCK_PIN
-    #define SCK_PIN   PA5
-#endif
-#ifndef MISO_PIN
-    #define MISO_PIN  PA6
-#endif
-#ifndef MOSI_PIN
-    #define MOSI_PIN  PA7
-#endif
-#ifndef SS_PIN
-    #define SS_PIN    PA8
-#endif
+extern IWDG_HandleTypeDef hiwdg;
 
-#endif // SPI_PINS_H_
+void watchdog_init();
+void watchdog_reset();
+
+#endif // WATCHDOG_STM32F1_H

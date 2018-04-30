@@ -21,10 +21,6 @@
  */
 
 /**
- * HAL for stm32duino.com based on Libmaple and compatible (STM32F1)
- */
-
-/**
  * Test Re-ARM specific configuration values for errors at compile-time.
  */
 #if ENABLED(SPINDLE_LASER_ENABLE)
@@ -35,10 +31,12 @@
   #elif ENABLED(SPINDLE_LASER_PWM) && PIN_EXISTS(SPINDLE_LASER_PWM)
     #if !PWM_PIN(SPINDLE_LASER_PWM_PIN)
       #error "SPINDLE_LASER_PWM_PIN not assigned to a PWM pin."
-    #elif SPINDLE_LASER_POWERUP_DELAY < 0
-      #error "SPINDLE_LASER_POWERUP_DELAY must be positive"
-    #elif SPINDLE_LASER_POWERDOWN_DELAY < 0
-      #error "SPINDLE_LASER_POWERDOWN_DELAY must be positive"
+    #elif !(SPINDLE_LASER_PWM_PIN == 4 || SPINDLE_LASER_PWM_PIN == 6 || SPINDLE_LASER_PWM_PIN == 11)
+      #error "SPINDLE_LASER_PWM_PIN must use SERVO0, SERVO1 or SERVO3 connector"
+    #elif SPINDLE_LASER_POWERUP_DELAY < 1
+      #error "SPINDLE_LASER_POWERUP_DELAY must be greater than 0."
+    #elif SPINDLE_LASER_POWERDOWN_DELAY < 1
+      #error "SPINDLE_LASER_POWERDOWN_DELAY must be greater than 0."
     #elif !defined(SPINDLE_LASER_PWM_INVERT)
       #error "SPINDLE_LASER_PWM_INVERT missing."
     #elif !defined(SPEED_POWER_SLOPE) || !defined(SPEED_POWER_INTERCEPT) || !defined(SPEED_POWER_MIN) || !defined(SPEED_POWER_MAX)
@@ -68,5 +66,5 @@
 #endif // SPINDLE_LASER_ENABLE
 
 #if ENABLED(EMERGENCY_PARSER)
-  #error "EMERGENCY_PARSER is not yet implemented for STM32F1. Disable EMERGENCY_PARSER to continue."
+  #error "EMERGENCY_PARSER is not yet implemented for STM32F4. Disable EMERGENCY_PARSER to continue."
 #endif
