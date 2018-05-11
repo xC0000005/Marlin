@@ -82,7 +82,7 @@ void HAL_timer_start(const uint8_t timer_num, const uint32_t frequency) {
       timerConfig[STEP_TIMER_NUM].timerdef.Init.ClockDivision  = TIM_CLOCKDIVISION_DIV1;
       timerConfig[STEP_TIMER_NUM].IRQ_Id = STEP_TIMER_IRQ_NAME;
       timerConfig[STEP_TIMER_NUM].callback = (uint32_t)temp_isr_handler;
-      HAL_NVIC_SetPriority(timerConfig[STEP_TIMER_NUM].IRQ_Id, 1, 0);
+      HAL_NVIC_SetPriority(timerConfig[STEP_TIMER_NUM].IRQ_Id, STEP_TIMER_PRIORITY, 0);
       break;
     case TEMP_TIMER_NUM:
       // TEMPERATURE TIMER
@@ -93,7 +93,7 @@ void HAL_timer_start(const uint8_t timer_num, const uint32_t frequency) {
       timerConfig[TEMP_TIMER_NUM].timerdef.Init.ClockDivision  = TIM_CLOCKDIVISION_DIV1;
       timerConfig[TEMP_TIMER_NUM].IRQ_Id = TEMP_TIMER_IRQ_NAME;
       timerConfig[TEMP_TIMER_NUM].callback = (uint32_t)step_isr_handler;
-      HAL_NVIC_SetPriority(timerConfig[TEMP_TIMER_NUM].IRQ_Id, 2, 0);
+      HAL_NVIC_SetPriority(timerConfig[TEMP_TIMER_NUM].IRQ_Id, TEMP_TIMER_PRIORITY, 0);
       break;
     }
     timers_initialised[timer_num] = true;
