@@ -41,10 +41,17 @@
 #define STEP_TIMER_NUM 0  // index of timer to use for stepper
 #define TEMP_TIMER_NUM 1  // index of timer to use for temperature
 
-#define HAL_TIMER_RATE         (HAL_RCC_GetSysClockFreq() / 2)  // frequency of timer peripherals
-#define STEPPER_TIMER_PRESCALE 54            // was 40,prescaler for setting stepper timer, 2Mhz
+// TODO: Set all of these via calculation - the prescale seems to be the Clock Frequence divded by 1000.
+#define HAL_TIMER_RATE         (HAL_RCC_GetPCLK2Freq())  // frequency of timer peripherals
+#define STEPPER_TIMER_PRESCALE 36            // prescaler for setting stepper timer, 2Mhz. I
 #define HAL_STEPPER_TIMER_RATE (HAL_TIMER_RATE / STEPPER_TIMER_PRESCALE)   // frequency of stepper timer (HAL_TIMER_RATE / STEPPER_TIMER_PRESCALE)
 #define HAL_TICKS_PER_US       ((HAL_STEPPER_TIMER_RATE) / 1000000) // stepper timer ticks per µs
+
+#define STEP_TIMER_DEV TIM4
+#define STEP_TIMER_CALLBACK TIM4_IRQHandler
+#define STEP_TIMER_IRQ_NAME TIM4_IRQn
+#define ENABLE_STEP_TIMER() __HAL_RCC_TIM4_CLK_ENABLE()
+#define STEP_TIMER_PRIORITY 1
 
 #define PULSE_TIMER_NUM STEP_TIMER_NUM
 #define PULSE_TIMER_PRESCALE STEPPER_TIMER_PRESCALE
@@ -52,8 +59,13 @@
 #define TEMP_TIMER_PRESCALE     1000 // prescaler for setting Temp timer, 72Khz
 #define TEMP_TIMER_FREQUENCY    1000 // temperature interrupt frequency
 
-#define STEP_TIMER_MIN_INTERVAL    8 // minimum time in µs between stepper interrupts
+#define TEMP_TIMER_DEV TIM3
+#define TEMP_TIMER_CALLBACK TIM3_IRQHandler
+#define TEMP_TIMER_IRQ_NAME TIM3_IRQn
+#define ENABLE_TEMP_TIMER() __HAL_RCC_TIM3_CLK_ENABLE()
+#define TEMP_TIMER_PRIORITY 2
 
+#define STEP_TIMER_MIN_INTERVAL    8 // minimum time in µs between stepper interrupts
 #define ENABLE_STEPPER_DRIVER_INTERRUPT() HAL_timer_enable_interrupt(STEP_TIMER_NUM)
 #define DISABLE_STEPPER_DRIVER_INTERRUPT() HAL_timer_disable_interrupt(STEP_TIMER_NUM)
 #define STEPPER_ISR_ENABLED() HAL_timer_interrupt_enabled(STEP_TIMER_NUM)
@@ -61,13 +73,14 @@
 #define ENABLE_TEMPERATURE_INTERRUPT() HAL_timer_enable_interrupt(TEMP_TIMER_NUM)
 #define DISABLE_TEMPERATURE_INTERRUPT() HAL_timer_disable_interrupt(TEMP_TIMER_NUM)
 
-// TODO change this
+// The way this works is that these define the function names for the ISR routines themselves.
+// They are stored in an array and called from timer specific callbacks implemented by
+// the core itself (weak symbols in the vector table)
 
-
-extern void TC5_Handler();
-extern void TC7_Handler();
-#define HAL_STEP_TIMER_ISR  void TC5_Handler()
-#define HAL_TEMP_TIMER_ISR  void TC7_Handler()
+extern void temp_isr_handler();
+extern void step_isr_handler();
+#define HAL_STEP_TIMER_ISR  void temp_isr_handler()
+#define HAL_TEMP_TIMER_ISR  void step_isr_handler()
 
 // --------------------------------------------------------------------------
 // Types
