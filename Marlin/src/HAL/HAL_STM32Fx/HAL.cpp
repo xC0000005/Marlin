@@ -1,6 +1,10 @@
 /**
  * Marlin 3D Printer Firmware
+ *
  * Copyright (C) 2016 MarlinFirmware [https://github.com/MarlinFirmware/Marlin]
+ * Copyright (c) 2016 Bob Cousins bobcousins42@googlemail.com
+ * Copyright (c) 2015-2016 Nico Tonnhofer wurstnase.reprap@gmail.com
+ * Copyright (c) 2017 Victor Perez
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,22 +21,16 @@
  *
  */
 
-#ifdef STM32F7
 
-/**
- * Description: functions for I2C connected external EEPROM.
- * Not platform dependent.
- */
-
-#include "../../inc/MarlinConfig.h"
+#ifdef STM32Fx
 
 // --------------------------------------------------------------------------
 // Includes
 // --------------------------------------------------------------------------
 
 #include "HAL.h"
-#include "EEPROM_Emul/eeprom_emul.h"
 
+//#include <Wire.h>
 
 // --------------------------------------------------------------------------
 // Externals
@@ -54,10 +52,12 @@
 // Public Variables
 // --------------------------------------------------------------------------
 
+uint16_t HAL_adc_result;
+
 // --------------------------------------------------------------------------
 // Private Variables
 // --------------------------------------------------------------------------
-static bool eeprom_initialised = false;
+
 // --------------------------------------------------------------------------
 // Function prototypes
 // --------------------------------------------------------------------------
@@ -70,71 +70,71 @@ static bool eeprom_initialised = false;
 // Public functions
 // --------------------------------------------------------------------------
 
-// FLASH_FLAG_PGSERR (Programming Sequence Error) was renamed to
-// FLASH_FLAG_ERSERR (Erasing Sequence Error) in STM32F7
-#define FLASH_FLAG_PGSERR FLASH_FLAG_ERSERR
+/* VGPV Done with defines
+// disable interrupts
+void cli(void) { noInterrupts(); }
+
+// enable interrupts
+void sei(void) { interrupts(); }
+*/
+
+void HAL_clear_reset_source(void) { __HAL_RCC_CLEAR_RESET_FLAGS(); }
+
+uint8_t HAL_get_reset_source (void) {
+  if (__HAL_RCC_GET_FLAG(RCC_FLAG_IWDGRST) != RESET)
+    return RST_WATCHDOG;
+
+  if (__HAL_RCC_GET_FLAG(RCC_FLAG_SFTRST) != RESET)
+    return RST_SOFTWARE;
+
+  if (__HAL_RCC_GET_FLAG(RCC_FLAG_PINRST) != RESET)
+    return RST_EXTERNAL;
+
+  if (__HAL_RCC_GET_FLAG(RCC_FLAG_PORRST) != RESET)
+    return RST_POWER_ON;
+  return 0;
+}
+
+void _delay_ms(const int delay_ms) { delay(delay_ms); }
+
+extern "C" {
+  extern unsigned int _ebss; // end of bss section
+}
+
+// return free memory between end of heap (or end bss) and whatever is current
+
+/*
+#include "wirish/syscalls.c"
+//extern caddr_t _sbrk(int incr);
+#ifndef CONFIG_HEAP_END
+extern char _lm_heap_end;
+#define CONFIG_HEAP_END ((caddr_t)&_lm_heap_end)
+#endif
+
+extern "C" {
+  static int freeMemory() {
+    char top = 't';
+    return &top - reinterpret_cast<char*>(sbrk(0));
+  }
+  int freeMemory() {
+    int free_memory;
+    int heap_end = (int)_sbrk(0);
+    free_memory = ((int)&free_memory) - ((int)heap_end);
+    return free_memory;
+  }
+}
+*/
 
 // --------------------------------------------------------------------------
-// EEPROM
+// ADC
 // --------------------------------------------------------------------------
 
-
-void eeprom_init() {
-  if (!eeprom_initialised) {
-    HAL_FLASH_Unlock();
-
-    __HAL_FLASH_CLEAR_FLAG(FLASH_FLAG_EOP | FLASH_FLAG_OPERR | FLASH_FLAG_WRPERR |FLASH_FLAG_PGAERR | FLASH_FLAG_PGPERR | FLASH_FLAG_PGSERR);
-
-    /* EEPROM Init */
-    if (EE_Initialise() != EE_OK)
-      for (;;) HAL_Delay(1); // Spin forever until watchdog reset
-
-    HAL_FLASH_Lock();
-    eeprom_initialised = true;
-  }
+void HAL_adc_start_conversion(const uint8_t adc_pin) {
+  HAL_adc_result = analogRead(adc_pin);
 }
 
-void eeprom_write_byte(unsigned char *pos, unsigned char value) {
-  uint16_t eeprom_address = (unsigned) pos;
-
-  eeprom_init();
-
-  HAL_FLASH_Unlock();
-  __HAL_FLASH_CLEAR_FLAG(FLASH_FLAG_EOP | FLASH_FLAG_OPERR | FLASH_FLAG_WRPERR |FLASH_FLAG_PGAERR | FLASH_FLAG_PGPERR | FLASH_FLAG_PGSERR);
-
-  if (EE_WriteVariable(eeprom_address, (uint16_t) value) != EE_OK)
-      for (;;) HAL_Delay(1); // Spin forever until watchdog reset
-
-  HAL_FLASH_Lock();
+uint16_t HAL_adc_get_result(void) {
+  return HAL_adc_result;
 }
 
-unsigned char eeprom_read_byte(unsigned char *pos) {
-  uint16_t data = 0xFF;
-  uint16_t eeprom_address = (unsigned)pos;
-
-  eeprom_init();
-
-  if (EE_ReadVariable(eeprom_address, &data) != EE_OK) {
-    return (unsigned char)data;
-  }
-  return (unsigned char)data;
-}
-
-void eeprom_read_block(void *__dst, const void *__src, size_t __n) {
-  uint16_t data = 0xFF;
-  uint16_t eeprom_address = (unsigned) __src;
-
-  eeprom_init();
-
-  for (uint8_t c = 0; c < __n; c++) {
-    EE_ReadVariable(eeprom_address+c, &data);
-    *((uint8_t*)__dst + c) = data;
-  }
-}
-
-void eeprom_update_block(const void *__src, void *__dst, size_t __n) {
-
-}
-
-#endif // STM32F7
-
+#endif // STM32F4

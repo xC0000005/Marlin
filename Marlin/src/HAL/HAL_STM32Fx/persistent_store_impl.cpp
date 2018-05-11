@@ -21,7 +21,7 @@
  *
  */
 
-#ifdef STM32F4
+#ifdef STM32Fx
 
 #include "../persistent_store_api.h"
 

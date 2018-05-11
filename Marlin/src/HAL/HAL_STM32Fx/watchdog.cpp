@@ -4,7 +4,6 @@
  *
  * Based on Sprinter and grbl.
  * Copyright (C) 2011 Camiel Gubbels / Erik van der Zalm
- * Copyright (C) 2017 Victor Perez
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -21,21 +20,38 @@
  *
  */
 
-#ifndef HAL_SERVO_STM32F7_H
-#define HAL_SERVO_STM32F7_H
+#ifdef STM32Fx
 
-#include <../../libraries/Servo/src/Servo.h>
+#include "../../inc/MarlinConfig.h"
 
-// Inherit and expand on the official library
-class libServo : public Servo {
-public:
-    int8_t attach(const int pin);
-    int8_t attach(const int pin, const int min, const int max);
-    void move(const int value);
-private:
-    uint16_t min_ticks;
-    uint16_t max_ticks;
-    uint8_t servoIndex;               // index into the channel data for this servo
-};
+#if ENABLED(USE_WATCHDOG)
 
-#endif // HAL_SERVO_STM32F7_H
+  #include "watchdog.h"
+
+  IWDG_HandleTypeDef hiwdg;
+
+  void watchdog_init() {
+    hiwdg.Instance = IWDG;
+    hiwdg.Init.Prescaler = IWDG_PRESCALER_32; //32kHz LSI clock and 32x prescalar = 1024Hz IWDG clock
+    hiwdg.Init.Reload = 4095;           //4095 counts = 4 seconds at 1024Hz
+    if (HAL_IWDG_Init(&hiwdg) != HAL_OK) {
+      //Error_Handler();
+    }
+  }
+
+  void watchdog_reset() {
+    /* Refresh IWDG: reload counter */
+    if (HAL_IWDG_Refresh(&hiwdg) != HAL_OK) {
+      /* Refresh Error */
+      //Error_Handler();
+    }
+    else {
+    #if PIN_EXISTS(LED)
+      TOGGLE(LED_PIN);  // heart beat indicator
+    #endif
+    }
+  }
+
+#endif // USE_WATCHDOG
+
+#endif // STM32F4

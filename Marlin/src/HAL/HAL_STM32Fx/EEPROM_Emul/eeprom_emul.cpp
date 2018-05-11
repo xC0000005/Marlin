@@ -8,7 +8,7 @@
   ******************************************************************************
   * @attention
   *
-  * <h2><center>&copy; Copyright © 2016 STMicroelectronics International N.V.
+  * <h2><center>&copy; Copyright Â© 2016 STMicroelectronics International N.V.
   * All rights reserved.</center></h2>
   *
   * Redistribution and use in source and binary forms, with or without
@@ -47,7 +47,7 @@
 /** @addtogroup EEPROM_Emulation
   * @{
   */
-#ifdef STM32F7
+#if defined STM32F4 || defined STM32F7
 
 /* Includes ------------------------------------------------------------------*/
 #include "eeprom_emul.h"
@@ -562,7 +562,7 @@ static uint16_t EE_PageTransfer(uint16_t VirtAddress, uint16_t Data) {
   return FlashStatus;
 }
 
-#endif // STM32F7
+#endif // STM32x
 
 /**
  * @}

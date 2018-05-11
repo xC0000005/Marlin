@@ -145,4 +145,4 @@
 #define PE14 _STM32_PIN(E, 14)
 #define PE15 _STM32_PIN(E, 15)
 
-#endif // _FASTIO_STM32F4_H
+#endif // _FASTIO_STM32Fx

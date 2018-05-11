@@ -20,7 +20,7 @@
  *
  */
 
-#ifdef STM32F4
+#ifdef STM32Fx
 
 // --------------------------------------------------------------------------
 // Includes
@@ -28,7 +28,7 @@
 
 #include "HAL.h"
 
-#include "HAL_timers_STM32F4.h"
+#include "HAL_timers.h"
 
 // --------------------------------------------------------------------------
 // Externals
@@ -74,26 +74,26 @@ void HAL_timer_start(const uint8_t timer_num, const uint32_t frequency) {
   if (!timers_initialised[timer_num]) {
     switch (timer_num) {
     case STEP_TIMER_NUM:
-      //STEPPER TIMER TIM5 //use a 32bit timer
-      __HAL_RCC_TIM5_CLK_ENABLE();
-      timerConfig[0].timerdef.Instance            = TIM5;
-      timerConfig[0].timerdef.Init.Prescaler      = (STEPPER_TIMER_PRESCALE);
-      timerConfig[0].timerdef.Init.CounterMode    = TIM_COUNTERMODE_UP;
-      timerConfig[0].timerdef.Init.ClockDivision  = TIM_CLOCKDIVISION_DIV1;
-      timerConfig[0].IRQ_Id = TIM5_IRQn;
-      timerConfig[0].callback = (uint32_t)TC5_Handler;
-      HAL_NVIC_SetPriority(timerConfig[0].IRQ_Id, 1, 0);
+      // STEPPER TIMER
+      ENABLE_STEP_TIMER();
+      timerConfig[STEP_TIMER_NUM].timerdef.Instance            = STEP_TIMER_DEV;
+      timerConfig[STEP_TIMER_NUM].timerdef.Init.Prescaler      = (STEPPER_TIMER_PRESCALE);
+      timerConfig[STEP_TIMER_NUM].timerdef.Init.CounterMode    = TIM_COUNTERMODE_UP;
+      timerConfig[STEP_TIMER_NUM].timerdef.Init.ClockDivision  = TIM_CLOCKDIVISION_DIV1;
+      timerConfig[STEP_TIMER_NUM].IRQ_Id = STEP_TIMER_IRQ_NAME;
+      timerConfig[STEP_TIMER_NUM].callback = (uint32_t)temp_isr_handler;
+      HAL_NVIC_SetPriority(timerConfig[STEP_TIMER_NUM].IRQ_Id, STEP_TIMER_PRIORITY, 0);
       break;
     case TEMP_TIMER_NUM:
-      //TEMP TIMER TIM7 // any available 16bit Timer (1 already used for PWM)
-      __HAL_RCC_TIM7_CLK_ENABLE();
-      timerConfig[1].timerdef.Instance            = TIM7;
-      timerConfig[1].timerdef.Init.Prescaler      = (TEMP_TIMER_PRESCALE);
-      timerConfig[1].timerdef.Init.CounterMode    = TIM_COUNTERMODE_UP;
-      timerConfig[1].timerdef.Init.ClockDivision  = TIM_CLOCKDIVISION_DIV1;
-      timerConfig[1].IRQ_Id = TIM7_IRQn;
-      timerConfig[1].callback = (uint32_t)TC7_Handler;
-      HAL_NVIC_SetPriority(timerConfig[1].IRQ_Id, 2, 0);
+      // TEMPERATURE TIMER
+      ENABLE_TEMP_TIMER();
+      timerConfig[TEMP_TIMER_NUM].timerdef.Instance            = TEMP_TIMER_DEV;
+      timerConfig[TEMP_TIMER_NUM].timerdef.Init.Prescaler      = (TEMP_TIMER_PRESCALE);
+      timerConfig[TEMP_TIMER_NUM].timerdef.Init.CounterMode    = TIM_COUNTERMODE_UP;
+      timerConfig[TEMP_TIMER_NUM].timerdef.Init.ClockDivision  = TIM_CLOCKDIVISION_DIV1;
+      timerConfig[TEMP_TIMER_NUM].IRQ_Id = TEMP_TIMER_IRQ_NAME;
+      timerConfig[TEMP_TIMER_NUM].callback = (uint32_t)step_isr_handler;
+      HAL_NVIC_SetPriority(timerConfig[TEMP_TIMER_NUM].IRQ_Id, TEMP_TIMER_PRIORITY, 0);
       break;
     }
     timers_initialised[timer_num] = true;
@@ -106,15 +106,15 @@ void HAL_timer_start(const uint8_t timer_num, const uint32_t frequency) {
 }
 
 //forward the interrupt
-extern "C" void TIM5_IRQHandler() {
-  ((void(*)(void))timerConfig[0].callback)();
+extern "C" void STEP_TIMER_CALLBACK() {
+  ((void(*)(void))timerConfig[STEP_TIMER_NUM].callback)();
 }
-extern "C" void TIM7_IRQHandler() {
-  ((void(*)(void))timerConfig[1].callback)();
+extern "C" void TEMP_TIMER_CALLBACK() {
+  ((void(*)(void))timerConfig[TEMP_TIMER_NUM].callback)();
 }
 
 void HAL_timer_set_compare(const uint8_t timer_num, const uint32_t compare) {
-  __HAL_TIM_SetAutoreload(&timerConfig[timer_num].timerdef, compare);
+  __HAL_TIM_SET_AUTORELOAD(&timerConfig[timer_num].timerdef, compare);
 }
 
 void HAL_timer_enable_interrupt(const uint8_t timer_num) {
@@ -126,11 +126,11 @@ void HAL_timer_disable_interrupt(const uint8_t timer_num) {
 }
 
 hal_timer_t HAL_timer_get_compare(const uint8_t timer_num) {
-  return __HAL_TIM_GetAutoreload(&timerConfig[timer_num].timerdef);
+  return __HAL_TIM_GET_AUTORELOAD(&timerConfig[timer_num].timerdef);
 }
 
 uint32_t HAL_timer_get_count(const uint8_t timer_num) {
-  return __HAL_TIM_GetCounter(&timerConfig[timer_num].timerdef);
+  return __HAL_TIM_GET_COUNTER(&timerConfig[timer_num].timerdef);
 }
 
 void HAL_timer_restrain(const uint8_t timer_num, const uint16_t interval_ticks) {
@@ -153,4 +153,4 @@ bool HAL_timer_interrupt_enabled(const uint8_t timer_num) {
   }
 }
 
-#endif // STM32F4
+#endif // STM32Fx

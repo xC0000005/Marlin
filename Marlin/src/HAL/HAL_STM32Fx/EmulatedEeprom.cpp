@@ -17,7 +17,7 @@
  *
  */
 
-#ifdef STM32F1_1
+#ifdef STM32Fx
 
 /**
  * Description: functions for I2C connected external EEPROM.

@@ -27,10 +27,10 @@
  */
 
 /**
- * Adapted to the STM32F4 HAL
+ * Adapted to a generic STM32Fx HAL
  */
 
-#ifdef STM32F4
+#ifdef STM32F1
 
 // --------------------------------------------------------------------------
 // Includes
@@ -57,7 +57,7 @@ static SPISettings spiConfig;
   // --------------------------------------------------------------------------
   // Software SPI
   // --------------------------------------------------------------------------
-  #error "Software SPI not supported for STM32F4. Use hardware SPI."
+  #error "Software SPI not supported for STM32F1. Use hardware SPI."
 
 #else
 

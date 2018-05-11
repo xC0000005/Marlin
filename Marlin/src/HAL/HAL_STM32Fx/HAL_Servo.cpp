@@ -4,6 +4,7 @@
  *
  * Based on Sprinter and grbl.
  * Copyright (C) 2011 Camiel Gubbels / Erik van der Zalm
+ * Copyright (C) 2017 Victor Perez
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -20,33 +21,33 @@
  *
  */
 
-#ifdef STM32F7
+#ifdef STM32Fx
 
 #include "../../inc/MarlinConfig.h"
 
-#if ENABLED(USE_WATCHDOG)
+#if HAS_SERVOS
 
-  #include "watchdog_STM32F7.h"
+#include "HAL_Servo.h"
 
-  IWDG_HandleTypeDef hiwdg;
+int8_t libServo::attach(const int pin) {
+  return Servo::attach(pin);
+}
 
-  void watchdog_init() {
-    hiwdg.Instance = IWDG;
-    hiwdg.Init.Prescaler = IWDG_PRESCALER_32; //32kHz LSI clock and 32x prescalar = 1024Hz IWDG clock
-    hiwdg.Init.Reload = 4095;           //4095 counts = 4 seconds at 1024Hz
-    if (HAL_IWDG_Init(&hiwdg) != HAL_OK) {
-      //Error_Handler();
-    }
+int8_t libServo::attach(const int pin, const int min, const int max) {
+  return Servo::attach(pin, min, max);
+}
+
+void libServo::move(const int value) {
+  constexpr uint16_t servo_delay[] = SERVO_DELAY;
+  static_assert(COUNT(servo_delay) == NUM_SERVOS, "SERVO_DELAY must be an array NUM_SERVOS long.");
+  if (this->attach(0) >= 0) {
+    this->write(value);
+    safe_delay(servo_delay[this->servoIndex]);
+    #if ENABLED(DEACTIVATE_SERVOS_AFTER_MOVE)
+      this->detach();
+    #endif
   }
+}
+#endif // HAS_SERVOS
 
-  void watchdog_reset() {
-    /* Refresh IWDG: reload counter */
-    if (HAL_IWDG_Refresh(&hiwdg) != HAL_OK) {
-      /* Refresh Error */
-      //Error_Handler();
-    }
-  }
-
-#endif // USE_WATCHDOG
-
-#endif // STM32F7
+#endif // STM32Fx
