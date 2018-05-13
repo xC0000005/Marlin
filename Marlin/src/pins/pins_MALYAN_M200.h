@@ -24,10 +24,6 @@
  * MALYAN M200 pin assignments
  */
 
-#ifndef __STM32F1__
-  #error "Oops! You must be compiling for STM32."
-#endif
-
 #define BOARD_NAME "MALYANM200"
 
 // Enable EEPROM Emulation for this board

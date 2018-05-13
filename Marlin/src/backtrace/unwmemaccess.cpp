@@ -51,6 +51,17 @@
 #define END_FLASH_ADDR    0x00020000
 #endif
 
+#ifdef STM32F0
+// For STM32F0
+//  SRAM  (0x20000000 - 0x20020000) (15b)
+//  FLASH (0x00000000 - 0x00080000) (512kb)
+//
+#define START_SRAM_ADDR   0x20000000
+#define END_SRAM_ADDR     0x20001000
+#define START_FLASH_ADDR  0x00000000
+#define END_FLASH_ADDR    0x00080000
+#endif
+
 #ifdef __STM32F1__
 // For STM32F103ZET6/STM32F103VET6
 //  SRAM  (0x20000000 - 0x20010000) (64kb)
@@ -144,4 +155,3 @@ bool UnwReadB(const uint32_t a, uint8_t *v) {
 }
 
 #endif
-

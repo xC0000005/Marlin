@@ -30,7 +30,7 @@
  * Adapted to a generic STM32Fx HAL
  */
 
-#ifdef STM32F1
+#ifdef STM32Fx
 
 // --------------------------------------------------------------------------
 // Includes
