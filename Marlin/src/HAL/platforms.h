@@ -14,12 +14,12 @@
 #elif defined(__STM32F1__) || defined(TARGET_STM32F1)
   #define HAL_PLATFORM HAL_STM32Fx
   #define STM32F1
+#elif defined(STM32F0)
+  #define HAL_PLATFORM HAL_STM32Fx
 #elif defined(STM32F4)
   #define HAL_PLATFORM HAL_STM32Fx
-  #define STM32F4
 #elif defined(STM32F7)
   #define HAL_PLATFORM HAL_STM32Fx
-  #define STM32F7
 #else
   #error "Unsupported Platform!"
 #endif
