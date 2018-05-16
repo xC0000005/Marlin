@@ -41,55 +41,56 @@
 #define STEP_TIMER_NUM 0  // index of timer to use for stepper
 #define TEMP_TIMER_NUM 1  // index of timer to use for temperature
 
-// TODO: Set all of these via calculation - the prescale seems to be the Clock Frequence divded by 1000.
+// TODO: Set all of these via calculation - the prescale seems to be the peripheral
+// Clock Frequence divded by 1000.
 
 #ifdef STM32F0
-#define HAL_TIMER_RATE         (HAL_RCC_GetSysClockFreq() / 2)  // frequency of timer peripherals
-#define STEPPER_TIMER_PRESCALE 24            // to match system clock
 
-#define STEP_TIMER_DEV TIM7
-#define STEP_TIMER_CALLBACK TIM7_IRQHandler
-#define STEP_TIMER_IRQ_NAME TIM7_IRQn
-#define ENABLE_STEP_TIMER() __HAL_RCC_TIM7_CLK_ENABLE()
+  #define HAL_TIMER_RATE         (HAL_RCC_GetSysClockFreq() / 2)  // frequency of timer peripherals
+  #define STEPPER_TIMER_PRESCALE 24            // to match system clock
 
-#define TEMP_TIMER_DEV TIM6
-#define TEMP_TIMER_CALLBACK TIM6_IRQHandler
-#define TEMP_TIMER_IRQ_NAME TIM6_IRQn
-#define ENABLE_TEMP_TIMER() __HAL_RCC_TIM6_CLK_ENABLE()
+  #define STEP_TIMER 7
+  #define TEMP_TIMER 6
 
+#elif defined STM32F1
+
+  #define HAL_TIMER_RATE         (HAL_RCC_GetPCLK2Freq())  // frequency of timer peripherals
+  #define STEPPER_TIMER_PRESCALE 36            // prescaler for setting stepper timer, 2Mhz. I
+
+  #define STEP_TIMER 4
+  #define TEMP_TIMER 3
+
+#elif defined STM32F4 || defined STM32F7
+
+  #define HAL_TIMER_RATE         (HAL_RCC_GetSysClockFreq() / 2)  // frequency of timer peripherals
+  #define STEPPER_TIMER_PRESCALE 54            // was 40,prescaler for setting stepper timer, 2Mhz
+
+  #define STEP_TIMER 5
+  #define TEMP_TIMER 7
+  
 #endif
 
-#ifdef STM32F1
+#define __ENABLE_STEP_TIMER(T) __HAL_RCC_TIM##T##_CLK_ENABLE()
+#define _ENABLE_TIMER(T) __ENABLE_STEP_TIMER(T)
+#define ENABLE_STEP_TIMER() _ENABLE_TIMER(STEP_TIMER)
+#define ENABLE_TEMP_TIMER() _ENABLE_TIMER(TEMP_TIMER)
 
-#define HAL_TIMER_RATE         (HAL_RCC_GetPCLK2Freq())  // frequency of timer peripherals
-#define STEPPER_TIMER_PRESCALE 36            // prescaler for setting stepper timer, 2Mhz. I
+#define __TIMER_DEV(X) TIM##X
+#define _TIMER_DEV(X) __TIMER_DEV(X)
+#define STEP_TIMER_DEV _TIMER_DEV(STEP_TIMER)
+#define TEMP_TIMER_DEV _TIMER_DEV(TEMP_TIMER)
 
-#define STEP_TIMER_DEV TIM4
-#define STEP_TIMER_CALLBACK TIM4_IRQHandler
-#define STEP_TIMER_IRQ_NAME TIM4_IRQn
-#define ENABLE_STEP_TIMER() __HAL_RCC_TIM4_CLK_ENABLE()
+#define __TIMER_CALLBACK(X) TIM##X##_IRQHandler
+#define _TIMER_CALLBACK(X) __TIMER_CALLBACK(X)
 
-#define TEMP_TIMER_DEV TIM3
-#define TEMP_TIMER_CALLBACK TIM3_IRQHandler
-#define TEMP_TIMER_IRQ_NAME TIM3_IRQn
-#define ENABLE_TEMP_TIMER() __HAL_RCC_TIM3_CLK_ENABLE()
-#endif
+#define STEP_TIMER_CALLBACK _TIMER_CALLBACK(STEP_TIMER)
+#define TEMP_TIMER_CALLBACK _TIMER_CALLBACK(TEMP_TIMER)
 
-#ifdef STM32F4 || #defined STM32F7
-#define HAL_TIMER_RATE         (HAL_RCC_GetSysClockFreq() / 2)  // frequency of timer peripherals
-#define STEPPER_TIMER_PRESCALE 54            // was 40,prescaler for setting stepper timer, 2Mhz
+#define __TIMER_IRQ_NAME(X) TIM##X##_IRQn
+#define _TIMER_IRQ_NAME(X) __TIMER_IRQ_NAME(X)
 
-#define STEP_TIMER_DEV TIM5
-#define STEP_TIMER_CALLBACK TIM5_IRQHandler
-#define STEP_TIMER_IRQ_NAME TIM5_IRQn
-#define ENABLE_STEP_TIMER() __HAL_RCC_TIM5_CLK_ENABLE()
-
-#define TEMP_TIMER_DEV TIM7
-#define TEMP_TIMER_CALLBACK TIM7_IRQHandler
-#define TEMP_TIMER_IRQ_NAME TIM7_IRQn
-#define ENABLE_TEMP_TIMER() __HAL_RCC_TIM3_CLK_ENABLE()
-
-#endif
+#define STEP_TIMER_IRQ_NAME _TIMER_IRQ_NAME(STEP_TIMER)
+#define TEMP_TIMER_IRQ_NAME _TIMER_IRQ_NAME(TEMP_TIMER)
 
 #define STEP_TIMER_PRIORITY 1
 #define TEMP_TIMER_PRIORITY 2
