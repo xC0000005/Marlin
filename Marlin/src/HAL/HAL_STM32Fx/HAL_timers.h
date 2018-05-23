@@ -60,14 +60,22 @@
   #define STEP_TIMER 4
   #define TEMP_TIMER 3
 
-#elif defined STM32F4 || defined STM32F7
+#elif defined STM32F4
+
+  #define HAL_TIMER_RATE         (HAL_RCC_GetPCLK2Freq())  // frequency of timer peripherals
+  #define STEPPER_TIMER_PRESCALE 54            // was 40,prescaler for setting stepper timer, 2Mhz
+
+  #define STEP_TIMER 4
+  #define TEMP_TIMER 5
+
+#elif defined STM32F7
 
   #define HAL_TIMER_RATE         (HAL_RCC_GetSysClockFreq() / 2)  // frequency of timer peripherals
   #define STEPPER_TIMER_PRESCALE 54            // was 40,prescaler for setting stepper timer, 2Mhz
 
   #define STEP_TIMER 5
   #define TEMP_TIMER 7
-  
+
 #endif
 
 #define __ENABLE_STEP_TIMER(T) __HAL_RCC_TIM##T##_CLK_ENABLE()
@@ -119,8 +127,8 @@
 
 extern void temp_isr_handler();
 extern void step_isr_handler();
-#define HAL_STEP_TIMER_ISR  void temp_isr_handler()
-#define HAL_TEMP_TIMER_ISR  void step_isr_handler()
+#define HAL_STEP_TIMER_ISR  void step_isr_handler()
+#define HAL_TEMP_TIMER_ISR  void temp_isr_handler()
 
 // --------------------------------------------------------------------------
 // Types
