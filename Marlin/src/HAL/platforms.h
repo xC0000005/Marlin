@@ -11,7 +11,7 @@
   #define HAL_PLATFORM HAL_TEENSY35_36
 #elif defined(TARGET_LPC1768)
   #define HAL_PLATFORM HAL_LPC1768
-#elif defined(__STM32F1__) || defined(TARGET_STM32F1)
+#elif defined(__STM32F1__) || defined(TARGET_STM32F1) || defined(STM32F1)
   #define HAL_PLATFORM HAL_STM32Fx
   #define STM32F1
 #elif defined(STM32F0)
