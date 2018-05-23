@@ -20,7 +20,7 @@
  *
  */
 
-#ifndef __STM32F1__
+#ifndef STM32F1
   #error "Oops!  Make sure you have an STM32F1 board selected from the 'Tools -> Boards' menu."
 #endif
 
