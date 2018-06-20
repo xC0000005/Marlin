@@ -28,15 +28,23 @@
 
   #include "watchdog.h"
 
-  IWDG_HandleTypeDef hiwdg;
+  IWDG_HandleTypeDef hiwdg
+  #ifdef WATCHDOG_ON_AT_BOOT
+    = { .Instance = IWDG }
+  #endif
+   ;
 
   void watchdog_init() {
-    hiwdg.Instance = IWDG;
-    hiwdg.Init.Prescaler = IWDG_PRESCALER_32; //32kHz LSI clock and 32x prescalar = 1024Hz IWDG clock
-    hiwdg.Init.Reload = 4095;           //4095 counts = 4 seconds at 1024Hz
-    if (HAL_IWDG_Init(&hiwdg) != HAL_OK) {
-      //Error_Handler();
-    }
+    #ifndef WATCHDOG_ON_AT_BOOT
+
+      hiwdg.Instance = IWDG;
+      hiwdg.Init.Prescaler = IWDG_PRESCALER_32; //32kHz LSI clock and 32x prescalar = 1024Hz IWDG clock
+      hiwdg.Init.Reload = 4095;           //4095 counts = 4 seconds at 1024Hz
+
+      if (HAL_IWDG_Init(&hiwdg) != HAL_OK) {
+        //Error_Handler();
+      }
+    #endif
   }
 
   void watchdog_reset() {
