@@ -114,7 +114,7 @@
  *
  * :[-1, 0, 1, 2, 3, 4, 5, 6, 7]
  */
-#define SERIAL_PORT_2 -1
+// #define SERIAL_PORT_2 -1
 
 /**
  * This setting determines the communication speed of the printer.
@@ -1621,7 +1621,7 @@
 // LCD for Malyan M200 printers.
 // This requires SDSUPPORT to be enabled
 //
-//#define MALYAN_LCD
+#define MALYAN_LCD
 
 //
 // CONTROLLER TYPE: I2C
