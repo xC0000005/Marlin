@@ -72,6 +72,9 @@
 // Track incoming command bytes from the LCD
 int inbound_count;
 
+// For sending print completion messages
+static bool last_printing_status = false;
+
 // Everything written needs the high bit set.
 void write_to_lcd_P(const char * const message) {
   char encoded_message[MAX_CURLY_COMMAND];
@@ -106,17 +109,11 @@ void write_to_lcd(const char * const message) {
 void process_lcd_c_command(const char* command) {
   switch (command[0]) {
     case 'T': {
-      // M104 S<temperature>
-      char cmd[20];
-      sprintf_P(cmd, PSTR("M104 S%s"), command + 1);
-      enqueue_and_echo_command_now(cmd);
+      thermalManager.setTargetHotend(atoi(command + 1), 0);
     } break;
 
     case 'P': {
-      // M140 S<temperature>
-      char cmd[20];
-      sprintf_P(cmd, PSTR("M140 S%s"), command + 1);
-      enqueue_and_echo_command_now(cmd);
+      thermalManager.setTargetBed(atoi(command + 1));
     } break;
 
     default:
@@ -135,8 +132,7 @@ void process_lcd_c_command(const char* command) {
 void process_lcd_eb_command(const char* command) {
   char elapsed_buffer[10];
   duration_t elapsed;
-  bool has_days;
-  uint8_t len;
+  
   switch (command[0]) {
     case '0': {
       elapsed = print_job_timer.duration();
@@ -227,6 +223,7 @@ void process_lcd_p_command(const char* command) {
   switch (command[0]) {
     case 'X':
       // cancel print
+      last_printing_status = false;
       write_to_lcd_P(PSTR("{SYS:CANCELING}"));
       card.stopSDPrint(
         #if SD_RESORT
@@ -266,9 +263,10 @@ void process_lcd_p_command(const char* command) {
       }
       else {
         char message_buffer[MAX_CURLY_COMMAND];
-        sprintf_P(message_buffer, PSTR("{PRINTFILE:%s}"), card.filename);
+        sprintf_P(message_buffer, PSTR("{PRINTFILE:%s}"), card.longFilename[0] ? card.longFilename : card.filename);
         write_to_lcd(message_buffer);
         write_to_lcd_P(PSTR("{SYS:BUILD}"));
+        last_printing_status = true;
         card.openAndPrintFile(card.filename);
       }
     } break; // default
@@ -318,7 +316,7 @@ void process_lcd_s_command(const char* command) {
       uint16_t file_count = card.get_num_Files();
       for (uint16_t i = 0; i < file_count; i++) {
         card.getfilename(i);
-        sprintf_P(message_buffer, card.filenameIsDir ? PSTR("{DIR:%s}") : PSTR("{FILE:%s}"), card.filename);
+        sprintf_P(message_buffer, card.filenameIsDir ? PSTR("{DIR:%s}") : PSTR("{FILE:%s}"), card.longFilename[0] ? card.longFilename : card.filename);
         write_to_lcd(message_buffer);
       }
 
@@ -411,14 +409,11 @@ void lcd_update() {
     }
   }
 
-  // If there's a print in progress, we need to emit the status as
-  // {TQ:<PERCENT>}
-  if (card.sdprinting) {
-    // We also need to send: T:-2538.0 E:0
-    // I have no idea what this means.
-    char message_buffer[10];
-    sprintf_P(message_buffer, PSTR("{TQ:%03i}"), card.percentDone());
-    write_to_lcd(message_buffer);
+  // If there was a print in progress, we need to emit the final
+  // print status as {TQ:100}.
+  if (last_printing_status && !card.sdprinting) {
+    last_printing_status = false;
+    write_to_lcd_P(PSTR("{TQ:100}"));
   }
 }
 
