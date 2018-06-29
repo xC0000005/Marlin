@@ -73,7 +73,8 @@
 int inbound_count;
 
 // For sending print completion messages
-static bool last_printing_status = false;
+bool last_printing_status = false;
+uint8_t last_percent_done = 100;
 
 // Everything written needs the high bit set.
 void write_to_lcd_P(const char * const message) {
@@ -132,7 +133,7 @@ void process_lcd_c_command(const char* command) {
 void process_lcd_eb_command(const char* command) {
   char elapsed_buffer[10];
   duration_t elapsed;
-  
+
   switch (command[0]) {
     case '0': {
       elapsed = print_job_timer.duration();
@@ -266,7 +267,6 @@ void process_lcd_p_command(const char* command) {
         sprintf_P(message_buffer, PSTR("{PRINTFILE:%s}"), card.longFilename[0] ? card.longFilename : card.filename);
         write_to_lcd(message_buffer);
         write_to_lcd_P(PSTR("{SYS:BUILD}"));
-        last_printing_status = true;
         card.openAndPrintFile(card.filename);
       }
     } break; // default
@@ -409,11 +409,28 @@ void lcd_update() {
     }
   }
 
-  // If there was a print in progress, we need to emit the final
-  // print status as {TQ:100}.
-  if (last_printing_status && !card.sdprinting) {
-    last_printing_status = false;
-    write_to_lcd_P(PSTR("{TQ:100}"));
+  // The way last printing status works is simple:
+  // The UI needs to see at least one TQ which is not 100%
+  // and then when the print is complete, one which is.
+  if (card.sdprinting) {
+      if (card.percentDone() != last_percent_done) {
+      char message_buffer[10];
+      last_percent_done = card.percentDone();
+      sprintf_P(message_buffer, PSTR("{TQ:%03i}"), last_percent_done);
+      write_to_lcd(message_buffer);
+
+      if (!last_printing_status) last_printing_status = true;
+    }
+  }
+  else {
+    // If there was a print in progress, we need to emit the final
+    // print status as {TQ:100}. Reset last percent done so a new print will
+    // issue a percent of 0.
+    if (last_printing_status) {
+      last_printing_status = false;
+      last_percent_done = 100;
+      write_to_lcd_P(PSTR("{TQ:100}"));
+    }
   }
 }
 
