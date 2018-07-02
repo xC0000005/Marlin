@@ -105,14 +105,21 @@ void write_to_lcd(const char * const message) {
  * {C:P050}
  * Set temp for bed to 50
  *
+ * {C:S09} set feedrate to 90 %.
+ * {C:S12} set feedrate to 120 %.
+ *
  * the command portion begins after the :
  */
 void process_lcd_c_command(const char* command) {
   switch (command[0]) {
+    case 'C': {
+      int raw_feedrate = atoi(command + 1);
+      feedrate_percentage = raw_feedrate * 10;
+      feedrate_percentage = constrain(feedrate_percentage, 10, 999);
+    } break;
     case 'T': {
       thermalManager.setTargetHotend(atoi(command + 1), 0);
     } break;
-
     case 'P': {
       thermalManager.setTargetBed(atoi(command + 1));
     } break;
