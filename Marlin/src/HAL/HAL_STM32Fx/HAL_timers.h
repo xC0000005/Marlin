@@ -58,7 +58,7 @@
   #define STEPPER_TIMER_PRESCALE 36            // prescaler for setting stepper timer, 2Mhz. I
 
   #define STEP_TIMER 4
-  #define TEMP_TIMER 3
+  #define TEMP_TIMER 2
 
 #elif defined STM32F4
 
