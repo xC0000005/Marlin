@@ -34,7 +34,7 @@
 #include <avr/interrupt.h>
 #include <avr/io.h>
 
-#include "../HAL_SPI.h"
+#include "../shared/HAL_SPI.h"
 #include "fastio_AVR.h"
 #include "watchdog_AVR.h"
 #include "math_AVR.h"
@@ -345,7 +345,8 @@ inline void HAL_adc_init(void) {
   #define HAL_START_ADC(pin) ADCSRB = 0; SET_ADMUX_ADCSRA(pin)
 #endif
 
-#define HAL_READ_ADC ADC
+#define HAL_READ_ADC()  ADC
+#define HAL_ADC_READY() !TEST(ADCSRA, ADSC)
 
 #define GET_PIN_MAP_PIN(index) index
 #define GET_PIN_MAP_INDEX(pin) pin

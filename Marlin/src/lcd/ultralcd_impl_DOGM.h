@@ -181,6 +181,9 @@
   // The MINIPanel display
     //U8GLIB_MINI12864 u8g(DOGLCD_CS, DOGLCD_A0);  // 8 stripes
     U8GLIB_MINI12864_2X u8g(DOGLCD_CS, DOGLCD_A0); // 4 stripes
+#elif ENABLED(U8GLIB_SH1106_EINSTART)
+  // Connected via motherboard header
+  U8GLIB_SH1106_128X64 u8g(DOGLCD_SCK, DOGLCD_MOSI, DOGLCD_CS, LCD_PINS_DC, LCD_PINS_RS);
 #else
   // for regular DOGM128 display with HW-SPI
     //U8GLIB_DOGM128 u8g(DOGLCD_CS, DOGLCD_A0);  // HW-SPI Com: CS, A0  // 8 stripes
@@ -298,9 +301,9 @@ static void lcd_implementation_init() {
 
   #if ENABLED(MKS_12864OLED) || ENABLED(MKS_12864OLED_SSD1306)
     SET_OUTPUT(LCD_PINS_DC);
-    OUT_WRITE(LCD_PINS_RS, LOW);
-    _delay_ms(500);
-    WRITE(LCD_PINS_RS, HIGH);
+    #if !defined(LCD_RESET_PIN)
+      #define LCD_RESET_PIN LCD_PINS_RS
+    #endif
   #endif
 
   #if PIN_EXISTS(LCD_RESET)
@@ -310,7 +313,7 @@ static void lcd_implementation_init() {
     _delay_ms(5); // delay to allow the display to initalize
   #endif
 
-  #if PIN_EXISTS(LCD_RESET) || ENABLED(MKS_12864OLED) || ENABLED(MKS_12864OLED_SSD1306)
+  #if PIN_EXISTS(LCD_RESET)
     u8g.begin();
   #endif
 
