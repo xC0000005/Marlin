@@ -37,7 +37,7 @@
   #include "../module/servo.h"
 #endif
 
-#if ENABLED(EXT_SOLENOID) && !ENABLED(PARKING_EXTRUDER)
+#if ENABLED(EXT_SOLENOID) && DISABLED(PARKING_EXTRUDER)
   #include "../feature/solenoid.h"
 #endif
 
@@ -355,11 +355,11 @@ void tool_change(const uint8_t tmp_extruder, const float fr_mm_s/*=0.0*/, bool n
   planner.synchronize();
 
   #if HAS_LEVELING
-      // Set current position to the physical position
-      const bool leveling_was_active = planner.leveling_active;
-      set_bed_leveling_enabled(false);
-   #endif
-  
+    // Set current position to the physical position
+    const bool leveling_was_active = planner.leveling_active;
+    set_bed_leveling_enabled(false);
+  #endif
+
   #if ENABLED(MIXING_EXTRUDER) && MIXING_VIRTUAL_TOOLS > 1
 
     mixing_tool_change(tmp_extruder);
@@ -415,12 +415,14 @@ void tool_change(const uint8_t tmp_extruder, const float fr_mm_s/*=0.0*/, bool n
           #endif
 
           const float xdiff = hotend_offset[X_AXIS][tmp_extruder] - hotend_offset[X_AXIS][active_extruder],
-                      ydiff = hotend_offset[Y_AXIS][tmp_extruder] - hotend_offset[Y_AXIS][active_extruder];
+                      ydiff = hotend_offset[Y_AXIS][tmp_extruder] - hotend_offset[Y_AXIS][active_extruder],
+                      zdiff = hotend_offset[Z_AXIS][tmp_extruder] - hotend_offset[Z_AXIS][active_extruder];
 
           #if ENABLED(DEBUG_LEVELING_FEATURE)
             if (DEBUGGING(LEVELING)) {
               SERIAL_ECHOPAIR("Offset Tool XY by { ", xdiff);
               SERIAL_ECHOPAIR(", ", ydiff);
+              SERIAL_ECHOPAIR(", ", zdiff);
               SERIAL_ECHOLNPGM(" }");
             }
           #endif
@@ -428,6 +430,7 @@ void tool_change(const uint8_t tmp_extruder, const float fr_mm_s/*=0.0*/, bool n
           // The newly-selected extruder XY is actually at...
           current_position[X_AXIS] += xdiff;
           current_position[Y_AXIS] += ydiff;
+          current_position[Z_AXIS] += zdiff;
 
           // Set the new active extruder
           active_extruder = tmp_extruder;
@@ -475,7 +478,7 @@ void tool_change(const uint8_t tmp_extruder, const float fr_mm_s/*=0.0*/, bool n
 
       planner.synchronize();
 
-      #if ENABLED(EXT_SOLENOID) && !ENABLED(PARKING_EXTRUDER)
+      #if ENABLED(EXT_SOLENOID) && DISABLED(PARKING_EXTRUDER)
         disable_all_solenoids();
         enable_solenoid_on_active_extruder();
       #endif
@@ -511,13 +514,12 @@ void tool_change(const uint8_t tmp_extruder, const float fr_mm_s/*=0.0*/, bool n
     #if HAS_FANMUX
       fanmux_switch(active_extruder);
     #endif
-  
+
     #if HAS_LEVELING
-          planner.synchronize();
-          // Restore leveling to re-establish the logical position
-          set_bed_leveling_enabled(leveling_was_active);
+      // Restore leveling to re-establish the logical position
+      set_bed_leveling_enabled(leveling_was_active);
     #endif
-  
+
     SERIAL_ECHO_START();
     SERIAL_ECHOLNPAIR(MSG_ACTIVE_EXTRUDER, (int)active_extruder);
 
