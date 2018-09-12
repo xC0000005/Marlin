@@ -132,8 +132,10 @@
   #include "pins_AZTEEG_X3_PRO.h"     // ATmega2560                                 env:megaatmega2560
 #elif MB(ULTIMAIN_2)
   #include "pins_ULTIMAIN_2.h"        // ATmega2560                                 env:megaatmega2560
-#elif MB(FORMBOT)
-  #include "pins_FORMBOT.h"           // ATmega2560                                 env:megaatmega2560
+#elif MB(FORMBOT_TREX2)
+  #include "pins_FORMBOT_TREX2.h"     // ATmega2560                                 env:megaatmega2560
+#elif MB(FORMBOT_TREX3)
+  #include "pins_FORMBOT_TREX3.h"     // ATmega2560                                 env:megaatmega2560
 #elif MB(RUMBA)
   #include "pins_RUMBA.h"             // ATmega2560                                 env:megaatmega2560
 #elif MB(BQ_ZUM_MEGA_3D)
@@ -374,11 +376,15 @@
   #include "pins_CHITU3D.h"           // STM32F1                                    env:STM32F1
 #elif MB(GTM32_PRO_VB)
   #include "pins_GTM32_PRO_VB.h"      // STM32F1                                    env:STM32F1
+#elif MB(MORPHEUS)
+  #include "pins_MORPHEUS.h"          // STM32F1                                    env:STM32F1
 
 //
 // STM32 ARM Cortex-M4F
 //
 
+#elif MB(TEENSY31_32)
+  #include "pins_TEENSY31_32.h"       // TEENSY31_32                                env:teensy31
 #elif MB(TEENSY35_36)
   #include "pins_TEENSY35_36.h"       // TEENSY35_36                                env:teensy35
 #elif MB(BEAST)
@@ -619,6 +625,10 @@
 
 #ifndef MAX_EXTRUDERS
   #define MAX_EXTRUDERS 5
+#endif
+
+#ifndef NUM_SERVO_PLUGS
+  #define NUM_SERVO_PLUGS 4
 #endif
 
 //

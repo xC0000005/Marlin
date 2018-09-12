@@ -124,7 +124,7 @@ uint8_t Stepper::last_direction_bits = 0,
 
 bool Stepper::abort_current_block;
 
-#if DISABLED(MIXING_EXTRUDER)
+#if DISABLED(MIXING_EXTRUDER) && EXTRUDERS > 1
   uint8_t Stepper::last_moved_extruder = 0xFF;
 #endif
 
@@ -159,8 +159,8 @@ uint32_t Stepper::advance_dividend[XYZE] = { 0 },
   int32_t Stepper::delta_error_m[MIXING_STEPPERS];
   uint32_t Stepper::advance_dividend_m[MIXING_STEPPERS],
            Stepper::advance_divisor_m;
-#else
-  int8_t Stepper::active_extruder;           // Active extruder
+#elif EXTRUDERS > 1
+  uint8_t Stepper::active_extruder;          // Active extruder
 #endif
 
 #if ENABLED(S_CURVE_ACCELERATION)
@@ -231,7 +231,7 @@ int8_t Stepper::count_direction[NUM_AXIS] = { 0, 0, 0, 0 };
   #define X_APPLY_DIR(v,ALWAYS) \
     if (extruder_duplication_enabled || ALWAYS) { \
       X_DIR_WRITE(v); \
-      X2_DIR_WRITE(v); \
+      X2_DIR_WRITE(bool(v)); \
     } \
     else { \
       if (movement_extruder()) X2_DIR_WRITE(v); else X_DIR_WRITE(v); \
@@ -1485,16 +1485,10 @@ uint32_t Stepper::stepper_block_phase_isr() {
 
         #if ENABLED(LIN_ADVANCE)
           if (LA_use_advance_lead) {
-            // Wake up eISR on first acceleration loop and fire ISR if final adv_rate is reached
-            if (step_events_completed == steps_per_isr || (LA_steps && LA_isr_rate != current_block->advance_speed)) {
-              nextAdvanceISR = 0;
-              LA_isr_rate = current_block->advance_speed;
-            }
+            // Fire ISR if final adv_rate is reached
+            if (LA_steps && LA_isr_rate != current_block->advance_speed) nextAdvanceISR = 0;
           }
-          else {
-            LA_isr_rate = LA_ADV_NEVER;
-            if (LA_steps) nextAdvanceISR = 0;
-          }
+          else if (LA_steps) nextAdvanceISR = 0;
         #endif // LIN_ADVANCE
       }
       // Are we in Deceleration phase ?
@@ -1536,17 +1530,13 @@ uint32_t Stepper::stepper_block_phase_isr() {
 
         #if ENABLED(LIN_ADVANCE)
           if (LA_use_advance_lead) {
-            if (step_events_completed <= decelerate_after + steps_per_isr ||
-               (LA_steps && LA_isr_rate != current_block->advance_speed)
-            ) {
-              nextAdvanceISR = 0; // Wake up eISR on first deceleration loop
+            // Wake up eISR on first deceleration loop and fire ISR if final adv_rate is reached
+            if (step_events_completed <= decelerate_after + steps_per_isr || (LA_steps && LA_isr_rate != current_block->advance_speed)) {
+              nextAdvanceISR = 0;
               LA_isr_rate = current_block->advance_speed;
             }
           }
-          else {
-            LA_isr_rate = LA_ADV_NEVER;
-            if (LA_steps) nextAdvanceISR = 0;
-          }
+          else if (LA_steps) nextAdvanceISR = 0;
         #endif // LIN_ADVANCE
       }
       // We must be in cruise phase otherwise
@@ -1712,7 +1702,7 @@ uint32_t Stepper::stepper_block_phase_isr() {
           advance_dividend_m[i] = current_block->mix_steps[i] << 1;
         }
         advance_divisor_m = e_steps << 1;
-      #else
+      #elif EXTRUDERS > 1
         active_extruder = current_block->active_extruder;
       #endif
 
@@ -1726,7 +1716,11 @@ uint32_t Stepper::stepper_block_phase_isr() {
         if ((LA_use_advance_lead = current_block->use_advance_lead)) {
           LA_final_adv_steps = current_block->final_adv_steps;
           LA_max_adv_steps = current_block->max_adv_steps;
+          //Start the ISR
+          nextAdvanceISR = 0;
+          LA_isr_rate = current_block->advance_speed;
         }
+        else LA_isr_rate = LA_ADV_NEVER;
       #endif
 
       if (current_block->direction_bits != last_direction_bits
@@ -1735,7 +1729,7 @@ uint32_t Stepper::stepper_block_phase_isr() {
         #endif
       ) {
         last_direction_bits = current_block->direction_bits;
-        #if DISABLED(MIXING_EXTRUDER)
+        #if DISABLED(MIXING_EXTRUDER) && EXTRUDERS > 1
           last_moved_extruder = active_extruder;
         #endif
         set_directions();

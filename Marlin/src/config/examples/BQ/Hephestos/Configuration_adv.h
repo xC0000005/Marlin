@@ -287,6 +287,13 @@
 
 //#define Z_LATE_ENABLE // Enable Z the last moment. Needed if your Z driver overheats.
 
+// Employ an external closed loop controller. Override pins here if needed.
+//#define EXTERNAL_CLOSED_LOOP_CONTROLLER
+#if ENABLED(EXTERNAL_CLOSED_LOOP_CONTROLLER)
+  //#define CLOSED_LOOP_ENABLE_PIN        -1
+  //#define CLOSED_LOOP_MOVE_COMPLETE_PIN -1
+#endif
+
 /**
  * Dual Steppers / Dual Endstops
  *
@@ -425,6 +432,7 @@
 
 #if ENABLED(ULTIPANEL)
   #define MANUAL_FEEDRATE {120*60, 120*60, 18*60, 60}  // Feedrates for manual moves along X, Y, Z, E from panel
+  #define MANUAL_E_MOVES_RELATIVE // Show LCD extruder moves as relative rather than absolute positions
   #define ULTIPANEL_FEEDMULTIPLY  // Comment to disable setting feedrate multiplier via encoder
 #endif
 
@@ -477,7 +485,7 @@
  *                         known compatible chips: AD5206
  *    DAC_MOTOR_CURRENT_DEFAULT - used by PRINTRBOARD_REVF & RIGIDBOARD_V2
  *                         known compatible chips: MCP4728
- *    DIGIPOT_I2C_MOTOR_CURRENTS - used by 5DPRINT, AZTEEG_X3_PRO, MIGHTYBOARD_REVE
+ *    DIGIPOT_I2C_MOTOR_CURRENTS - used by 5DPRINT, AZTEEG_X3_PRO, AZTEEG_X5_MINI_WIFI, MIGHTYBOARD_REVE
  *                         known compatible chips: MCP4451, MCP4018
  *
  *  Motor currents can also be set by M907 - M910 and by the LCD.

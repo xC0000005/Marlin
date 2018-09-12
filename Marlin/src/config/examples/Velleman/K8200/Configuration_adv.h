@@ -221,10 +221,20 @@
 // before setting a PWM value. (Does not work with software PWM for fan on Sanguinololu)
 #define FAN_KICKSTART_TIME 500
 
-// This defines the minimal speed for the main fan, run in PWM mode
-// to enable uncomment and set minimal PWM speed for reliable running (1-255)
-// if fan speed is [1 - (FAN_MIN_PWM-1)] it is set to FAN_MIN_PWM
-#define FAN_MIN_PWM 50
+/**
+ * PWM Fan Scaling
+ *
+ * Define the min/max speeds for PWM fans (as set with M106).
+ *
+ * With these options the M106 0-255 value range is scaled to a subset
+ * to ensure that the fan has enough power to spin, or to run lower
+ * current fans with higher current. (e.g., 5V/12V fans with 12V/24V)
+ * Value 0 always turns off the fan.
+ *
+ * Define one or both of these to override the default 0-255 range.
+ */
+//#define FAN_MIN_PWM 50
+//#define FAN_MAX_PWM 128
 
 // @section extruder
 
@@ -289,6 +299,13 @@
 // @section extras
 
 //#define Z_LATE_ENABLE // Enable Z the last moment. Needed if your Z driver overheats.
+
+// Employ an external closed loop controller. Override pins here if needed.
+//#define EXTERNAL_CLOSED_LOOP_CONTROLLER
+#if ENABLED(EXTERNAL_CLOSED_LOOP_CONTROLLER)
+  //#define CLOSED_LOOP_ENABLE_PIN        -1
+  //#define CLOSED_LOOP_MOVE_COMPLETE_PIN -1
+#endif
 
 /**
  * Dual Steppers / Dual Endstops
@@ -428,6 +445,7 @@
 
 #if ENABLED(ULTIPANEL)
   #define MANUAL_FEEDRATE {50*60, 50*60, 4*60, 60} // Feedrates for manual moves along X, Y, Z, E from panel
+  #define MANUAL_E_MOVES_RELATIVE // Show LCD extruder moves as relative rather than absolute positions
   #define ULTIPANEL_FEEDMULTIPLY  // Comment to disable setting feedrate multiplier via encoder
 #endif
 
@@ -480,7 +498,7 @@
  *                         known compatible chips: AD5206
  *    DAC_MOTOR_CURRENT_DEFAULT - used by PRINTRBOARD_REVF & RIGIDBOARD_V2
  *                         known compatible chips: MCP4728
- *    DIGIPOT_I2C_MOTOR_CURRENTS - used by 5DPRINT, AZTEEG_X3_PRO, MIGHTYBOARD_REVE
+ *    DIGIPOT_I2C_MOTOR_CURRENTS - used by 5DPRINT, AZTEEG_X3_PRO, AZTEEG_X5_MINI_WIFI, MIGHTYBOARD_REVE
  *                         known compatible chips: MCP4451, MCP4018
  *
  *  Motor currents can also be set by M907 - M910 and by the LCD.

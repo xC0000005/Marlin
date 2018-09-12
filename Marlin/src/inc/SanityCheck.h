@@ -558,6 +558,11 @@ static_assert(X_MAX_LENGTH >= X_BED_SIZE && Y_MAX_LENGTH >= Y_BED_SIZE,
   #endif
 #endif
 
+#if ENABLED(NOZZLE_PARK_FEATURE)
+  constexpr float npp[] = NOZZLE_PARK_POINT;
+  static_assert(COUNT(npp) == XYZ, "NOZZLE_PARK_POINT requires X, Y, and Z values.");
+#endif
+
 /**
  * Individual axis homing is useless for DELTAS
  */
@@ -607,14 +612,47 @@ static_assert(X_MAX_LENGTH >= X_BED_SIZE && Y_MAX_LENGTH >= Y_BED_SIZE,
     #error "SWITCHING_NOZZLE requires exactly 2 EXTRUDERS."
   #elif NUM_SERVOS < 1
     #error "SWITCHING_NOZZLE requires NUM_SERVOS >= 1."
+  #elif SWITCHING_NOZZLE_SERVO_NR == 0 && !PIN_EXISTS(SERVO0)
+    #error "SERVO0_PIN must be defined for your SWITCHING_NOZZLE."
+  #elif SWITCHING_NOZZLE_SERVO_NR == 1 && !PIN_EXISTS(SERVO1)
+    #error "SERVO1_PIN must be defined for your SWITCHING_NOZZLE."
+  #elif SWITCHING_NOZZLE_SERVO_NR == 2 && !PIN_EXISTS(SERVO2)
+    #error "SERVO2_PIN must be defined for your SWITCHING_NOZZLE."
+  #elif SWITCHING_NOZZLE_SERVO_NR == 3 && !PIN_EXISTS(SERVO3)
+    #error "SERVO3_PIN must be defined for your SWITCHING_NOZZLE."
   #endif
 #endif
 
 /**
  * Single Stepper Dual Extruder with switching servo
  */
-#if ENABLED(SWITCHING_EXTRUDER) && NUM_SERVOS < 1
-  #error "SWITCHING_EXTRUDER requires NUM_SERVOS >= 1."
+#if ENABLED(SWITCHING_EXTRUDER)
+  #if NUM_SERVOS < 1
+    #error "SWITCHING_EXTRUDER requires NUM_SERVOS >= 1."
+  #elif SWITCHING_EXTRUDER_SERVO_NR == 0 && !PIN_EXISTS(SERVO0)
+    #error "SERVO0_PIN must be defined for your SWITCHING_EXTRUDER."
+  #elif SWITCHING_EXTRUDER_SERVO_NR == 1 && !PIN_EXISTS(SERVO1)
+    #error "SERVO1_PIN must be defined for your SWITCHING_EXTRUDER."
+  #elif SWITCHING_EXTRUDER_SERVO_NR == 2 && !PIN_EXISTS(SERVO2)
+    #error "SERVO2_PIN must be defined for your SWITCHING_EXTRUDER."
+  #elif SWITCHING_EXTRUDER_SERVO_NR == 3 && !PIN_EXISTS(SERVO3)
+    #error "SERVO3_PIN must be defined for your SWITCHING_EXTRUDER."
+  #endif
+  #if EXTRUDERS > 3
+    #if NUM_SERVOS < 2
+      #error "SWITCHING_EXTRUDER with 4 extruders requires NUM_SERVOS >= 2."
+    #elif SWITCHING_EXTRUDER_E23_SERVO_NR == 0 && !PIN_EXISTS(SERVO0)
+      #error "SERVO0_PIN must be defined for your SWITCHING_EXTRUDER."
+    #elif SWITCHING_EXTRUDER_E23_SERVO_NR == 1 && !PIN_EXISTS(SERVO1)
+      #error "SERVO1_PIN must be defined for your SWITCHING_EXTRUDER."
+    #elif SWITCHING_EXTRUDER_E23_SERVO_NR == 2 && !PIN_EXISTS(SERVO2)
+      #error "SERVO2_PIN must be defined for your SWITCHING_EXTRUDER."
+    #elif SWITCHING_EXTRUDER_E23_SERVO_NR == 3 && !PIN_EXISTS(SERVO3)
+      #error "SERVO3_PIN must be defined for your SWITCHING_EXTRUDER."
+    #elif SWITCHING_EXTRUDER_E23_SERVO_NR == SWITCHING_EXTRUDER_SERVO_NR
+      #error "SWITCHING_EXTRUDER_E23_SERVO_NR should be a different extruder from SWITCHING_EXTRUDER_SERVO_NR."
+    #endif
+  #endif
 #endif
 
 /**
@@ -674,6 +712,37 @@ static_assert(X_MAX_LENGTH >= X_BED_SIZE && Y_MAX_LENGTH >= Y_BED_SIZE,
 #endif
 
 /**
+ * Switching Toolhead requirements
+ */
+#if ENABLED(SWITCHING_TOOLHEAD)
+  #if ENABLED(DUAL_X_CARRIAGE)
+    #error "SWITCHING_TOOLHEAD and DUAL_X_CARRIAGE are incompatible."
+  #elif ENABLED(SINGLENOZZLE)
+    #error "SWITCHING_TOOLHEAD and SINGLENOZZLE are incompatible."
+  #elif ENABLED(PARKING_EXTRUDER)
+    #error "SWITCHING_TOOLHEAD and PARKING_EXTRUDER are incompatible."
+  #elif !defined(SWITCHING_TOOLHEAD_SERVO_NR)
+    #error "SWITCHING_TOOLHEAD requires SWITCHING_TOOLHEAD_SERVO_NR."
+  #elif EXTRUDERS < 2
+    #error "SWITCHING_TOOLHEAD requires at least 2 EXTRUDERS."
+  #elif NUM_SERVOS < (SWITCHING_TOOLHEAD_SERVO_NR - 1)
+    #if SWITCHING_TOOLHEAD_SERVO_NR == 0
+      #error "A SWITCHING_TOOLHEAD_SERVO_NR of 0 requires NUM_SERVOS >= 1."
+    #elif SWITCHING_TOOLHEAD_SERVO_NR == 1
+      #error "A SWITCHING_TOOLHEAD_SERVO_NR of 1 requires NUM_SERVOS >= 2."
+    #elif SWITCHING_TOOLHEAD_SERVO_NR == 2
+      #error "A SWITCHING_TOOLHEAD_SERVO_NR of 2 requires NUM_SERVOS >= 3."
+    #elif SWITCHING_TOOLHEAD_SERVO_NR == 3
+      #error "A SWITCHING_TOOLHEAD_SERVO_NR of 3 requires NUM_SERVOS >= 4."
+    #endif
+  #elif !defined(SWITCHING_TOOLHEAD_SECURITY_RAISE)
+    #error "SWITCHING_TOOLHEAD requires SWITCHING_TOOLHEAD_SECURITY_RAISE."
+  #elif SWITCHING_TOOLHEAD_SECURITY_RAISE < 0
+    #error "SWITCHING_TOOLHEAD _SECURITY_RAISE must be 0 or higher."
+  #endif
+#endif
+
+/**
  * Part-Cooling Fan Multiplexer requirements
  */
 #if PIN_EXISTS(FANMUX1)
@@ -687,15 +756,15 @@ static_assert(X_MAX_LENGTH >= X_BED_SIZE && Y_MAX_LENGTH >= Y_BED_SIZE,
 /**
  * Limited number of servos
  */
-#if NUM_SERVOS > 4
-  #error "The maximum number of SERVOS in Marlin is 4."
+#if NUM_SERVOS > NUM_SERVO_PLUGS
+  #error "The selected board doesn't support enough servos for your configuration. Reduce NUM_SERVOS."
 #endif
 
 /**
  * Servo deactivation depends on servo endstops, switching nozzle, or switching extruder
  */
-#if ENABLED(DEACTIVATE_SERVOS_AFTER_MOVE) && !HAS_Z_SERVO_PROBE && !defined(SWITCHING_NOZZLE_SERVO_NR) && !defined(SWITCHING_EXTRUDER_SERVO_NR)
-  #error "Z_PROBE_SERVO_NR, switching nozzle, or switching extruder is required for DEACTIVATE_SERVOS_AFTER_MOVE."
+#if ENABLED(DEACTIVATE_SERVOS_AFTER_MOVE) && !HAS_Z_SERVO_PROBE && !defined(SWITCHING_NOZZLE_SERVO_NR) && !defined(SWITCHING_EXTRUDER_SERVO_NR) && !defined(SWITCHING_TOOLHEAD_SERVO_NR)
+  #error "Z_PROBE_SERVO_NR, switching nozzle, switching toolhead or switching extruder is required for DEACTIVATE_SERVOS_AFTER_MOVE."
 #endif
 
 /**
@@ -795,6 +864,14 @@ static_assert(X_MAX_LENGTH >= X_BED_SIZE && Y_MAX_LENGTH >= Y_BED_SIZE,
   #if HAS_Z_SERVO_PROBE
     #ifndef NUM_SERVOS
       #error "You must set NUM_SERVOS for a Z servo probe (Z_PROBE_SERVO_NR)."
+    #elif Z_PROBE_SERVO_NR == 0 && !PIN_EXISTS(SERVO0)
+      #error "SERVO0_PIN must be defined for your servo or BLTOUCH probe."
+    #elif Z_PROBE_SERVO_NR == 1 && !PIN_EXISTS(SERVO1)
+      #error "SERVO1_PIN must be defined for your servo or BLTOUCH probe."
+    #elif Z_PROBE_SERVO_NR == 2 && !PIN_EXISTS(SERVO2)
+      #error "SERVO2_PIN must be defined for your servo or BLTOUCH probe."
+    #elif Z_PROBE_SERVO_NR == 3 && !PIN_EXISTS(SERVO3)
+      #error "SERVO3_PIN must be defined for your servo or BLTOUCH probe."
     #elif Z_PROBE_SERVO_NR >= NUM_SERVOS
       #error "Z_PROBE_SERVO_NR must be smaller than NUM_SERVOS."
     #endif
@@ -1519,6 +1596,24 @@ static_assert(X_MAX_LENGTH >= X_BED_SIZE && Y_MAX_LENGTH >= Y_BED_SIZE,
   #error "select hardware UART for TMC2208 to use both TMC2208 and ENDSTOP_INTERRUPTS_FEATURE."
 #endif
 
+/**
+ * TMC2208 software UART is only supported on AVR
+ */
+#if HAS_DRIVER(TMC2208) && !defined(__AVR__) && !defined(TARGET_LPC1768) && !( \
+       defined(X_HARDWARE_SERIAL ) \
+    || defined(X2_HARDWARE_SERIAL) \
+    || defined(Y_HARDWARE_SERIAL ) \
+    || defined(Y2_HARDWARE_SERIAL) \
+    || defined(Z_HARDWARE_SERIAL ) \
+    || defined(Z2_HARDWARE_SERIAL) \
+    || defined(E0_HARDWARE_SERIAL) \
+    || defined(E1_HARDWARE_SERIAL) \
+    || defined(E2_HARDWARE_SERIAL) \
+    || defined(E3_HARDWARE_SERIAL) \
+    || defined(E4_HARDWARE_SERIAL) )
+  #error "TMC2208 Software Serial is supported only on AVR and LPC1768 platforms."
+#endif
+
 #if ENABLED(SENSORLESS_HOMING)
   // Require STEALTHCHOP for SENSORLESS_HOMING on DELTA as the transition from spreadCycle to stealthChop
   // is necessary in order to reset the stallGuard indication between the initial movement of all three
@@ -1625,6 +1720,10 @@ static_assert(COUNT(sanity_arr_3) <= XYZE_N, "DEFAULT_MAX_ACCELERATION has too m
 
 #if ENABLED(FAST_PWM_FAN) && !(defined(ARDUINO) && !defined(ARDUINO_ARCH_SAM))
   #error "FAST_PWM_FAN only supported by 8 bit CPUs."
+#endif
+
+#if ENABLED(PRINTCOUNTER) && DISABLED(EEPROM_SETTINGS)
+  #error "PRINTCOUNTER requires EEPROM_SETTINGS. Please update your Configuration."
 #endif
 
 #endif // _SANITYCHECK_H_
