@@ -170,7 +170,7 @@ void GcodeSuite::dwell(millis_t time) {
 // Placeholders for non-migrated codes
 //
 #if ENABLED(M100_FREE_MEMORY_WATCHER)
-  extern void M100_dump_routine(const char * const title, const char *start, const char *end);
+  extern void M100_dump_routine(PGM_P const title, const char *start, const char *end);
 #endif
 
 /**
@@ -261,6 +261,10 @@ void GcodeSuite::process_parsed_command(
           if (parser.subcode == 2 || parser.subcode == 3)
             G38(parser.subcode == 2);
           break;
+      #endif
+
+      #if ENABLED(GCODE_MOTION_MODES)
+        case 80: G80(); break;                                    // G80: Reset the current motion mode
       #endif
 
       case 90: relative_mode = false; break;                      // G90: Relative Mode
@@ -474,12 +478,18 @@ void GcodeSuite::process_parsed_command(
       #if ENABLED(FWRETRACT)
         case 207: M207(); break;                                  // M207: Set Retract Length, Feedrate, and Z lift
         case 208: M208(); break;                                  // M208: Set Recover (unretract) Additional Length and Feedrate
-        case 209:
-          if (MIN_AUTORETRACT <= MAX_AUTORETRACT) M209();         // M209: Turn Automatic Retract Detection on/off
-          break;
+        #if ENABLED(FWRETRACT_AUTORETRACT)
+          case 209:
+            if (MIN_AUTORETRACT <= MAX_AUTORETRACT) M209();       // M209: Turn Automatic Retract Detection on/off
+            break;
+        #endif
       #endif
 
       case 211: M211(); break;                                    // M211: Enable, Disable, and/or Report software endstops
+
+      #if ENABLED(SINGLENOZZLE)
+        case 217: M217(); break;                                  // M217: Set filament swap parameters
+      #endif
 
       #if HOTENDS > 1
         case 218: M218(); break;                                  // M218: Set a tool offset
@@ -539,8 +549,8 @@ void GcodeSuite::process_parsed_command(
         case 364: if (M364()) return; break;                      // M364: SCARA Psi pos3 (90 deg to Theta)
       #endif
 
-      #if ENABLED(EXT_SOLENOID)
-        case 380: M380(); break;                                  // M380: Activate solenoid on active extruder
+      #if ENABLED(EXT_SOLENOID) || ENABLED(MANUAL_SOLENOID_CONTROL)
+        case 380: M380(); break;                                  // M380: Activate solenoid on active (or specified) extruder
         case 381: M381(); break;                                  // M381: Disable all solenoids
       #endif
 
@@ -630,13 +640,15 @@ void GcodeSuite::process_parsed_command(
           case 122: M122(); break;
         #endif
         case 906: M906(); break;                                  // M906: Set motor current in milliamps using axis codes X, Y, Z, E
-        case 911: M911(); break;                                  // M911: Report TMC2130 prewarn triggered flags
-        case 912: M912(); break;                                  // M912: Clear TMC2130 prewarn triggered flags
+        #if ENABLED(MONITOR_DRIVER_STATUS)
+          case 911: M911(); break;                                // M911: Report TMC2130 prewarn triggered flags
+          case 912: M912(); break;                                // M912: Clear TMC2130 prewarn triggered flags
+        #endif
         #if ENABLED(HYBRID_THRESHOLD)
           case 913: M913(); break;                                // M913: Set HYBRID_THRESHOLD speed.
         #endif
-        #if ENABLED(SENSORLESS_HOMING)
-          case 914: M914(); break;                                // M914: Set SENSORLESS_HOMING sensitivity.
+        #if USE_SENSORLESS
+          case 914: M914(); break;                                // M914: Set StallGuard sensitivity.
         #endif
         #if ENABLED(TMC_Z_CALIBRATION)
           case 915: M915(); break;                                // M915: TMC Z axis calibration.
@@ -698,7 +710,7 @@ void GcodeSuite::process_next_command() {
     SERIAL_ECHOLN(current_command);
     #if ENABLED(M100_FREE_MEMORY_WATCHER)
       SERIAL_ECHOPAIR("slot:", cmd_queue_index_r);
-      M100_dump_routine("   Command Queue:", (const char*)command_queue, (const char*)(command_queue + sizeof(command_queue)));
+      M100_dump_routine(PSTR("   Command Queue:"), (const char*)command_queue, (const char*)(command_queue + sizeof(command_queue)));
     #endif
   }
 
@@ -712,14 +724,14 @@ void GcodeSuite::process_next_command() {
    * Run a series of commands, bypassing the command queue to allow
    * G-code "macros" to be called from within other G-code handlers.
    */
-  void GcodeSuite::process_subcommands_now_P(const char *pgcode) {
+  void GcodeSuite::process_subcommands_now_P(PGM_P pgcode) {
     // Save the parser state
     char * const saved_cmd = parser.command_ptr;
 
     // Process individual commands in string
     while (pgm_read_byte_near(pgcode)) {
       // Break up string at '\n' delimiters
-      const char *delim = strchr_P(pgcode, '\n');
+      PGM_P const delim = strchr_P(pgcode, '\n');
       size_t len = delim ? delim - pgcode : strlen_P(pgcode);
       char cmd[len + 1];
       strncpy_P(cmd, pgcode, len);

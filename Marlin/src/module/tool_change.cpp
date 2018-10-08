@@ -22,12 +22,26 @@
 
 #include "tool_change.h"
 
+#include "probe.h"
 #include "motion.h"
 #include "planner.h"
+#include "temperature.h"
 
 #include "../Marlin.h"
 
-#include "../inc/MarlinConfig.h"
+#if ENABLED(SINGLENOZZLE)
+  float singlenozzle_swap_length      = SINGLENOZZLE_SWAP_LENGTH;
+  int16_t singlenozzle_prime_speed    = SINGLENOZZLE_SWAP_PRIME_SPEED,
+          singlenozzle_retract_speed  = SINGLENOZZLE_SWAP_RETRACT_SPEED;
+  uint16_t singlenozzle_temp[EXTRUDERS];
+  #if FAN_COUNT > 0
+    uint8_t singlenozzle_fan_speed[EXTRUDERS];
+  #endif
+  #if ENABLED(SINGLENOZZLE_SWAP_PARK)
+    #include "../libs/point_t.h"
+    const point_t singlenozzle_change_point = SINGLENOZZLE_TOOLCHANGE_POSITION;
+  #endif
+#endif
 
 #if ENABLED(PARKING_EXTRUDER) && PARKING_EXTRUDER_SOLENOIDS_DELAY > 0
   #include "../gcode/gcode.h" // for dwell()
@@ -55,6 +69,10 @@
 
 #if HAS_FANMUX
   #include "../feature/fanmux.h"
+#endif
+
+#if ENABLED(ULTIPANEL)
+  #include "../lcd/ultralcd.h"
 #endif
 
 #if DO_SWITCH_EXTRUDER
@@ -109,7 +127,7 @@
     #endif
   }
 
-  inline void parking_extruder_tool_change(const uint8_t tmp_extruder, const float fr_mm_s/*=0.0*/, bool no_move/*=false*/) {
+  inline void parking_extruder_tool_change(const uint8_t tmp_extruder, bool no_move) {
     if (!no_move) {
 
       const float parkingposx[] = PARKING_EXTRUDER_PARKING_X,
@@ -498,11 +516,24 @@ void tool_change(const uint8_t tmp_extruder, const float fr_mm_s/*=0.0*/, bool n
             active_extruder = tmp_extruder;
             update_software_endstops(X_AXIS);
             active_extruder = !tmp_extruder;
+
+            // Don't move the new extruder out of bounds
+            if (!WITHIN(current_position[X_AXIS], soft_endstop_min[X_AXIS], soft_endstop_max[X_AXIS]))
+              no_move = true;
+
+          #else
+              // No software endstops? Use the configured limits
+              if (active_extruder == 0) {
+                if (!WITHIN(current_position[X_AXIS], X2_MIN_POS, X2_MAX_POS))
+                  no_move = true;
+              }
+              else if (!WITHIN(current_position[X_AXIS], X1_MIN_POS, X1_MAX_POS))
+                no_move = true;
           #endif
 
-          // Don't move the new extruder out of bounds
-          if (!WITHIN(current_position[X_AXIS], soft_endstop_min[X_AXIS], soft_endstop_max[X_AXIS]))
-            no_move = true;
+          #if ENABLED(ULTIPANEL)
+            lcd_return_to_status();
+          #endif
 
           if (!no_move) set_destination_from_current();
           dualx_tool_change(tmp_extruder, no_move); // Can modify no_move
@@ -569,6 +600,13 @@ void tool_change(const uint8_t tmp_extruder, const float fr_mm_s/*=0.0*/, bool n
           #if ENABLED(DEBUG_LEVELING_FEATURE)
             if (DEBUGGING(LEVELING)) DEBUG_POS("Move back", destination);
           #endif
+          #if ENABLED(DUAL_X_CARRIAGE)
+            // Dual x carriage does not properly apply these to current position due to command ordering
+            // So we apply the offsets for y and z to the destination here. X cannot have an offset in this mode
+            // as it is utilized for X2 home position.
+            destination[Y_AXIS] -= hotend_offset[Y_AXIS][active_extruder] - hotend_offset[Y_AXIS][tmp_extruder];
+            destination[Z_AXIS] -= hotend_offset[Z_AXIS][active_extruder] - hotend_offset[Z_AXIS][tmp_extruder];
+          #endif
           // Move back to the original (or tweaked) position
           do_blocking_move_to(destination[X_AXIS], destination[Y_AXIS], destination[Z_AXIS]);
           #if ENABLED(DUAL_X_CARRIAGE)
@@ -602,16 +640,89 @@ void tool_change(const uint8_t tmp_extruder, const float fr_mm_s/*=0.0*/, bool n
       UNUSED(no_move);
 
       #if ENABLED(MK2_MULTIPLEXER)
-        if (tmp_extruder >= E_STEPPERS)
-          return invalid_extruder_error(tmp_extruder);
-
+        if (tmp_extruder >= E_STEPPERS) return invalid_extruder_error(tmp_extruder);
         select_multiplexed_stepper(tmp_extruder);
       #endif
 
       #if EXTRUDERS > 1
-        // Set the new active extruder
-        active_extruder = tmp_extruder;
-      #endif
+
+        #if ENABLED(SINGLENOZZLE)
+
+          #if ENABLED(PREVENT_COLD_EXTRUSION)
+            if (!DEBUGGING(DRYRUN) && thermalManager.targetTooColdToExtrude(active_extruder)) {
+              SERIAL_ERROR_START();
+              SERIAL_ERRORLNPGM(MSG_HOTEND_TOO_COLD);
+              return;
+            }
+          #endif
+
+          #if FAN_COUNT > 0
+            singlenozzle_fan_speed[active_extruder] = fan_speed[0];
+            fan_speed[0] = singlenozzle_fan_speed[tmp_extruder];
+          #endif
+
+          set_destination_from_current();
+
+          current_position[Z_AXIS] += (
+            #if ENABLED(SINGLENOZZLE_SWAP_PARK)
+              singlenozzle_change_point.z
+            #else
+              SINGLENOZZLE_TOOLCHANGE_ZRAISE
+            #endif
+          );
+
+          planner.buffer_line(current_position, planner.max_feedrate_mm_s[Z_AXIS], active_extruder);
+
+          #if ENABLED(SINGLENOZZLE_SWAP_PARK)
+            current_position[X_AXIS] = singlenozzle_change_point.x;
+            current_position[Y_AXIS] = singlenozzle_change_point.y;
+            planner.buffer_line(current_position, planner.max_feedrate_mm_s[Y_AXIS], active_extruder);
+          #endif
+
+          if (singlenozzle_swap_length) {
+            #if ENABLED(ADVANCED_PAUSE_FEATURE)
+              do_pause_e_move(-singlenozzle_swap_length, MMM_TO_MMS(singlenozzle_retract_speed));
+            #else
+              current_position[E_AXIS] -= singlenozzle_swap_length / planner.e_factor[active_extruder];
+              planner.buffer_line(current_position, MMM_TO_MMS(singlenozzle_retract_speed), active_extruder);
+            #endif
+          }
+
+          singlenozzle_temp[active_extruder] = thermalManager.target_temperature[0];
+          if (singlenozzle_temp[tmp_extruder] && singlenozzle_temp[tmp_extruder] != singlenozzle_temp[active_extruder]) {
+            thermalManager.setTargetHotend(singlenozzle_temp[tmp_extruder], 0);
+            #if ENABLED(ULTRA_LCD)
+              thermalManager.set_heating_message(0);
+            #endif
+            (void)thermalManager.wait_for_hotend(0, false);  // Wait for heating or cooling
+          }
+
+          active_extruder = tmp_extruder;
+
+          if (singlenozzle_swap_length) {
+            #if ENABLED(ADVANCED_PAUSE_FEATURE)
+              do_pause_e_move(singlenozzle_swap_length, singlenozzle_prime_speed);
+            #else
+              current_position[E_AXIS] += singlenozzle_swap_length / planner.e_factor[tmp_extruder];
+              planner.buffer_line(current_position, singlenozzle_prime_speed, tmp_extruder);
+            #endif
+          }
+
+          #if ENABLED(SINGLENOZZLE_SWAP_PARK)
+            current_position[X_AXIS] = destination[X_AXIS];
+            current_position[Y_AXIS] = destination[Y_AXIS];
+            planner.buffer_line(current_position, planner.max_feedrate_mm_s[Y_AXIS], active_extruder);
+          #endif
+
+          do_blocking_move_to(destination[X_AXIS], destination[Y_AXIS], destination[Z_AXIS]);
+
+        #else // !SINGLENOZZLE
+
+          active_extruder = tmp_extruder;
+
+        #endif // !SINGLENOZZLE
+
+      #endif // EXTRUDERS > 1
 
     #endif // HOTENDS <= 1
 

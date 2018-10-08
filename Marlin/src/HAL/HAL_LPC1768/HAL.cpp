@@ -74,14 +74,14 @@ void HAL_adc_init(void) {
 // externals need to make the call to KILL compile
 #include "../../core/language.h"
 
-extern void kill(const char*);
-extern const char errormagic[];
+extern void kill(PGM_P);
 
 void HAL_adc_enable_channel(int ch) {
   pin_t pin = analogInputToDigitalPin(ch);
 
   if (pin == -1) {
-    SERIAL_PRINTF("%sINVALID ANALOG PORT:%d\n", errormagic, ch);
+    serial_error_start();
+    SERIAL_PRINTF("INVALID ANALOG PORT:%d\n", ch);
     kill(MSG_KILLED);
   }
 
