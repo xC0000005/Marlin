@@ -25,11 +25,12 @@
 
 #include "../inc/MarlinConfig.h"
 
-#if ENABLED(ULTRA_LCD) || ENABLED(MALYAN_LCD)
+#if ENABLED(ULTRA_LCD) || ENABLED(MALYAN_LCD) || ENABLED(EXTENSIBLE_UI)
   void lcd_init();
   bool lcd_detected();
   void lcd_update();
   void lcd_setalertstatusPGM(PGM_P message);
+  void kill_screen(PGM_P lcd_msg);
 #else
   inline void lcd_init() {}
   inline bool lcd_detected() { return true; }
@@ -86,9 +87,17 @@
     uint8_t get_ADC_keyValue();
   #endif
 
-  #if ENABLED(DOGLCD)
+  #if HAS_LCD_CONTRAST
     extern int16_t lcd_contrast;
     void set_lcd_contrast(const int16_t value);
+  #endif
+
+  #if ENABLED(DOGLCD)
+    #define SETCURSOR(col, row) lcd_moveto(col * (DOG_CHAR_WIDTH), (row + 1) * row_height)
+    #define SETCURSOR_RJ(len, row) lcd_moveto(LCD_PIXEL_WIDTH - len * (DOG_CHAR_WIDTH), (row + 1) * row_height)
+  #else
+    #define SETCURSOR(col, row) lcd_moveto(col, row)
+    #define SETCURSOR_RJ(len, row) lcd_moveto(LCD_WIDTH - len, row)
   #endif
 
   #if ENABLED(SHOW_BOOTSCREEN)
@@ -208,6 +217,15 @@
     void wait_for_release();
   #endif
 
+#elif ENABLED(EXTENSIBLE_UI)
+  // These functions are defined elsewhere
+  void lcd_setstatus(const char* const message, const bool persist=false);
+  void lcd_setstatusPGM(const char* const message, const int8_t level=0);
+  void lcd_status_printf_P(const uint8_t level, const char * const fmt, ...);
+  void lcd_reset_status();
+  void lcd_refresh();
+  void lcd_reset_alert_level();
+  bool lcd_hasstatus();
 #else // MALYAN_LCD or no LCD
 
   constexpr bool lcd_wait_for_move = false;
@@ -279,10 +297,5 @@
   void lcd_reselect_last_file();
 #endif
 
-#if ENABLED(ULTIPANEL) && ENABLED(SDSUPPORT)
-  extern bool abort_sd_printing;
-#else
-  constexpr bool abort_sd_printing = false;
-#endif
 
 #endif // ULTRALCD_H
