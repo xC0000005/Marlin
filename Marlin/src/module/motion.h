@@ -26,15 +26,21 @@
  * High-level motion commands to feed the planner
  * Some of these methods may migrate to the planner class.
  */
-
-#ifndef MOTION_H
-#define MOTION_H
+#pragma once
 
 #include "../inc/MarlinConfig.h"
 
 #if IS_SCARA
   #include "../module/scara.h"
 #endif
+
+// Axis homed and known-position states
+extern uint8_t axis_homed, axis_known_position;
+constexpr uint8_t xyz_bits = _BV(X_AXIS) | _BV(Y_AXIS) | _BV(Z_AXIS);
+FORCE_INLINE bool all_axes_homed() { return (axis_homed & xyz_bits) == xyz_bits; }
+FORCE_INLINE bool all_axes_known() { return (axis_known_position & xyz_bits) == xyz_bits; }
+FORCE_INLINE void set_all_unhomed() { axis_homed = 0; }
+FORCE_INLINE void set_all_unknown() { axis_known_position = 0; }
 
 // Error margin to work around float imprecision
 constexpr float slop = 0.0001;
@@ -89,8 +95,8 @@ extern int16_t feedrate_percentage;
 
 extern float soft_endstop_min[XYZ], soft_endstop_max[XYZ];
 
-FORCE_INLINE float pgm_read_any(const float *p) { return pgm_read_float_near(p); }
-FORCE_INLINE signed char pgm_read_any(const signed char *p) { return pgm_read_byte_near(p); }
+FORCE_INLINE float pgm_read_any(const float *p) { return pgm_read_float(p); }
+FORCE_INLINE signed char pgm_read_any(const signed char *p) { return pgm_read_byte(p); }
 
 #define XYZ_DEFS(type, array, CONFIG) \
   extern const type array##_P[XYZ]; \
@@ -108,7 +114,7 @@ XYZ_DEFS(signed char, home_dir, HOME_DIR);
   extern bool soft_endstops_enabled;
   void clamp_to_software_endstops(float target[XYZ]);
 #else
-  #define soft_endstops_enabled false
+  constexpr bool soft_endstops_enabled = false;
   #define clamp_to_software_endstops(x) NOOP
 #endif
 
@@ -196,6 +202,8 @@ void clean_up_after_endstop_or_probe_move();
 #endif
 
 void set_axis_is_at_home(const AxisEnum axis);
+
+void set_axis_is_not_at_home(const AxisEnum axis);
 
 void homeaxis(const AxisEnum axis);
 
@@ -357,5 +365,3 @@ void homeaxis(const AxisEnum axis);
 #if HAS_M206_COMMAND
   void set_home_offset(const AxisEnum axis, const float v);
 #endif
-
-#endif // MOTION_H

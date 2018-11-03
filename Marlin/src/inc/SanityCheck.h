@@ -19,15 +19,13 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
+#pragma once
 
 /**
  * SanityCheck.h
  *
  * Test configuration values for errors at compile-time.
  */
-
-#ifndef _SANITYCHECK_H_
-#define _SANITYCHECK_H_
 
 /**
  * Require gcc 4.7 or newer (first included with Arduino 1.6.8) for C++11 features.
@@ -458,7 +456,7 @@ static_assert(X_MAX_LENGTH >= X_BED_SIZE && Y_MAX_LENGTH >= Y_BED_SIZE,
  * LCD Info Screen Style
  */
 #if LCD_INFO_SCREEN_STYLE > 0
-  #if ENABLED(DOGLCD) || LCD_WIDTH < 20 || LCD_HEIGHT < 4
+  #if HAS_GRAPHICAL_LCD || LCD_WIDTH < 20 || LCD_HEIGHT < 4
     #error "Alternative LCD_INFO_SCREEN_STYLE requires 20x4 Character LCD."
   #elif LCD_INFO_SCREEN_STYLE > 1
     #error "LCD_INFO_SCREEN_STYLE only has options 0 and 1 at this time."
@@ -471,14 +469,14 @@ static_assert(X_MAX_LENGTH >= X_BED_SIZE && Y_MAX_LENGTH >= Y_BED_SIZE,
 #if ENABLED(LCD_PROGRESS_BAR)
   #if DISABLED(SDSUPPORT) && DISABLED(LCD_SET_PROGRESS_MANUALLY)
     #error "LCD_PROGRESS_BAR requires SDSUPPORT or LCD_SET_PROGRESS_MANUALLY."
-  #elif DISABLED(ULTRA_LCD)
+  #elif !HAS_CHARACTER_LCD
     #error "LCD_PROGRESS_BAR requires a character LCD."
-  #elif ENABLED(DOGLCD)
+  #elif HAS_GRAPHICAL_LCD
     #error "LCD_PROGRESS_BAR does not apply to graphical displays."
   #elif ENABLED(FILAMENT_LCD_DISPLAY)
     #error "LCD_PROGRESS_BAR and FILAMENT_LCD_DISPLAY are not fully compatible. Comment out this line to use both."
   #endif
-#elif ENABLED(LCD_SET_PROGRESS_MANUALLY) && DISABLED(DOGLCD)
+#elif ENABLED(LCD_SET_PROGRESS_MANUALLY) && !HAS_GRAPHICAL_LCD
   #error "LCD_SET_PROGRESS_MANUALLY requires LCD_PROGRESS_BAR or Graphical LCD."
 #endif
 
@@ -866,7 +864,7 @@ static_assert(X_MAX_LENGTH >= X_BED_SIZE && Y_MAX_LENGTH >= Y_BED_SIZE,
     #error "You probably want to use Max Endstops for DELTA!"
   #elif ENABLED(ENABLE_LEVELING_FADE_HEIGHT) && DISABLED(AUTO_BED_LEVELING_BILINEAR) && !UBL_SEGMENTED
     #error "ENABLE_LEVELING_FADE_HEIGHT on DELTA requires AUTO_BED_LEVELING_BILINEAR or AUTO_BED_LEVELING_UBL."
-  #elif ENABLED(DELTA_AUTO_CALIBRATION) && !(HAS_BED_PROBE || ENABLED(ULTIPANEL))
+  #elif ENABLED(DELTA_AUTO_CALIBRATION) && !(HAS_BED_PROBE || HAS_LCD_MENU)
     #error "DELTA_AUTO_CALIBRATION requires a probe or LCD Controller."
   #elif ABL_GRID
     #if (GRID_MAX_POINTS_X & 1) == 0 || (GRID_MAX_POINTS_Y & 1) == 0
@@ -891,7 +889,8 @@ static_assert(X_MAX_LENGTH >= X_BED_SIZE && Y_MAX_LENGTH >= Y_BED_SIZE,
   + ENABLED(BLTOUCH) \
   + ENABLED(SOLENOID_PROBE) \
   + ENABLED(Z_PROBE_ALLEN_KEY) \
-  + ENABLED(Z_PROBE_SLED)
+  + ENABLED(Z_PROBE_SLED) \
+  + ENABLED(RACK_AND_PINION_PROBE)
   #error "Please enable only one probe option: PROBE_MANUALLY, FIX_MOUNTED_PROBE, BLTOUCH, SOLENOID_PROBE, Z_PROBE_ALLEN_KEY, Z_PROBE_SLED, or Z Servo."
 #endif
 
@@ -932,6 +931,10 @@ static_assert(X_MAX_LENGTH >= X_BED_SIZE && Y_MAX_LENGTH >= Y_BED_SIZE,
     #elif Z_PROBE_SERVO_NR >= NUM_SERVOS
       #error "Z_PROBE_SERVO_NR must be smaller than NUM_SERVOS."
     #endif
+  #endif
+
+  #if ENABLED(RACK_AND_PINION_PROBE) && !(defined(Z_PROBE_DEPLOY_X) && defined(Z_PROBE_RETRACT_X))
+    #error "RACK_AND_PINION_PROBE requires Z_PROBE_DEPLOY_X and Z_PROBE_RETRACT_X."
   #endif
 
   /**
@@ -1701,33 +1704,68 @@ static_assert(X_MAX_LENGTH >= X_BED_SIZE && Y_MAX_LENGTH >= Y_BED_SIZE,
 /**
  * Check existing CS pins against enabled TMC SPI drivers.
  */
-#if AXIS_DRIVER_TYPE(X, TMC2130) && !PIN_EXISTS(X_CS)
-  #error "X_CS_PIN is required for TMC2130. Define X_CS_PIN in Configuration_adv.h."
-#elif AXIS_DRIVER_TYPE(X2, TMC2130) && !PIN_EXISTS(X2_CS)
-  #error "X2_CS_PIN is required for X2. Define X2_CS_PIN in Configuration_adv.h."
-#elif AXIS_DRIVER_TYPE(Y, TMC2130) && !PIN_EXISTS(Y_CS)
-  #error "Y_CS_PIN is required for TMC2130. Define Y_CS_PIN in Configuration_adv.h."
-#elif AXIS_DRIVER_TYPE(Y2, TMC2130) && !PIN_EXISTS(Y2_CS)
-  #error "Y2_CS_PIN is required for TMC2130. Define Y2_CS_PIN in Configuration_adv.h."
-#elif AXIS_DRIVER_TYPE(Z, TMC2130) && !PIN_EXISTS(Z_CS)
-  #error "Z_CS_PIN is required for TMC2130. Define Z_CS_PIN in Configuration_adv.h."
-#elif AXIS_DRIVER_TYPE(Z2, TMC2130) && !PIN_EXISTS(Z2_CS)
-  #error "Z2_CS_PIN is required for TMC2130. Define Z2_CS_PIN in Configuration_adv.h."
-#elif AXIS_DRIVER_TYPE(Z3, TMC2130) && !PIN_EXISTS(Z3_CS)
-  #error "Z3_CS_PIN is required for TMC2130. Define Z3_CS_PIN in Configuration_adv.h."
-#elif AXIS_DRIVER_TYPE(E0, TMC2130) && !PIN_EXISTS(E0_CS)
-  #error "E0_CS_PIN is required for TMC2130. Define E0_CS_PIN in Configuration_adv.h."
-#elif AXIS_DRIVER_TYPE(E1, TMC2130) && !PIN_EXISTS(E1_CS)
-  #error "E1_CS_PIN is required for TMC2130. Define E1_CS_PIN in Configuration_adv.h."
-#elif AXIS_DRIVER_TYPE(E2, TMC2130) && !PIN_EXISTS(E2_CS)
-  #error "E2_CS_PIN is required for TMC2130. Define E2_CS_PIN in Configuration_adv.h."
-#elif AXIS_DRIVER_TYPE(E3, TMC2130) && !PIN_EXISTS(E3_CS)
-  #error "E3_CS_PIN is required for TMC2130. Define E3_CS_PIN in Configuration_adv.h."
-#elif AXIS_DRIVER_TYPE(E4, TMC2130) && !PIN_EXISTS(E4_CS)
-  #error "E4_CS_PIN is required for TMC2130. Define E4_CS_PIN in Configuration_adv.h."
-#elif AXIS_DRIVER_TYPE(E5, TMC2130) && !PIN_EXISTS(E5_CS)
-  #error "E5_CS_PIN is required for TMC2130. Define E5_CS_PIN in Configuration_adv.h."
+#define INVALID_TMC2130(ST) (AXIS_DRIVER_TYPE(ST, TMC2130) && !PIN_EXISTS(ST##_CS))
+#if INVALID_TMC2130(X)
+  #error "TMC2130 on X requires X_CS_PIN."
+#elif INVALID_TMC2130(X2)
+  #error "TMC2130 on X2 requires X2_CS_PIN."
+#elif INVALID_TMC2130(Y)
+  #error "TMC2130 on Y requires Y_CS_PIN."
+#elif INVALID_TMC2130(Y2)
+  #error "TMC2130 on Y2 requires Y2_CS_PIN."
+#elif INVALID_TMC2130(Z)
+  #error "TMC2130 on Z requires Z_CS_PIN."
+#elif INVALID_TMC2130(Z2)
+  #error "TMC2130 on Z2 requires Z2_CS_PIN."
+#elif INVALID_TMC2130(Z3)
+  #error "TMC2130 on Z3 requires Z3_CS_PIN."
+#elif INVALID_TMC2130(E0)
+  #error "TMC2130 on E0 requires E0_CS_PIN."
+#elif INVALID_TMC2130(E1)
+  #error "TMC2130 on E1 requires E1_CS_PIN."
+#elif INVALID_TMC2130(E2)
+  #error "TMC2130 on E2 requires E2_CS_PIN."
+#elif INVALID_TMC2130(E3)
+  #error "TMC2130 on E3 requires E3_CS_PIN."
+#elif INVALID_TMC2130(E4)
+  #error "TMC2130 on E4 requires E4_CS_PIN."
+#elif INVALID_TMC2130(E5)
+  #error "TMC2130 on E5 requires E5_CS_PIN."
 #endif
+#undef INVALID_TMC2130
+
+/**
+ * Check existing RX/TX pins against enable TMC UART drivers.
+ */
+#define INVALID_TMC2208(ST) (AXIS_DRIVER_TYPE(ST, TMC2208) && !(defined(ST##_HARDWARE_SERIAL) || (PIN_EXISTS(ST##_SERIAL_RX) && PIN_EXISTS(ST##_SERIAL_TX))))
+#if INVALID_TMC2208(X)
+  #error "TMC2208 on X requires X_HARDWARE_SERIAL or X_SERIAL_(RX|TX)_PIN."
+#elif INVALID_TMC2208(X2)
+  #error "TMC2208 on X2 requires X2_HARDWARE_SERIAL or X2_SERIAL_(RX|TX)_PIN."
+#elif INVALID_TMC2208(Y)
+  #error "TMC2208 on Y requires Y_HARDWARE_SERIAL or Y_SERIAL_(RX|TX)_PIN."
+#elif INVALID_TMC2208(Y2)
+  #error "TMC2208 on Y2 requires Y2_HARDWARE_SERIAL or Y2_SERIAL_(RX|TX)_PIN."
+#elif INVALID_TMC2208(Z)
+  #error "TMC2208 on Z requires Z_HARDWARE_SERIAL or Z_SERIAL_(RX|TX)_PIN."
+#elif INVALID_TMC2208(Z2)
+  #error "TMC2208 on Z2 requires Z2_HARDWARE_SERIAL or Z2_SERIAL_(RX|TX)_PIN."
+#elif INVALID_TMC2208(Z3)
+  #error "TMC2208 on Z3 requires Z3_HARDWARE_SERIAL or Z3_SERIAL_(RX|TX)_PIN."
+#elif INVALID_TMC2208(E0)
+  #error "TMC2208 on E0 requires E0_HARDWARE_SERIAL or E0_SERIAL_(RX|TX)_PIN."
+#elif INVALID_TMC2208(E1)
+  #error "TMC2208 on E1 requires E1_HARDWARE_SERIAL or E1_SERIAL_(RX|TX)_PIN."
+#elif INVALID_TMC2208(E2)
+  #error "TMC2208 on E2 requires E2_HARDWARE_SERIAL or E2_SERIAL_(RX|TX)_PIN."
+#elif INVALID_TMC2208(E3)
+  #error "TMC2208 on E3 requires E3_HARDWARE_SERIAL or E3_SERIAL_(RX|TX)_PIN."
+#elif INVALID_TMC2208(E4)
+  #error "TMC2208 on E4 requires E4_HARDWARE_SERIAL or E4_SERIAL_(RX|TX)_PIN."
+#elif INVALID_TMC2208(E5)
+  #error "TMC2208 on E5 requires E5_HARDWARE_SERIAL or E5_SERIAL_(RX|TX)_PIN."
+#endif
+#undef INVALID_TMC2208
 
 /**
  * TMC2208 software UART and ENDSTOP_INTERRUPTS both use pin change interrupts (PCI)
@@ -1790,6 +1828,15 @@ static_assert(X_MAX_LENGTH >= X_BED_SIZE && Y_MAX_LENGTH >= Y_BED_SIZE,
   #elif ENDSTOP_NOISE_THRESHOLD
     #error "SENSORLESS_HOMING is incompatible with ENDSTOP_NOISE_THRESHOLD."
   #endif
+#endif
+
+// Sensorless homing/probing requirements
+#if ENABLED(SENSORLESS_HOMING) && !(X_SENSORLESS || Y_SENSORLESS || Z_SENSORLESS)
+  #error "SENSORLESS_HOMING requires a TMC stepper driver with StallGuard on X, Y, or Z axes."
+#elif ENABLED(SENSORLESS_PROBING) && ENABLED(DELTA) && !(X_SENSORLESS && Y_SENSORLESS && Z_SENSORLESS)
+  #error "SENSORLESS_PROBING for DELTA requires TMC stepper drivers with StallGuard on X, Y, and Z axes."
+#elif ENABLED(SENSORLESS_PROBING) && !Z_SENSORLESS
+  #error "SENSORLESS_PROBING requires a TMC stepper driver with StallGuard on Z."
 #endif
 
 // Sensorless homing is required for both combined steppers in an H-bot
@@ -1875,6 +1922,19 @@ static_assert(COUNT(sanity_arr_3) <= XYZE_N, "DEFAULT_MAX_ACCELERATION has too m
   #error "FAST_PWM_FAN only supported by 8 bit CPUs."
 #endif
 
+#if ENABLED(Z_STEPPER_AUTO_ALIGN)
+  #if !Z_MULTI_STEPPER_DRIVERS
+    #error "Z_STEPPER_AUTO_ALIGN requires Z_DUAL_STEPPER_DRIVERS or Z_TRIPLE_STEPPER_DRIVERS."
+  #elif !HAS_BED_PROBE
+    #error "Z_STEPPER_AUTO_ALIGN requires a Z-bed probe."
+  #endif
+  constexpr float sanity_arr_z_align_x[] = Z_STEPPER_ALIGN_X, sanity_arr_z_align_y[] = Z_STEPPER_ALIGN_Y;
+  static_assert(
+    COUNT(sanity_arr_z_align_x) == Z_STEPPER_COUNT && COUNT(sanity_arr_z_align_y) == Z_STEPPER_COUNT,
+    "Z_STEPPER_ALIGN_[XY]POS settings require one element per Z stepper."
+  );
+#endif
+
 #if ENABLED(PRINTCOUNTER) && DISABLED(EEPROM_SETTINGS)
   #error "PRINTCOUNTER requires EEPROM_SETTINGS. Please update your Configuration."
 #endif
@@ -1886,5 +1946,3 @@ static_assert(COUNT(sanity_arr_3) <= XYZE_N, "DEFAULT_MAX_ACCELERATION has too m
 #if ENABLED(SD_FIRMWARE_UPDATE) && !defined(__AVR_ATmega2560__)
   #error "SD_FIRMWARE_UPDATE requires an ATmega2560-based (Arduino Mega) board."
 #endif
-
-#endif // _SANITYCHECK_H_

@@ -19,6 +19,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
+#pragma once
 
 /**
  * Configuration_adv.h
@@ -30,8 +31,6 @@
  * Basic settings can be found in Configuration.h
  *
  */
-#ifndef CONFIGURATION_ADV_H
-#define CONFIGURATION_ADV_H
 #define CONFIGURATION_ADV_H_VERSION 020000
 
 // @section temperature
@@ -568,7 +567,7 @@
     //#define PROGRESS_MSG_ONCE           // Show the message for MSG_TIME then clear it
     //#define LCD_PROGRESS_BAR_TEST       // Add a menu item to test the progress bar
   #endif
-#endif // SDSUPPORT || LCD_SET_PROGRESS_MANUALLY
+#endif // HAS_PRINT_PROGRESS
 
 /**
  * LED Control Menu
@@ -717,6 +716,9 @@
     #define SD_FIRMWARE_UPDATE_INACTIVE_VALUE 0xFF
   #endif
 
+  // Add an optimized binary file transfer mode, initiated with 'M28 B1'
+  //#define FAST_FILE_TRANSFER
+
 #endif // SDSUPPORT
 
 /**
@@ -731,7 +733,7 @@
  * controller events, as there is a trade-off between reliable
  * printing performance versus fast display updates.
  */
-#if ENABLED(DOGLCD)
+#if HAS_GRAPHICAL_LCD
   // Show SD percentage next to the progress bar
   //#define DOGM_SD_PERCENT
 
@@ -1807,5 +1809,3 @@
 
 // Enable Marlin dev mode which adds some special commands
 //#define MARLIN_DEV_MODE
-
-#endif // CONFIGURATION_ADV_H

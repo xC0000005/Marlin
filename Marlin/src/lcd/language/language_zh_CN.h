@@ -30,8 +30,6 @@
 #ifndef LANGUAGE_ZH_CN_H
 #define LANGUAGE_ZH_CN_H
 
-//#define TALL_FONT_CORRECTION (1)
-
 #define CHARSIZE 3
 
 #define WELCOME_MSG                         MACHINE_NAME _UxGT("已就绪.")  //" ready."
@@ -229,7 +227,7 @@
 #define MSG_E6STEPS                         _UxGT("挤出机6步数/mm") //"E6steps/mm"
 #define MSG_TEMPERATURE                     _UxGT("温度")  //"Temperature"
 #define MSG_MOTION                          _UxGT("运动")  //"Motion"
-#define MSG_FILAMENT                        _UxGT("丝料测容")  //"Filament" lcd_control_volumetric_menu
+#define MSG_FILAMENT                        _UxGT("丝料测容")  //"Filament" menu_advanced_filament
 #define MSG_VOLUMETRIC_ENABLED              _UxGT("测容积mm³")  //"E in mm3" volumetric_enabled
 #define MSG_FILAMENT_DIAM                   _UxGT("丝料直径")  //"Fil. Dia."
 #define MSG_FILAMENT_UNLOAD                 _UxGT("卸载 mm") // "Unload mm"
@@ -270,7 +268,7 @@
 #define MSG_FILAMENTUNLOAD                  _UxGT("卸载丝料") // "Unload filament"
 #define MSG_FILAMENTUNLOAD_ALL              _UxGT("卸载全部") // "Unload All"
 #define MSG_INIT_SDCARD                     _UxGT("初始化存储卡")  //"Init. SD card"
-#define MSG_CNG_SDCARD                      _UxGT("更换存储卡")  //"Change SD card"
+#define MSG_CHANGE_SDCARD                   _UxGT("更换存储卡")  //"Change SD card"
 #define MSG_ZPROBE_OUT                      _UxGT("Z探针在热床之外")  //"Z probe out. bed" Z probe is not within the physical limits
 #define MSG_SKEW_FACTOR                     _UxGT("偏斜因数") // "Skew Factor"
 #define MSG_BLTOUCH                         _UxGT("BLTouch")     // "BLTouch"
