@@ -19,6 +19,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
+#pragma once
 
 /**
  * Simplified Chinese
@@ -27,8 +28,6 @@
  * See also http://marlinfw.org/docs/development/lcd_language.html
  *
  */
-#ifndef LANGUAGE_ZH_CN_H
-#define LANGUAGE_ZH_CN_H
 
 #define CHARSIZE 3
 
@@ -120,7 +119,7 @@
 #define MSG_UBL_OUTPUT_MAP_CSV              _UxGT("输出到CSV") // "Output for CSV"
 #define MSG_UBL_OUTPUT_MAP_BACKUP           _UxGT("输出到备份") // "Off Printer Backup"
 #define MSG_UBL_INFO_UBL                    _UxGT("输出UBL信息") // "Output UBL Info"
-#define MSG_UBL_EDIT_MESH_MENU              _UxGT("编辑网格") // "Edit Mesh"
+#define MSG_EDIT_MESH                       _UxGT("编辑网格") // "Edit Mesh"
 #define MSG_UBL_FILLIN_AMOUNT               _UxGT("填充合计") // "Fill-in Amount"
 #define MSG_UBL_MANUAL_FILLIN               _UxGT("手工填充") // "Manual Fill-in"
 #define MSG_UBL_SMART_FILLIN                _UxGT("聪明填充") // "Smart Fill-in"
@@ -325,7 +324,7 @@
 #define MSG_CASE_LIGHT                      _UxGT("外壳灯") // "Case light"
 #define MSG_CASE_LIGHT_BRIGHTNESS           _UxGT("灯亮度") // "Light BRIGHTNESS"
 
-#if LCD_WIDTH > 19
+#if LCD_WIDTH >= 20
   #define MSG_INFO_PRINT_COUNT              _UxGT("打印计数")  //"Print Count"
   #define MSG_INFO_COMPLETED_PRINTS         _UxGT("完成了")  //"Completed"
   #define MSG_INFO_PRINT_TIME               _UxGT("总打印时间")  //"Total print time"
@@ -384,5 +383,3 @@
   #define MSG_FILAMENT_CHANGE_PURGE_1       _UxGT("清除中 ...") // "Purging..."
   #define MSG_FILAMENT_CHANGE_RESUME_1      _UxGT("恢复中 ...")  //"Resuming..."
 #endif // LCD_HEIGHT < 4
-
-#endif // LANGUAGE_ZH_CN_H

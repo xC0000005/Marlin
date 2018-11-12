@@ -19,6 +19,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
+#pragma once
 
 /**
  * Spanish
@@ -27,8 +28,6 @@
  * See also http://marlinfw.org/docs/development/lcd_language.html
  *
  */
-#ifndef LANGUAGE_ES_UTF_H
-#define LANGUAGE_ES_UTF_H
 
 #define DISPLAY_CHARSET_ISO10646_1
 #define CHARSIZE 2
@@ -205,7 +204,7 @@
 #define MSG_INFO_PROTOCOL                   _UxGT("Protocolo")
 #define MSG_CASE_LIGHT                      _UxGT("Luz cabina")
 
-#if LCD_WIDTH > 19
+#if LCD_WIDTH >= 20
   #define MSG_INFO_PRINT_COUNT              _UxGT("Conteo de impresión")
   #define MSG_INFO_COMPLETED_PRINTS         _UxGT("Completadas")
   #define MSG_INFO_PRINT_TIME               _UxGT("Tiempo total de imp.")
@@ -262,5 +261,3 @@
 #define MSG_FILAMENT_CHANGE_HEAT_2          _UxGT("Calentar la boquilla")
 #define MSG_FILAMENT_CHANGE_HEATING_1       _UxGT("Calentando boquilla")
 #define MSG_FILAMENT_CHANGE_HEATING_2       _UxGT("Espere por favor")
-
-#endif // LANGUAGE_ES_UTF_H
