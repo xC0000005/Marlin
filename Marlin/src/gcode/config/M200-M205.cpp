@@ -34,7 +34,8 @@
    */
   void GcodeSuite::M200() {
 
-    if (get_target_extruder_from_command()) return;
+    const int8_t target_extruder = get_target_extruder_from_command();
+    if (target_extruder < 0) return;
 
     if (parser.seen('D')) {
       // setting any extruder filament size disables volumetric on the assumption that
@@ -55,11 +56,12 @@
  */
 void GcodeSuite::M201() {
 
-  GET_TARGET_EXTRUDER();
+  const int8_t target_extruder = get_target_extruder_from_command();
+  if (target_extruder < 0) return;
 
   LOOP_XYZE(i) {
     if (parser.seen(axis_codes[i])) {
-      const uint8_t a = i + (i == E_AXIS ? TARGET_EXTRUDER : 0);
+      const uint8_t a = (i == E_AXIS ? E_AXIS_N(target_extruder) : i);
       planner.settings.max_acceleration_mm_per_s2[a] = parser.value_axis_units((AxisEnum)a);
     }
   }
@@ -74,11 +76,12 @@ void GcodeSuite::M201() {
  */
 void GcodeSuite::M203() {
 
-  GET_TARGET_EXTRUDER();
+  const int8_t target_extruder = get_target_extruder_from_command();
+  if (target_extruder < 0) return;
 
   LOOP_XYZE(i)
     if (parser.seen(axis_codes[i])) {
-      const uint8_t a = i + (i == E_AXIS ? TARGET_EXTRUDER : 0);
+      const uint8_t a = (i == E_AXIS ? E_AXIS_N(target_extruder) : i);
       planner.settings.max_feedrate_mm_s[a] = parser.value_axis_units((AxisEnum)a);
     }
 }
@@ -144,10 +147,8 @@ void GcodeSuite::M205() {
           planner.recalculate_max_e_jerk();
         #endif
       }
-      else {
-        SERIAL_ERROR_START();
-        SERIAL_ERRORLNPGM("?J out of range (0.01 to 0.3)");
-      }
+      else
+        SERIAL_ERROR_MSG("?J out of range (0.01 to 0.3)");
     }
   #endif
   #if HAS_CLASSIC_JERK

@@ -204,7 +204,7 @@
   #define PARKING_EXTRUDER_SOLENOIDS_PINS_ACTIVE LOW  // LOW or HIGH pin signal energizes the coil
   #define PARKING_EXTRUDER_SOLENOIDS_DELAY 250        // Delay (ms) for magnetic field. No delay if 0 or not defined.
   #define PARKING_EXTRUDER_PARKING_X { -78, 184 }     // X positions for parking the extruders
-  #define PARKING_EXTRUDER_GRAB_DISTANCE 1            // mm to move beyond the parking point to grab the extruder
+  #define PARKING_EXTRUDER_GRAB_DISTANCE 1            // (mm) Distance to move beyond the parking point to grab the extruder
   //#define MANUAL_SOLENOID_CONTROL                   // Manual control of docking solenoids with M380 S / M381
 #endif
 
@@ -242,6 +242,9 @@
 // Offset of the extruders (uncomment if using more than one and relying on firmware to position when changing).
 // The offset has to be X=0, Y=0 for the extruder 0 hotend (default extruder).
 // For the other hotends it is their distance from the extruder 0 hotend.
+//#define HOTEND_OFFSET_X {0.0, 20.00} // (mm) relative X-offset for each nozzle
+//#define HOTEND_OFFSET_Y {0.0, 5.00}  // (mm) relative Y-offset for each nozzle
+//#define HOTEND_OFFSET_Z {0.0, 0.00}  // (mm) relative Z-offset for each nozzle
 
 #ifdef ROXYs_TRex
   #define HOTEND_OFFSET_X {0.0, 0.00}  // (mm) for each extruder, offset of the hotend on the X axis
@@ -399,10 +402,10 @@
 #define PID_MAX BANG_MAX // Limits current to nozzle while PID is active (see PID_FUNCTIONAL_RANGE below); 255=full current
 #define PID_K1 0.95      // Smoothing factor within any PID loop
 #if ENABLED(PIDTEMP)
-  #define PID_AUTOTUNE_MENU // Add PID Autotune to the LCD "Temperature" menu to run M303 and apply the result.
-  //#define PID_DEBUG // Sends debug data to the serial port.
-  //#define PID_OPENLOOP 1 // Puts PID in open loop. M104/M140 sets the output power from 0 to PID_MAX
-  //#define SLOW_PWM_HEATERS // PWM with very low frequency (roughly 0.125Hz=8s) and minimum state time of approximately 1s useful for heaters driven by a relay
+  #define PID_AUTOTUNE_MENU       // Add PID Autotune to the LCD "Temperature" menu to run M303 and apply the result.
+  //#define PID_DEBUG             // Sends debug data to the serial port.
+  //#define PID_OPENLOOP 1        // Puts PID in open loop. M104/M140 sets the output power from 0 to PID_MAX
+  //#define SLOW_PWM_HEATERS      // PWM with very low frequency (roughly 0.125Hz=8s) and minimum state time of approximately 1s useful for heaters driven by a relay
   //#define PID_PARAMS_PER_HOTEND // Uses separate PID parameters for each extruder (useful for mismatched extruders)
                                   // Set/get with gcode: M301 E[extruder number, 0-2]
   #define PID_FUNCTIONAL_RANGE 10 // If the temperature difference between the target temperature and the actual temperature
@@ -665,7 +668,6 @@
  * Override with M92
  *                                      X, Y, Z, E0 [, E1[, E2[, E3[, E4[, E5]]]]]
  */
-//#define DEFAULT_AXIS_STEPS_PER_UNIT   { 80, 160, 1600, 93 }
 #define DEFAULT_AXIS_STEPS_PER_UNIT   { 80, 80, 800, 93 }
 
 /**
@@ -673,7 +675,6 @@
  * Override with M203
  *                                      X, Y, Z, E0 [, E1[, E2[, E3[, E4[, E5]]]]]
  */
-//#define DEFAULT_MAX_FEEDRATE          { 250, 150, 5, 25 }
 #define DEFAULT_MAX_FEEDRATE          { 250, 100, 5, 25 }
 
 /**
@@ -692,11 +693,6 @@
  *   M204 R    Retract Acceleration
  *   M204 T    Travel Acceleration
  */
-
-//#define DEFAULT_ACCELERATION          3000    // X, Y, Z and E acceleration for printing moves
-//#define DEFAULT_RETRACT_ACCELERATION  3000    // E acceleration for retracts
-//#define DEFAULT_TRAVEL_ACCELERATION   3000    // X, Y, Z acceleration for travel (non printing) moves
-
 #define DEFAULT_ACCELERATION          1500    // X, Y, Z and E acceleration for printing moves
 #define DEFAULT_RETRACT_ACCELERATION  1500    // E acceleration for retracts
 #define DEFAULT_TRAVEL_ACCELERATION   1500    // X, Y, Z acceleration for travel (non printing) moves
@@ -709,11 +705,6 @@
  * When changing speed and direction, if the difference is less than the
  * value set here, it may happen instantaneously.
  */
-//#define DEFAULT_XJERK                 20.0
-//#define DEFAULT_YJERK                 10.0
-//#define DEFAULT_ZJERK                  0.4
-//#define DEFAULT_EJERK                  5.0
-
 #define DEFAULT_XJERK                 12.0   // More conservitive numbers.
 #define DEFAULT_YJERK                  8.0
 #define DEFAULT_ZJERK                  0.4
@@ -801,6 +792,7 @@
   //#define BLTOUCH_DELAY 375   // (ms) Enable and increase if needed
 #endif
 
+
 // A probe that is deployed and stowed with a solenoid pin (SOL1_PIN)
 //#define SOLENOID_PROBE
 
@@ -846,7 +838,7 @@
 #define MIN_PROBE_EDGE 0
 
 // X and Y axis travel speed (mm/m) between probes
-#define XY_PROBE_SPEED 7000
+#define XY_PROBE_SPEED 5000
 
 // Feedrate (mm/m) for the first approach when double-probing (MULTIPLE_PROBING == 2)
 #define Z_PROBE_SPEED_FAST HOMING_FEEDRATE_Z
@@ -876,7 +868,7 @@
 #define Z_CLEARANCE_DEPLOY_PROBE    7 // Z Clearance for Deploy/Stow
 #define Z_CLEARANCE_BETWEEN_PROBES  7 // Z Clearance between probe points
 #define Z_CLEARANCE_MULTI_PROBE     5 // Z Clearance between multiple probes
-#define Z_AFTER_PROBING             7 // Z position after probing is done
+#define Z_AFTER_PROBING            10 // Z position after probing is done
 
 #define Z_PROBE_LOW_POINT          -2 // Farthest distance below the trigger-point to go before stopping
 
@@ -970,11 +962,7 @@
 #define Z_MIN_POS 0
 #define X_MAX_POS 450
 #define Y_MAX_POS Y_BED_SIZE
-#if ENABLED(tallVersion)
-  #define Z_MAX_POS 700
-#else
-  #define Z_MAX_POS 500
-#endif
+#define Z_MAX_POS 700
 
 /**
  * Software Endstops
@@ -1110,7 +1098,7 @@
   #if ENABLED(G26_MESH_VALIDATION)
     #define MESH_TEST_NOZZLE_SIZE    0.4  // (mm) Diameter of primary nozzle.
     #define MESH_TEST_LAYER_HEIGHT   0.2  // (mm) Default layer height for the G26 Mesh Validation Tool.
-    #define MESH_TEST_HOTEND_TEMP  205.0  // (°C) Default nozzle temperature for the G26 Mesh Validation Tool.
+    #define MESH_TEST_HOTEND_TEMP  208.0  // (°C) Default nozzle temperature for the G26 Mesh Validation Tool.
     #define MESH_TEST_BED_TEMP      60.0  // (°C) Default bed temperature for the G26 Mesh Validation Tool.
   #endif
 
@@ -1249,8 +1237,8 @@
 #define Z_SAFE_HOMING
 
 #if ENABLED(Z_SAFE_HOMING)
-  #define Z_SAFE_HOMING_X_POINT ((X_BED_SIZE) / 2)    // X point for Z homing when homing all axes (G28).
-  #define Z_SAFE_HOMING_Y_POINT ((Y_BED_SIZE) / 2)    // Y point for Z homing when homing all axes (G28).
+  #define Z_SAFE_HOMING_X_POINT (((X_BED_SIZE) / 2) - 15)   // X point for Z homing when homing all axes (G28).
+  #define Z_SAFE_HOMING_Y_POINT (((Y_BED_SIZE) / 2) - 15)   // Y point for Z homing when homing all axes (G28).
 #endif
 
 // Homing speeds (mm/m)
@@ -1484,7 +1472,7 @@
  *
  * View the current statistics with M78.
  */
-#define PRINTCOUNTER
+//#define PRINTCOUNTER
 
 //=============================================================================
 //============================= LCD and SD support ============================

@@ -23,6 +23,12 @@
 
 #include "../inc/MarlinConfig.h"
 
+#if HAS_BUZZER
+  #include "../libs/buzzer.h"
+#endif
+
+#define HAS_ENCODER_ACTION (HAS_LCD_MENU || ENABLED(ULTIPANEL_FEEDMULTIPLY))
+
 #if HAS_SPI_LCD
 
   #include "../Marlin.h"
@@ -32,176 +38,6 @@
     #include "../module/motion.h" // for active_extruder
   #endif
 
-#endif
-
-#if HAS_BUZZER
-  #include "../libs/buzzer.h"
-#endif
-
-#if HAS_GRAPHICAL_LCD
-
-  #ifndef LCD_PIXEL_WIDTH
-    #define LCD_PIXEL_WIDTH 128
-  #endif
-  #ifndef LCD_PIXEL_HEIGHT
-    #define LCD_PIXEL_HEIGHT 64
-  #endif
-
-  // LCD selection
-  #if ENABLED(REPRAPWORLD_GRAPHICAL_LCD)
-    #define U8G_CLASS U8GLIB_ST7920_128X64_4X
-    #if DISABLED(SDSUPPORT) && (LCD_PINS_D4 == SCK_PIN) && (LCD_PINS_ENABLE == MOSI_PIN)
-      #define U8G_PARAM LCD_PINS_RS
-    #else
-      #define U8G_PARAM LCD_PINS_D4, LCD_PINS_ENABLE, LCD_PINS_RS
-    #endif
-
-  #elif ENABLED(U8GLIB_ST7920)
-    // RepRap Discount Full Graphics Smart Controller
-    #if DISABLED(SDSUPPORT) && (LCD_PINS_D4 == SCK_PIN) && (LCD_PINS_ENABLE == MOSI_PIN)
-      #define U8G_CLASS U8GLIB_ST7920_128X64_4X_HAL
-      #define U8G_PARAM LCD_PINS_RS // 2 stripes, HW SPI (shared with SD card, on AVR does not use standard LCD adapter)
-    #else
-      //#define U8G_CLASS U8GLIB_ST7920_128X64_4X
-      //#define U8G_PARAM LCD_PINS_D4, LCD_PINS_ENABLE, LCD_PINS_RS     // Original u8glib device. 2 stripes, SW SPI
-      #define U8G_CLASS U8GLIB_ST7920_128X64_RRD
-      #define U8G_PARAM LCD_PINS_D4, LCD_PINS_ENABLE, LCD_PINS_RS       // Number of stripes can be adjusted in ultralcd_st7920_u8glib_rrd.h with PAGE_HEIGHT
-                                                                        // AVR version ignores these pin settings
-                                                                        // HAL version uses these pin settings
-    #endif
-
-  #elif ENABLED(CARTESIO_UI)
-    // The CartesioUI display
-    //#define U8G_CLASS U8GLIB_DOGM128_2X
-    //#define U8G_PARAM DOGLCD_SCK, DOGLCD_MOSI, DOGLCD_CS, DOGLCD_A0   // 4 stripes
-    #define U8G_CLASS U8GLIB_DOGM128_2X
-    #define U8G_PARAM DOGLCD_CS, DOGLCD_A0                              // 4 stripes
-
-  #elif ENABLED(U8GLIB_LM6059_AF)
-    // Based on the Adafruit ST7565 (http://www.adafruit.com/products/250)
-    //#define U8G_CLASS U8GLIB_LM6059
-    //#define U8G_PARAM DOGLCD_CS, DOGLCD_A0                            // 8 stripes
-    #define U8G_CLASS U8GLIB_LM6059_2X
-    #define U8G_PARAM DOGLCD_CS, DOGLCD_A0                              // 4 stripes
-
-  #elif ENABLED(U8GLIB_ST7565_64128N)
-    // The MaKrPanel, Mini Viki, Viki 2.0 & AZSMZ 12864 ST7565 controller
-    #define SMART_RAMPS (MB(RAMPS_SMART_EFB) || MB(RAMPS_SMART_EEB) || MB(RAMPS_SMART_EFF) || MB(RAMPS_SMART_EEF) || MB(RAMPS_SMART_SF))
-    #if DOGLCD_SCK == SCK_PIN && DOGLCD_MOSI == MOSI_PIN && !SMART_RAMPS
-      #define U8G_CLASS U8GLIB_64128N_2X_HAL
-      #define U8G_PARAM DOGLCD_CS, DOGLCD_A0                            // using HW-SPI
-    #else
-      #define U8G_CLASS U8GLIB_64128N_2X_HAL
-      #define U8G_PARAM DOGLCD_SCK, DOGLCD_MOSI, DOGLCD_CS, DOGLCD_A0   // using SW-SPI
-    #endif
-
-  #elif ENABLED(MKS_12864OLED_SSD1306)
-    // MKS 128x64 (SSD1306) OLED I2C LCD
-    #define U8G_CLASS U8GLIB_SSD1306_128X64
-    #define U8G_PARAM DOGLCD_SCK, DOGLCD_MOSI, DOGLCD_CS, DOGLCD_A0     // 8 stripes
-    //#define U8G_CLASS U8GLIB_SSD1306_128X64_2X
-    //#define U8G_PARAM DOGLCD_SCK, DOGLCD_MOSI, DOGLCD_CS, DOGLCD_A0   // 4 stripes
-
-  #elif ENABLED(U8GLIB_SSD1306)
-    // Generic support for SSD1306 OLED I2C LCDs
-    //#define U8G_CLASS U8GLIB_SSD1306_128X64_2X_I2C_2_WIRE
-    //#define U8G_PARAM (U8G_I2C_OPT_NONE | U8G_I2C_OPT_FAST)           // 4 stripes
-    #define U8G_CLASS U8GLIB_SSD1306_128X64_2X
-    #define U8G_PARAM (U8G_I2C_OPT_NONE | U8G_I2C_OPT_FAST)             // 4 stripes
-
-  #elif ENABLED(MKS_12864OLED)
-    // MKS 128x64 (SH1106) OLED I2C LCD
-    #define U8G_CLASS U8GLIB_SH1106_128X64
-    #define U8G_PARAM DOGLCD_SCK, DOGLCD_MOSI, DOGLCD_CS, DOGLCD_A0     // 8 stripes
-    //#define U8G_CLASS U8GLIB_SH1106_128X64_2X
-    //#define U8G_PARAM DOGLCD_SCK, DOGLCD_MOSI, DOGLCD_CS, DOGLCD_A0   // 4 stripes
-  #elif ENABLED(U8GLIB_SH1106)
-    // Generic support for SH1106 OLED I2C LCDs
-    //#define U8G_CLASS U8GLIB_SH1106_128X64_2X_I2C_2_WIRE
-    //#define U8G_PARAM (U8G_I2C_OPT_NONE | U8G_I2C_OPT_FAST)           // 4 stripes
-    #define U8G_CLASS U8GLIB_SH1106_128X64_2X
-    #define U8G_PARAM (U8G_I2C_OPT_NONE | U8G_I2C_OPT_FAST)             // 4 stripes
-  #elif ENABLED(U8GLIB_SSD1309)
-    // Generic support for SSD1309 OLED I2C LCDs
-    #define U8G_CLASS U8GLIB_SSD1309_128X64
-    #define U8G_PARAM (U8G_I2C_OPT_NONE | U8G_I2C_OPT_FAST)
-  #elif ENABLED(MINIPANEL)
-    // The MINIPanel display
-    //#define U8G_CLASS U8GLIB_MINI12864
-    //#define U8G_PARAM DOGLCD_CS, DOGLCD_A0                            // 8 stripes
-    #define U8G_CLASS U8GLIB_MINI12864_2X
-    #define U8G_PARAM DOGLCD_CS, DOGLCD_A0                              // 4 stripes
-  #elif ENABLED(U8GLIB_SH1106_EINSTART)
-    // Connected via motherboard header
-    #define U8G_CLASS U8GLIB_SH1106_128X64
-    #define U8G_PARAM DOGLCD_SCK, DOGLCD_MOSI, DOGLCD_CS, LCD_PINS_DC, LCD_PINS_RS
-  #else
-    // for regular DOGM128 display with HW-SPI
-    //#define U8G_CLASS U8GLIB_DOGM128
-    //#define U8G_PARAM DOGLCD_CS, DOGLCD_A0                            // HW-SPI Com: CS, A0  // 8 stripes
-    #define U8G_CLASS U8GLIB_DOGM128_2X
-    #define U8G_PARAM DOGLCD_CS, DOGLCD_A0                              // HW-SPI Com: CS, A0 // 4 stripes
-  #endif
-
-  #include <U8glib.h>
-  #include "dogm/HAL_LCD_class_defines.h"
-  extern U8G_CLASS u8g;
-
-  // For selective rendering within a Y range
-  #define PAGE_UNDER(yb) (u8g.getU8g()->current_page.y0 <= (yb))
-  #define PAGE_CONTAINS(ya, yb) (PAGE_UNDER(yb) && u8g.getU8g()->current_page.y1 >= (ya))
-
-  // Only Western languages support big / small fonts
-  #if DISABLED(DISPLAY_CHARSET_ISO10646_1)
-    #undef USE_BIG_EDIT_FONT
-    #undef USE_SMALL_INFOFONT
-  #endif
-
-  #define MENU_FONT_NAME    ISO10646_1_5x7
-  #define MENU_FONT_WIDTH    6
-  #define MENU_FONT_ASCENT  10
-  #define MENU_FONT_DESCENT  2
-  #define MENU_FONT_HEIGHT  (MENU_FONT_ASCENT + MENU_FONT_DESCENT)
-
-  #if ENABLED(USE_BIG_EDIT_FONT)
-    #define EDIT_FONT_NAME    u8g_font_9x18
-    #define EDIT_FONT_WIDTH    9
-    #define EDIT_FONT_ASCENT  10
-    #define EDIT_FONT_DESCENT  3
-  #else
-    #define EDIT_FONT_NAME    MENU_FONT_NAME
-    #define EDIT_FONT_WIDTH   MENU_FONT_WIDTH
-    #define EDIT_FONT_ASCENT  MENU_FONT_ASCENT
-    #define EDIT_FONT_DESCENT MENU_FONT_DESCENT
-  #endif
-  #define EDIT_FONT_HEIGHT (EDIT_FONT_ASCENT + EDIT_FONT_DESCENT)
-
-  // Get the Ascent, Descent, and total Height for the Info Screen font
-  #if ENABLED(USE_SMALL_INFOFONT)
-    extern const u8g_fntpgm_uint8_t u8g_font_6x9[];
-    #define INFO_FONT_ASCENT 7
-  #else
-    #define INFO_FONT_ASCENT 8
-  #endif
-  #define INFO_FONT_DESCENT 2
-  #define INFO_FONT_HEIGHT (INFO_FONT_ASCENT + INFO_FONT_DESCENT)
-
-  enum MarlinFont : uint8_t {
-    FONT_STATUSMENU = 1,
-    FONT_EDIT,
-    FONT_MENU
-  };
-
-  #if ENABLED(LIGHTWEIGHT_UI)
-    void lcd_in_status(const bool inStatus);
-  #endif
-
-#endif // HAS_GRAPHICAL_LCD
-
-#define HAS_ENCODER_ACTION (HAS_LCD_MENU || ENABLED(ULTIPANEL_FEEDMULTIPLY))
-
-#if HAS_SPI_LCD
-
   enum LCDViewAction : uint8_t {
     LCDVIEW_NONE,
     LCDVIEW_REDRAW_NOW,
@@ -210,7 +46,7 @@
     LCDVIEW_CALL_NO_REDRAW
   };
 
-  #if ENABLED(ADC_KEYPAD)
+  #if HAS_ADC_BUTTONS
     uint8_t get_ADC_keyValue();
   #endif
 
@@ -223,10 +59,12 @@
   #endif
 
   #define LCD_UPDATE_INTERVAL 100
-  #define BUTTON_EXISTS(BN) (defined(BTN_## BN) && BTN_## BN >= 0)
-  #define BUTTON_PRESSED(BN) !READ(BTN_## BN)
 
   #if HAS_LCD_MENU
+
+    #if ENABLED(SDSUPPORT)
+      #include "../sd/cardreader.h"
+    #endif
 
     typedef void (*screenFunc_t)();
     typedef void (*menuAction_t)();
@@ -250,7 +88,39 @@
 
 #endif
 
-#if HAS_DIGITAL_ENCODER
+// REPRAPWORLD_KEYPAD (and ADC_KEYPAD)
+#if ENABLED(REPRAPWORLD_KEYPAD)
+  #define BTN_OFFSET          0 // Bit offset into buttons for shift register values
+
+  #define BLEN_KEYPAD_F3      0
+  #define BLEN_KEYPAD_F2      1
+  #define BLEN_KEYPAD_F1      2
+  #define BLEN_KEYPAD_DOWN    3
+  #define BLEN_KEYPAD_RIGHT   4
+  #define BLEN_KEYPAD_MIDDLE  5
+  #define BLEN_KEYPAD_UP      6
+  #define BLEN_KEYPAD_LEFT    7
+
+  #define EN_KEYPAD_F1      _BV(BTN_OFFSET + BLEN_KEYPAD_F1)
+  #define EN_KEYPAD_F2      _BV(BTN_OFFSET + BLEN_KEYPAD_F2)
+  #define EN_KEYPAD_F3      _BV(BTN_OFFSET + BLEN_KEYPAD_F3)
+  #define EN_KEYPAD_DOWN    _BV(BTN_OFFSET + BLEN_KEYPAD_DOWN)
+  #define EN_KEYPAD_RIGHT   _BV(BTN_OFFSET + BLEN_KEYPAD_RIGHT)
+  #define EN_KEYPAD_MIDDLE  _BV(BTN_OFFSET + BLEN_KEYPAD_MIDDLE)
+  #define EN_KEYPAD_UP      _BV(BTN_OFFSET + BLEN_KEYPAD_UP)
+  #define EN_KEYPAD_LEFT    _BV(BTN_OFFSET + BLEN_KEYPAD_LEFT)
+
+  #define RRK(B) (keypad_buttons & (B))
+
+  #ifdef EN_C
+    #define BUTTON_CLICK() ((buttons & EN_C) || RRK(EN_KEYPAD_MIDDLE))
+  #else
+    #define BUTTON_CLICK() RRK(EN_KEYPAD_MIDDLE)
+  #endif
+
+#endif
+
+#if HAS_DIGITAL_BUTTONS
 
   // Wheel spin pins where BA is 00, 10, 11, 01 (1 bit always changes)
   #define BLEN_A 0
@@ -259,52 +129,20 @@
   #define EN_A _BV(BLEN_A)
   #define EN_B _BV(BLEN_B)
 
+  #define BUTTON_EXISTS(BN) (defined(BTN_## BN) && BTN_## BN >= 0)
+  #define BUTTON_PRESSED(BN) !READ(BTN_## BN)
+
   #if BUTTON_EXISTS(ENC)
     #define BLEN_C 2
     #define EN_C _BV(BLEN_C)
   #endif
 
-  #if BUTTON_EXISTS(BACK)
-    #define BLEN_D 3
-    #define EN_D _BV(BLEN_D)
-    #define LCD_BACK_CLICKED() (buttons & EN_D)
-  #endif
-
-  #if ENABLED(REPRAPWORLD_KEYPAD)
-    #define REPRAPWORLD_BTN_OFFSET          0 // Bit offset into buttons for shift register values
-
-    #define BLEN_REPRAPWORLD_KEYPAD_F3      0
-    #define BLEN_REPRAPWORLD_KEYPAD_F2      1
-    #define BLEN_REPRAPWORLD_KEYPAD_F1      2
-    #define BLEN_REPRAPWORLD_KEYPAD_DOWN    3
-    #define BLEN_REPRAPWORLD_KEYPAD_RIGHT   4
-    #define BLEN_REPRAPWORLD_KEYPAD_MIDDLE  5
-    #define BLEN_REPRAPWORLD_KEYPAD_UP      6
-    #define BLEN_REPRAPWORLD_KEYPAD_LEFT    7
-
-    #define EN_REPRAPWORLD_KEYPAD_F1        (_BV(REPRAPWORLD_BTN_OFFSET + BLEN_REPRAPWORLD_KEYPAD_F1))
-    #define EN_REPRAPWORLD_KEYPAD_F2        (_BV(REPRAPWORLD_BTN_OFFSET + BLEN_REPRAPWORLD_KEYPAD_F2))
-    #define EN_REPRAPWORLD_KEYPAD_F3        (_BV(REPRAPWORLD_BTN_OFFSET + BLEN_REPRAPWORLD_KEYPAD_F3))
-    #define EN_REPRAPWORLD_KEYPAD_DOWN      (_BV(REPRAPWORLD_BTN_OFFSET + BLEN_REPRAPWORLD_KEYPAD_DOWN))
-    #define EN_REPRAPWORLD_KEYPAD_RIGHT     (_BV(REPRAPWORLD_BTN_OFFSET + BLEN_REPRAPWORLD_KEYPAD_RIGHT))
-    #define EN_REPRAPWORLD_KEYPAD_MIDDLE    (_BV(REPRAPWORLD_BTN_OFFSET + BLEN_REPRAPWORLD_KEYPAD_MIDDLE))
-    #define EN_REPRAPWORLD_KEYPAD_UP        (_BV(REPRAPWORLD_BTN_OFFSET + BLEN_REPRAPWORLD_KEYPAD_UP))
-    #define EN_REPRAPWORLD_KEYPAD_LEFT      (_BV(REPRAPWORLD_BTN_OFFSET + BLEN_REPRAPWORLD_KEYPAD_LEFT))
-
-    #define RRK(B) (buttons_reprapworld_keypad & (B))
-
-    #ifdef EN_C
-      #define BUTTON_CLICK() ((buttons & EN_C) || RRK(EN_REPRAPWORLD_KEYPAD_MIDDLE))
-    #else
-      #define BUTTON_CLICK() RRK(EN_REPRAPWORLD_KEYPAD_MIDDLE)
-    #endif
-
-  #elif ENABLED(LCD_I2C_VIKI)
+  #if ENABLED(LCD_I2C_VIKI)
 
     #define B_I2C_BTN_OFFSET 3 // (the first three bit positions reserved for EN_A, EN_B, EN_C)
 
     // button and encoder bit positions within 'buttons'
-    #define B_LE (BUTTON_LEFT   << B_I2C_BTN_OFFSET)    // The remaining normalized buttons are all read via I2C
+    #define B_LE (BUTTON_LEFT   << B_I2C_BTN_OFFSET)      // The remaining normalized buttons are all read via I2C
     #define B_UP (BUTTON_UP     << B_I2C_BTN_OFFSET)
     #define B_MI (BUTTON_SELECT << B_I2C_BTN_OFFSET)
     #define B_DW (BUTTON_DOWN   << B_I2C_BTN_OFFSET)
@@ -312,13 +150,12 @@
 
     #if BUTTON_EXISTS(ENC)                                // The pause/stop/restart button is connected to BTN_ENC when used
       #define B_ST (EN_C)                                 // Map the pause/stop/resume button into its normalized functional name
-      #define BUTTON_CLICK() (buttons & (B_MI|B_RI|B_ST))  // Pause/stop also acts as click until a proper pause/stop is implemented.
+      #define BUTTON_CLICK() (buttons & (B_MI|B_RI|B_ST)) // Pause/stop also acts as click until a proper pause/stop is implemented.
     #else
       #define BUTTON_CLICK() (buttons & (B_MI|B_RI))
     #endif
 
     // I2C buttons take too long to read inside an interrupt context and so we read them during lcd_update
-    #define LCD_HAS_SLOW_BUTTONS
 
   #elif ENABLED(LCD_I2C_PANELOLU2)
 
@@ -330,14 +167,13 @@
 
       #define BUTTON_CLICK() (buttons & B_MI)
 
-      // I2C buttons take too long to read inside an interrupt context and so we read them during lcd_update
-      #define LCD_HAS_SLOW_BUTTONS
-
     #endif
 
   #endif
 
 #else
+
+  #define BUTTON_EXISTS(BN) false
 
   // Shift register bits correspond to buttons:
   #define BL_LE 7   // Left
@@ -352,8 +188,19 @@
   #define B_DW (_BV(BL_DW))
   #define B_RI (_BV(BL_RI))
   #define B_ST (_BV(BL_ST))
-  #define BUTTON_CLICK() (buttons & (B_MI|B_ST))
 
+  #ifndef BUTTON_CLICK
+    #define BUTTON_CLICK() (buttons & (B_MI|B_ST))
+  #endif
+
+#endif
+
+#if BUTTON_EXISTS(BACK)
+  #define BLEN_D 3
+  #define EN_D _BV(BLEN_D)
+  #define LCD_BACK_CLICKED() (buttons & EN_D)
+#else
+  #define LCD_BACK_CLICKED() false
 #endif
 
 #ifndef BUTTON_CLICK
@@ -364,8 +211,19 @@
   #endif
 #endif
 
-#define LCD_MESSAGEPGM(x)      ui.setstatusPGM(PSTR(x))
-#define LCD_ALERTMESSAGEPGM(x) ui.setalertstatusPGM(PSTR(x))
+#if HAS_GRAPHICAL_LCD
+  enum MarlinFont : uint8_t {
+    FONT_STATUSMENU = 1,
+    FONT_EDIT,
+    FONT_MENU
+  };
+#else
+  enum HD44780CharSet : uint8_t {
+    CHARSET_MENU,
+    CHARSET_INFO,
+    CHARSET_BOOT
+  };
+#endif
 
 ////////////////////////////////////////////
 //////////// MarlinUI Singleton ////////////
@@ -397,18 +255,25 @@ public:
   #if HAS_SPI_LCD || ENABLED(MALYAN_LCD) || ENABLED(EXTENSIBLE_UI)
     static void init();
     static void update();
-    static bool detected();
-    static void setalertstatusPGM(PGM_P message);
+    static void set_alert_status_P(PGM_P message);
   #else // NO LCD
     static inline void init() {}
     static inline void update() {}
-    static constexpr bool detected() { return true; }
-    static inline void setalertstatusPGM(PGM_P message) { UNUSED(message); }
+    static inline void set_alert_status_P(PGM_P message) { UNUSED(message); }
   #endif
 
   #if HAS_SPI_LCD || ENABLED(EXTENSIBLE_UI)
 
+    static char status_message[];
+    static bool has_status();
+
+
+    static uint8_t status_message_level;      // Higher levels block lower levels
+    static inline void reset_alert_level() { status_message_level = 0; }
+
     #if HAS_SPI_LCD
+
+      static bool detected();
 
       static LCDViewAction lcdDrawUpdate;
       static inline bool should_draw() { return bool(lcdDrawUpdate); }
@@ -429,36 +294,23 @@ public:
 
         static constexpr bool drawing_screen = false, first_page = true;
 
-        enum HD44780CharSet : uint8_t { CHARSET_MENU, CHARSET_INFO, CHARSET_BOOT };
-
-        static void set_custom_characters(
-          #if ENABLED(LCD_PROGRESS_BAR) || ENABLED(SHOW_BOOTSCREEN)
-            const HD44780CharSet screen_charset=CHARSET_INFO
-          #endif
-        );
+        static void set_custom_characters(const HD44780CharSet screen_charset=CHARSET_INFO);
 
         #if ENABLED(LCD_PROGRESS_BAR)
           static millis_t progress_bar_ms;  // Start time for the current progress bar cycle
+          static void draw_progress_bar(const uint8_t percent);
           #if PROGRESS_MSG_EXPIRE > 0
             static millis_t MarlinUI::expire_status_ms; // = 0
             static inline void reset_progress_bar_timeout() { expire_status_ms = 0; }
           #endif
-          #define LCD_SET_CHARSET(C) set_custom_characters(C)
-        #else
-          #define LCD_SET_CHARSET(C) set_custom_characters()
         #endif
 
       #endif
 
-      // Status message
-      static char status_message[];
       #if ENABLED(STATUS_MESSAGE_SCROLLING)
         static uint8_t status_scroll_offset;
       #endif
-
       static uint8_t lcd_status_update_delay;
-      static uint8_t status_message_level;      // Higher levels block lower levels
-      static inline void reset_alert_level() { status_message_level = 0; }
 
       #if HAS_PRINT_PROGRESS
         #if ENABLED(LCD_SET_PROGRESS_MANUALLY)
@@ -494,30 +346,26 @@ public:
       static void status_screen();
 
     #else
-
-      static void refresh();
-      static void reset_alert_level();
-
+      static void refresh() {}
     #endif
 
     static bool get_blink();
     static void kill_screen(PGM_P const lcd_msg);
     static void draw_kill_screen();
-    static bool hasstatus();
-    static void setstatus(const char* const message, const bool persist=false);
-    static void setstatusPGM(PGM_P const message, const int8_t level=0);
+    static void set_status(const char* const message, const bool persist=false);
+    static void set_status_P(PGM_P const message, const int8_t level=0);
     static void status_printf_P(const uint8_t level, PGM_P const fmt, ...);
     static void reset_status();
 
   #else // MALYAN_LCD or NO LCD
 
     static inline void refresh() {}
-    static constexpr bool hasstatus() { return false; }
-    static inline void setstatus(const char* const message, const bool persist=false) { UNUSED(message); UNUSED(persist); }
-    static inline void setstatusPGM(PGM_P const message, const int8_t level=0) { UNUSED(message); UNUSED(level); }
+    static inline void set_status(const char* const message, const bool persist=false) { UNUSED(message); UNUSED(persist); }
+    static inline void set_status_P(PGM_P const message, const int8_t level=0) { UNUSED(message); UNUSED(level); }
     static inline void status_printf_P(const uint8_t level, PGM_P const fmt, ...) { UNUSED(level); UNUSED(fmt); }
     static inline void reset_status() {}
     static inline void reset_alert_level() {}
+    static constexpr bool has_status() { return false; }
 
   #endif
 
@@ -529,8 +377,11 @@ public:
       static void enable_encoder_multiplier(const bool onoff);
     #endif
 
-    #if ENABLED(SCROLL_LONG_FILENAMES)
-      static uint8_t filename_scroll_pos, filename_scroll_max;
+    #if ENABLED(SDSUPPORT)
+      #if ENABLED(SCROLL_LONG_FILENAMES)
+        static uint8_t filename_scroll_pos, filename_scroll_max;
+      #endif
+      static const char * scrolled_filename(CardReader &theCard, const uint8_t maxlen, uint8_t hash, const bool doScroll);
     #endif
 
     #if IS_KINEMATIC
@@ -562,6 +413,10 @@ public:
     static void return_to_status();
     static inline bool on_status_screen() { return currentScreen == status_screen; }
     static inline void run_current_screen() { (*currentScreen)(); }
+
+    #if ENABLED(LIGHTWEIGHT_UI)
+      static void lcd_in_status(const bool inStatus);
+    #endif
 
     static inline void defer_status_screen(const bool defer) {
       #if LCD_TIMEOUT_TO_STATUS
@@ -613,7 +468,11 @@ public:
   #if HAS_ENCODER_ACTION
 
     static volatile uint8_t buttons;
-    #if ENABLED(LCD_HAS_SLOW_BUTTONS)
+    #if ENABLED(REPRAPWORLD_KEYPAD)
+      static volatile uint8_t keypad_buttons;
+      static bool handle_keypad();
+    #endif
+    #if HAS_SLOW_BUTTONS
       static volatile uint8_t slow_buttons;
       static uint8_t read_slow_buttons();
     #endif
@@ -636,19 +495,23 @@ public:
       static inline void encoder_direction_menus()  { encoderDirection = -(ENCODERBASE); }
     #else
       static constexpr int8_t encoderDirection = ENCODERBASE;
-      static inline void encoder_direction_normal() { }
-      static inline void encoder_direction_menus()  { }
+      static inline void encoder_direction_normal() {}
+      static inline void encoder_direction_menus()  {}
     #endif
 
   #else
 
-    static inline void update_buttons() { }
+    static inline void update_buttons() {}
 
   #endif
 
 private:
 
   static void _synchronize();
+
+  #if HAS_SPI_LCD || ENABLED(EXTENSIBLE_UI)
+    static void finishstatus(const bool persist);
+  #endif
 
   #if HAS_SPI_LCD
     #if HAS_LCD_MENU
@@ -659,8 +522,10 @@ private:
       #endif
     #endif
     static void draw_status_screen();
-    static void finishstatus(const bool persist);
   #endif
 };
 
 extern MarlinUI ui;
+
+#define LCD_MESSAGEPGM(x)      ui.set_status_P(PSTR(x))
+#define LCD_ALERTMESSAGEPGM(x) ui.set_alert_status_P(PSTR(x))
