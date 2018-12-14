@@ -407,6 +407,8 @@
   #include "pins_STM32F4.h"           // STM32F4                                    env:STM32F4
 #elif MB(ARMED)
   #include "pins_ARMED.h"             // STM32F4                                    env:ARMED
+#elif MB(LERDGEX)
+  #include "pins_STM32F4.h"           // STM32F4                                    env:STM32F4
 
 //
 // ARM Cortex M7
