@@ -25,7 +25,7 @@
 #endif
 
 #define DEFAULT_MACHINE_NAME "LERDGE"
-#define BOARD_NAME "Lerdge K"
+#define BOARD_NAME "Lerdge X"
 
 //#define I2C_EEPROM
 
@@ -39,11 +39,11 @@
 //
 // Limit Switches
 //
-#define X_MIN_PIN          PB12
+#define X_MIN_PIN          PG3
 #define X_MAX_PIN          -1
-#define Y_MIN_PIN          PB13
+#define Y_MIN_PIN          PG4
 #define Y_MAX_PIN          -1
-#define Z_MIN_PIN          PB14
+#define Z_MIN_PIN          PG5
 #define Z_MAX_PIN          -1
 
 //
@@ -58,66 +58,62 @@
 // Steppers
 //
 
-#define X_STEP_PIN         PB10
-#define X_DIR_PIN          PB2
-#define X_ENABLE_PIN       PB11
+#define X_STEP_PIN         PG1
+#define X_DIR_PIN          PB10
+#define X_ENABLE_PIN       PG0
 //#ifndef X_CS_PIN
-//  #define X_CS_PIN         PD1
+//  #define X_CS_PIN         PE0-PE4
 //#endif
 
-#define Y_STEP_PIN         PB0
-#define Y_DIR_PIN          PC5
-#define Y_ENABLE_PIN       PB1
+#define Y_STEP_PIN         PF14
+#define Y_DIR_PIN          PF15
+#define Y_ENABLE_PIN       PF13
 //#ifndef Y_CS_PIN
-//  #define Y_CS_PIN         PE12
+//  #define Y_CS_PIN         PE0-PE4
 //#endif
 
-#define Z_STEP_PIN         PA7
-#define Z_DIR_PIN          PA6
-#define Z_ENABLE_PIN       PC4
+#define Z_STEP_PIN         PF11
+#define Z_DIR_PIN          PF12
+#define Z_ENABLE_PIN       PC5
 //#ifndef Z_CS_PIN
-//  #define Z_CS_PIN         PD5
+//  #define Z_CS_PIN         PE0-PE4
 //#endif
 
-#define E0_STEP_PIN        PA3
-#define E0_DIR_PIN         PA4
-#define E0_ENABLE_PIN      PA5
+#define E0_STEP_PIN        PC14
+#define E0_DIR_PIN         PC13
+#define E0_ENABLE_PIN      PC15
 //#ifndef E0_CS_PIN
-//  #define E0_CS_PIN         PB4
+//  #define E0_CS_PIN         PE0-PE4
 //#endif
 
-#define E1_STEP_PIN        -1
-#define E1_DIR_PIN         -1
-#define E1_ENABLE_PIN      -1
+#define E1_STEP_PIN        PF1
+#define E1_DIR_PIN         PF0
+#define E1_ENABLE_PIN      PF2
 //#ifndef E1_CS_PIN
-//  #define E1_CS_PIN         PE5
+//  #define E1_CS_PIN         PE0-PE4
 //#endif
-
-#define SCK_PIN            PA5
-#define MISO_PIN           PA6
-#define MOSI_PIN           PA7
 
 //
 // Temperature Sensors
 //
 
-#define TEMP_0_PIN         PC0   // Analog Input
-#define TEMP_1_PIN         -1   // Analog Input
-#define TEMP_BED_PIN       PC1   // Analog Input
+#define TEMP_0_PIN         PC1   // Analog Input
+#define TEMP_1_PIN         PC2   // Analog Input
+#define TEMP_BED_PIN       PC0   // Analog Input
 
 //
 // Heaters / Fans
 //
 
 #define HEATER_0_PIN       PA1
-#define HEATER_1_PIN       -1
+#define HEATER_1_PIN       PA0
 #define HEATER_BED_PIN     PA2
 
 #ifndef FAN_PIN
   #define FAN_PIN          PC15
 #endif
-#define FAN1_PIN           PA0
-#define FAN2_PIN           -1
+#define FAN1_PIN           PF6
+#define FAN2_PIN           PF7
 
 #define ORIG_E0_AUTO_FAN_PIN  FAN1_PIN // Use this by NOT overriding E0_AUTO_FAN_PIN
 
@@ -176,7 +172,8 @@
 // Filament runout
 //
 
-#define FIL_RUNOUT_PIN     PE1
+#define FIL_RUNOUT_PIN     PE6
+#define FIL_RUNOUT2_PIN    PE7
 
 //
 // ST7920 Delays
