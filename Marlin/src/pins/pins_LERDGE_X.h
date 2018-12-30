@@ -93,10 +93,6 @@
 //  #define E1_CS_PIN         PE5
 //#endif
 
-#define SCK_PIN            PA5
-#define MISO_PIN           PA6
-#define MOSI_PIN           PA7
-
 //
 // Temperature Sensors
 //

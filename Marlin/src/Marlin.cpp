@@ -667,6 +667,21 @@ void stop() {
   }
 }
 
+void blinkForever(int delayOn, int delayOff) {
+  // initialize digital pin LED_BUILTIN as an output.
+  pinMode(PC6, OUTPUT);
+  //pinMode(PC7, OUTPUT);
+
+  digitalWrite(PC6, LOW);   // turn the LED on (HIGH is the voltage level)
+  digitalWrite(PC7, LOW);   // turn the LED on (HIGH is the voltage level)
+
+  delay(delayOn);
+  digitalWrite(PC6, HIGH);    // turn the LED off by making the voltage LOW
+  digitalWrite(PC7, HIGH);    // turn the LED off by making the voltage LOW
+
+  delay(delayOff);
+}
+
 /**
  * Marlin entry-point: Set up before the program loop
  *  - Set up the kill pin, filament runout, power hold
@@ -960,7 +975,6 @@ void setup() {
  *  - Call inactivity manager
  */
 void loop() {
-
   for (;;) {
 
     #if ENABLED(SDSUPPORT)
