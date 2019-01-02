@@ -323,21 +323,33 @@ bool SdVolume::init(Sd2Card* dev, uint8_t part) {
   // if part > 0 assume mbr volume with partition table
   if (part) {
     if (part > 4) return false;
-    if (!cacheRawBlock(volumeStartBlock, CACHE_FOR_READ)) return false;
+    if (!cacheRawBlock(volumeStartBlock, CACHE_FOR_READ)){
+      SERIAL_ECHOLN("Failed to read start block`");
+      SERIAL_FLUSH();
+
+      return false;
+    }
     part_t* p = &cacheBuffer_.mbr.part[part - 1];
     if ((p->boot & 0x7F) != 0  || p->totalSectors < 100 || p->firstSector == 0)
       return false; // not a valid partition
     volumeStartBlock = p->firstSector;
   }
-  if (!cacheRawBlock(volumeStartBlock, CACHE_FOR_READ)) return false;
+  if (!cacheRawBlock(volumeStartBlock, CACHE_FOR_READ)){
+    SERIAL_ECHOLN("Failed to read start block2`");
+    SERIAL_FLUSH();
+
+    return false;
+  }
   fbs = &cacheBuffer_.fbs32;
   if (fbs->bytesPerSector != 512 ||
       fbs->fatCount == 0 ||
       fbs->reservedSectorCount == 0 ||
       fbs->sectorsPerCluster == 0) {
-    // not valid FAT volume
-    return false;
-  }
+        SERIAL_ECHOLN("Not a valid start block`");
+        SERIAL_FLUSH();
+
+        return false;
+      }
   fatCount_ = fbs->fatCount;
   blocksPerCluster_ = fbs->sectorsPerCluster;
   // determine shift that is same as multiply by blocksPerCluster_
@@ -373,7 +385,12 @@ bool SdVolume::init(Sd2Card* dev, uint8_t part) {
   // FAT type is determined by cluster count
   if (clusterCount_ < 4085) {
     fatType_ = 12;
-    if (!FAT12_SUPPORT) return false;
+    if (!FAT12_SUPPORT){
+      SERIAL_ECHOLN("Not Fat 12`");
+      SERIAL_FLUSH();
+
+      return false;
+    }
   }
   else if (clusterCount_ < 65525)
     fatType_ = 16;

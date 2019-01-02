@@ -139,6 +139,10 @@
 //#define SERVO0_PIN         PD12
 //#define SERVO1_PIN         -1
 
+//
+// SD support
+//
+#define SDIO_SUPPORT
 
 #define SDSS               PC11
 #define LED_PIN            PC7         //Alive

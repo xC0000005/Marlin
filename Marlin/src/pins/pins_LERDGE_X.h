@@ -150,6 +150,11 @@
 #define MISO_PIN  PC8
 #define MOSI_PIN  PD2
 #define SS_PIN    PC11
+ 
+//
+// SD support
+//
+#define SDIO_SUPPORT
 
 //
 // LCD / Controller
