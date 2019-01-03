@@ -25,23 +25,6 @@
 
   #include "../../inc/MarlinConfig.h"
 
-#ifdef NOT_LIB
-  //#include "sdio_sd.h"
-
-  bool SDIO_Init(void) {
-  }
-
-  bool SDIO_ReadBlock(uint32_t block, uint8_t *dst) {
-  }
-
-  bool SDIO_WriteBlock(uint32_t block, const uint8_t *src) {
-  }
-
-  uint32_t SDIO_GetCardSize(void) {
-    return 0;
-  }
-
-#else
   #include "HAL_sdio_Stm32.h"
 
   SD_CardInfo SdCardInfo;
@@ -53,6 +36,7 @@
   		BSP_SD_GetCardInfo(&SdCardInfo);
   		return true;
   	}
+
   	return false;
   }
 
@@ -63,30 +47,14 @@
       return false;
     }
 
-    //if (SdCardInfo.CardType != CARD_SDHC_SDXC) {
+    if (SdCardInfo.CardType != CARD_SDHC_SDXC) {
       blockAddress = block * 512U;
-    //}
-    //else {
-    //  blockAddress = block;
-    //}
+    }
+    else {
+      blockAddress = block;
+    }
 
-    SERIAL_ECHO_START();
-    SERIAL_ECHOLNPAIR("Reading Block   ", block);
-    SERIAL_ECHOLNPAIR(" To address ", (uint32_t)dst);
-    SERIAL_ECHOLNPAIR("Adjusted Address   ", (uint32_t)blockAddress);
-    SERIAL_FLUSH();
-
-    SERIAL_ECHO_START();
-    SERIAL_ECHOLNPAIR("Adjusted Address   ", (uint32_t)blockAddress);
-    SERIAL_FLUSH();
-
-    bool result = BSP_SD_ReadBlocks((uint32_t *)dst, blockAddress, 512, 1);
-
-    SERIAL_ECHO_START();
-    SERIAL_ECHOLNPAIR("Read Result   ", result);
-    SERIAL_FLUSH();
-
-    return result == MSD_OK;
+    return BSP_SD_ReadBlocks((uint32_t *)dst, blockAddress, 512, 1) == MSD_OK;
   }
 
   bool SDIO_WriteBlock(uint32_t block, const uint8_t *src) {
@@ -96,12 +64,12 @@
       return false;
     }
 
-    //if (SdCardInfo.CardType != CARD_SDHC_SDXC) {
+    if (SdCardInfo.CardType != CARD_SDHC_SDXC) {
       blockAddress = block * 512U;
-    //}
-    //else {
-    //  blockAddress = block;
-    //}
+    }
+    else {
+      blockAddress = block;
+    }
 
     return BSP_SD_WriteBlocks((uint32_t *)src, blockAddress, 512, 1) == MSD_OK;
   }
@@ -109,6 +77,5 @@
   uint32_t SDIO_GetCardSize(void) {
     return 0;
   }
-#endif // SDIO LIABLE
 
 #endif // ARDUINO_ARCH_STM32 && !STM32GENERIC
