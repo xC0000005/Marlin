@@ -78,107 +78,6 @@
     return 0;
   }
 
-  /**
-  ******************************************************************************
-  * @file    bsp_sd.c
-  * @author  MCD Application Team
-  * @version V1.0.0
-  * @date    10-June-2016
-  * @brief   This file includes the uSD card driver mounted on stm32
-  *          board.
-  ******************************************************************************
-  * @attention
-  *
-  * <h2><center>&copy; COPYRIGHT(c) 2016 STMicroelectronics</center></h2>
-  *
-  * Redistribution and use in source and binary forms, with or without modification,
-  * are permitted provided that the following conditions are met:
-  *   1. Redistributions of source code must retain the above copyright notice,
-  *      this list of conditions and the following disclaimer.
-  *   2. Redistributions in binary form must reproduce the above copyright notice,
-  *      this list of conditions and the following disclaimer in the documentation
-  *      and/or other materials provided with the distribution.
-  *   3. Neither the name of STMicroelectronics nor the names of its contributors
-  *      may be used to endorse or promote products derived from this software
-  *      without specific prior written permission.
-  *
-  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
-  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
-  * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
-  * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
-  * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
-  * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
-  * CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
-  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-  *
-  ******************************************************************************
-  */
-
-/* File Info : -----------------------------------------------------------------
-                                   User NOTES
-1. How To use this driver:
---------------------------
-   - This driver is used to drive the micro SD external card mounted on a board.
-   - This driver does not need a specific component driver for the micro SD device
-     to be included with.
-
-2. Driver description:
----------------------
-  + Initialization steps:
-     o Initialize the micro SD card using the BSP_SD_Init() function. This
-       function includes the MSP layer hardware resources initialization and the
-       SDIO interface configuration to interface with the external micro SD. It
-       also includes the micro SD initialization sequence.
-     o To check the SD card presence you can use the function BSP_SD_IsDetected() which
-       returns the detection status
-     o If SD presence detection interrupt mode is desired, you must configure the
-       SD detection interrupt mode by calling the function BSP_SD_ITConfig(). The interrupt
-       is generated as an external interrupt whenever the micro SD card is
-       plugged/unplugged in/from the board. The SD detection interrupt
-       is handled by calling the function BSP_SD_DetectIT() which is called in the IRQ
-       handler file, the user callback is implemented in the function BSP_SD_DetectCallback().
-     o The function BSP_SD_GetCardInfo() is used to get the micro SD card information
-       which is stored in the structure "HAL_SD_CardInfoTypedef".
-
-  + Micro SD card operations
-     o The micro SD card can be accessed with read/write block(s) operations once
-       it is reay for access. The access cand be performed whether using the polling
-       mode by calling the functions BSP_SD_ReadBlocks()/BSP_SD_WriteBlocks(), or by DMA
-       transfer using the functions BSP_SD_ReadBlocks_DMA()/BSP_SD_WriteBlocks_DMA()
-     o The DMA transfer complete is used with interrupt mode. Once the SD transfer
-       is complete, the SD interrupt is handeled using the function BSP_SD_IRQHandler(),
-       the DMA Tx/Rx transfer complete are handeled using the functions
-       BSP_SD_DMA_Tx_IRQHandler()/BSP_SD_DMA_Rx_IRQHandler(). The corresponding user callbacks
-       are implemented by the user at application level.
-     o The SD erase block(s) is performed using the function BSP_SD_Erase() with specifying
-       the number of blocks to erase.
-     o The SD runtime status is returned when calling the function BSP_SD_GetStatus().
-
-------------------------------------------------------------------------------*/
-
-/* Includes ------------------------------------------------------------------*/
-//#include "bsp_sd.h"
-
-#ifdef SDMMC1
-/* Definition for BSP SD */
-#define SD_INSTANCE            SDMMC1
-#define SD_CLK_ENABLE          __HAL_RCC_SDMMC1_CLK_ENABLE
-#define SD_CLK_DISABLE         __HAL_RCC_SDMMC1_CLK_DISABLE
-#define SD_CLK_EDGE            SDMMC_CLOCK_EDGE_RISING
-#define SD_CLK_BYPASS          SDMMC_CLOCK_BYPASS_DISABLE
-#define SD_CLK_PWR_SAVE        SDMMC_CLOCK_POWER_SAVE_DISABLE
-#define SD_BUS_WIDE_1B         SDMMC_BUS_WIDE_1B
-#define SD_BUS_WIDE_4B         SDMMC_BUS_WIDE_4B
-#ifndef SD_HW_FLOW_CTRL
-#define SD_HW_FLOW_CTRL        SDMMC_HARDWARE_FLOW_CONTROL_DISABLE
-#endif
-#define SD_CLK_DIV             SDMMC_TRANSFER_CLK_DIV
-/* Definition for MSP SD */
-#define SD_AF                  GPIO_AF12_SDMMC1
-#elif defined(SDIO)
-/* Definition for BSP SD */
 #define SD_INSTANCE            SDIO
 #define SD_CLK_ENABLE          __HAL_RCC_SDIO_CLK_ENABLE
 #define SD_CLK_DISABLE         __HAL_RCC_SDIO_CLK_DISABLE
@@ -191,11 +90,7 @@
 #define SD_HW_FLOW_CTRL        SDIO_HARDWARE_FLOW_CONTROL_DISABLE
 #endif
 #define SD_CLK_DIV             SDIO_TRANSFER_CLK_DIV
-/* Definition for MSP SD */
 #define SD_AF                  GPIO_AF12_SDIO
-#else
-#error "Unknown SD_INSTANCE"
-#endif
 
 /* BSP SD Private Variables */
 static SD_HandleTypeDef uSdHandle;
@@ -557,23 +452,5 @@ void BSP_SD_GetCardInfo(HAL_SD_CardInfoTypeDef *CardInfo)
   /* Get SD card Information */
   HAL_SD_Get_CardInfo(&uSdHandle, CardInfo);
 }
-
-/**
-  * @}
-  */
-
-/**
-  * @}
-  */
-
-/**
-  * @}
-  */
-
-/**
-  * @}
-  */
-
-/************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
 
 #endif // ARDUINO_ARCH_STM32 && !STM32GENERIC
