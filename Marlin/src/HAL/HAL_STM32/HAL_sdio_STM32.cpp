@@ -27,6 +27,17 @@
 
   #include "HAL_sdio_Stm32.h"
 
+  static SD_HandleTypeDef uSdHandle;
+  static uint32_t SD_detect_gpio_pin = GPIO_PIN_All;
+  static GPIO_TypeDef *SD_detect_gpio_port = GPIOA;
+  #if defined (STM32F4xx) || defined(STM32F7xx) || defined(STM32L4xx)
+  #define SD_OK                         HAL_OK
+  #define SD_TRANSFER_OK                ((uint8_t)0x00)
+  #define SD_TRANSFER_BUSY              ((uint8_t)0x01)
+  #else /* (STM32F1xx) || defined(STM32F2xx) || defined(STM32L1xx) */
+  static SD_CardInfo uSdCardInfo;
+  #endif
+
   SD_CardInfo SdCardInfo;
 
   bool SDIO_Init(void) {
@@ -78,33 +89,6 @@
     return 0;
   }
 
-#define SD_INSTANCE            SDIO
-#define SD_CLK_ENABLE          __HAL_RCC_SDIO_CLK_ENABLE
-#define SD_CLK_DISABLE         __HAL_RCC_SDIO_CLK_DISABLE
-#define SD_CLK_EDGE            SDIO_CLOCK_EDGE_RISING
-#define SD_CLK_BYPASS          SDIO_CLOCK_BYPASS_DISABLE
-#define SD_CLK_PWR_SAVE        SDIO_CLOCK_POWER_SAVE_DISABLE
-#define SD_BUS_WIDE_1B         SDIO_BUS_WIDE_1B
-#define SD_BUS_WIDE_4B         SDIO_BUS_WIDE_4B
-#ifndef SD_HW_FLOW_CTRL
-#define SD_HW_FLOW_CTRL        SDIO_HARDWARE_FLOW_CONTROL_DISABLE
-#endif
-#define SD_CLK_DIV             SDIO_TRANSFER_CLK_DIV
-#define SD_AF                  GPIO_AF12_SDIO
-
-/* BSP SD Private Variables */
-static SD_HandleTypeDef uSdHandle;
-static uint32_t SD_detect_gpio_pin = GPIO_PIN_All;
-static GPIO_TypeDef *SD_detect_gpio_port = GPIOA;
-#if defined (STM32F4xx) || defined(STM32F7xx) || defined(STM32L4xx)
-#define SD_OK                         HAL_OK
-#define SD_TRANSFER_OK                ((uint8_t)0x00)
-#define SD_TRANSFER_BUSY              ((uint8_t)0x01)
-#else /* (STM32F1xx) || defined(STM32F2xx) || defined(STM32L1xx) */
-static SD_CardInfo uSdCardInfo;
-#endif
-
-
 /**
   * @brief  Initializes the SD card device with CS check if any.
   * @retval SD status
@@ -112,18 +96,15 @@ static SD_CardInfo uSdCardInfo;
 uint8_t BSP_SD_Init(void)
 {
   uint8_t sd_state = MSD_OK;
+  GPIO_InitTypeDef gpio_init_structure;
 
-  /* PLLSAI is dedicated to LCD periph. Do not use it to get 48MHz*/
-
-  /* uSD device interface configuration */
-  uSdHandle.Instance = SD_INSTANCE;
-
-  uSdHandle.Init.ClockEdge           = SD_CLK_EDGE;
-  uSdHandle.Init.ClockBypass         = SD_CLK_BYPASS;
-  uSdHandle.Init.ClockPowerSave      = SD_CLK_PWR_SAVE;
-  uSdHandle.Init.BusWide             = SD_BUS_WIDE_1B;
-  uSdHandle.Init.HardwareFlowControl = SD_HW_FLOW_CTRL;
-  uSdHandle.Init.ClockDiv            = SD_CLK_DIV;
+  uSdHandle.Instance = SDIO;
+  uSdHandle.Init.ClockEdge           = SDIO_CLOCK_EDGE_RISING;
+  uSdHandle.Init.ClockBypass         = SDIO_CLOCK_BYPASS_DISABLE;
+  uSdHandle.Init.ClockPowerSave      = SDIO_CLOCK_POWER_SAVE_DISABLE;
+  uSdHandle.Init.BusWide             = SDIO_BUS_WIDE_1B;
+  uSdHandle.Init.HardwareFlowControl = SDIO_HARDWARE_FLOW_CONTROL_DISABLE;
+  uSdHandle.Init.ClockDiv            = SDIO_TRANSFER_CLK_DIV;
 
   if(SD_detect_gpio_pin != GPIO_PIN_All) {
     /* Msp SD Detect pin initialization */
@@ -134,8 +115,25 @@ uint8_t BSP_SD_Init(void)
     }
   }
 
-  /* Msp SD initialization */
-  BSP_SD_MspInit(&uSdHandle, NULL);
+  /* Enable clocks */
+  __HAL_RCC_SDIO_CLK_ENABLE();
+  __HAL_RCC_GPIOC_CLK_ENABLE();
+  __HAL_RCC_GPIOD_CLK_ENABLE();
+
+  /* Common GPIO configuration */
+  gpio_init_structure.Mode      = GPIO_MODE_AF_PP;
+  gpio_init_structure.Pull      = GPIO_PULLUP;
+  gpio_init_structure.Speed     = GPIO_SPEED_HIGH;
+  gpio_init_structure.Alternate = GPIO_AF12_SDIO;
+
+  /* GPIOC configuration */
+  gpio_init_structure.Pin = GPIO_PIN_8 | GPIO_PIN_9 | GPIO_PIN_10 | GPIO_PIN_11 | GPIO_PIN_12;
+
+  HAL_GPIO_Init(GPIOC, &gpio_init_structure);
+
+  /* GPIOD configuration */
+  gpio_init_structure.Pin = GPIO_PIN_2;
+  HAL_GPIO_Init(GPIOD, &gpio_init_structure);
 
   /* HAL SD initialization */
 #if defined (STM32F4xx) || defined(STM32F7xx) || defined(STM32L4xx)
@@ -151,7 +149,7 @@ uint8_t BSP_SD_Init(void)
   if(sd_state == MSD_OK)
   {
     /* Enable wide operation */
-    if(HAL_SD_WideBusOperation_Config(&uSdHandle, SD_BUS_WIDE_4B) != SD_OK)
+    if(HAL_SD_WideBusOperation_Config(&uSdHandle, SDIO_BUS_WIDE_4B) != SD_OK)
     {
       sd_state = MSD_ERROR;
     }
@@ -187,7 +185,7 @@ uint8_t BSP_SD_DeInit(void)
 {
   uint8_t sd_state = MSD_OK;
 
-  uSdHandle.Instance = SD_INSTANCE;
+  uSdHandle.Instance = SDIO;
 
   /* HAL SD deinitialization */
   if(HAL_SD_DeInit(&uSdHandle) != HAL_OK)
@@ -195,9 +193,9 @@ uint8_t BSP_SD_DeInit(void)
     sd_state = MSD_ERROR;
   }
 
-  /* Msp SD deinitialization */
-  uSdHandle.Instance = SD_INSTANCE;
-  BSP_SD_MspDeInit(&uSdHandle, NULL);
+  HAL_NVIC_DisableIRQ(SDIO_IRQn);
+
+  __HAL_RCC_SDIO_CLK_DISABLE();
 
   return  sd_state;
 }
@@ -323,59 +321,6 @@ uint8_t BSP_SD_WriteBlocks(uint32_t *pData, uint64_t WriteAddr, uint32_t BlockSi
 }
 
 /**
-  * @brief  Erases the specified memory area of the given SD card.
-  * @param  StartAddr: Start byte address
-  * @param  EndAddr: End byte address
-  * @retval SD status
-  */
-uint8_t BSP_SD_Erase(uint64_t StartAddr, uint64_t EndAddr)
-{
-  if(HAL_SD_Erase(&uSdHandle, StartAddr, EndAddr) != SD_OK)
-  {
-    return MSD_ERROR;
-  }
-  else
-  {
-    return MSD_OK;
-  }
-}
-
-/**
-  * @brief  Initializes the SD MSP.
-  * @param  hsd: SD handle
-  * @param  Params : pointer on additional configuration parameters, can be NULL.
-  */
-__weak void BSP_SD_MspInit(SD_HandleTypeDef *hsd, void *Params)
-{
-  UNUSED(hsd);
-  UNUSED(Params);
-  GPIO_InitTypeDef gpio_init_structure;
-
-  /* Enable SDIO clock */
-  SD_CLK_ENABLE();
-
-  /* Enable GPIOs clock */
-  __HAL_RCC_GPIOC_CLK_ENABLE();
-  __HAL_RCC_GPIOD_CLK_ENABLE();
-
-  /* Common GPIO configuration */
-  gpio_init_structure.Mode      = GPIO_MODE_AF_PP;
-  gpio_init_structure.Pull      = GPIO_PULLUP;
-  gpio_init_structure.Speed     = GPIO_SPEED_HIGH;
-  gpio_init_structure.Alternate = SD_AF;
-
-  /* GPIOC configuration */
-  gpio_init_structure.Pin = GPIO_PIN_8 | GPIO_PIN_9 | GPIO_PIN_10 | GPIO_PIN_11 | GPIO_PIN_12;
-
-  HAL_GPIO_Init(GPIOC, &gpio_init_structure);
-
-  /* GPIOD configuration */
-  gpio_init_structure.Pin = GPIO_PIN_2;
-  HAL_GPIO_Init(GPIOD, &gpio_init_structure);
-
-}
-
-/**
   * @brief  Initializes the SD Detect pin MSP.
   * @param  hsd: SD handle
   * @param  Params : pointer on additional configuration parameters, can be NULL.
@@ -392,28 +337,6 @@ __weak void BSP_SD_Detect_MspInit(SD_HandleTypeDef *hsd, void *Params)
   gpio_init_structure.Pull      = GPIO_PULLUP;
   gpio_init_structure.Speed     = GPIO_SPEED_HIGH;
   HAL_GPIO_Init(SD_detect_gpio_port, &gpio_init_structure);
-}
-
-/**
-  * @brief  DeInitializes the SD MSP.
-  * @param  hsd: SD handle
-  * @param  Params : pointer on additional configuration parameters, can be NULL.
-  */
-__weak void BSP_SD_MspDeInit(SD_HandleTypeDef *hsd, void *Params)
-{
-    UNUSED(hsd);
-    UNUSED(Params);
-    /* Disable NVIC for SDIO interrupts */
-    HAL_NVIC_DisableIRQ(SDIO_IRQn);
-
-    /* DeInit GPIO pins can be done in the application
-       (by surcharging this __weak function) */
-
-    /* Disable SDIO clock */
-    SD_CLK_DISABLE();
-
-    /* GPOI pins clock and DMA cloks can be shut down in the applic
-       by surcgarging this __weak function */
 }
 
 #if defined (STM32F4xx) || defined(STM32F7xx) || defined(STM32L4xx)
