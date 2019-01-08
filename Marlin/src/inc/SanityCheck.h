@@ -500,8 +500,8 @@ static_assert(X_MAX_LENGTH >= X_BED_SIZE && Y_MAX_LENGTH >= Y_BED_SIZE,
   #elif PROGRESS_MSG_EXPIRE < 0
     #error "PROGRESS_MSG_EXPIRE must be greater than or equal to 0."
   #endif
-#elif ENABLED(LCD_SET_PROGRESS_MANUALLY) && !HAS_GRAPHICAL_LCD
-  #error "LCD_SET_PROGRESS_MANUALLY requires LCD_PROGRESS_BAR or Graphical LCD."
+#elif ENABLED(LCD_SET_PROGRESS_MANUALLY) && !HAS_GRAPHICAL_LCD && DISABLED(EXTENSIBLE_UI)
+  #error "LCD_SET_PROGRESS_MANUALLY requires LCD_PROGRESS_BAR, Graphical LCD, or EXTENSIBLE_UI."
 #endif
 
 /**
@@ -509,6 +509,13 @@ static_assert(X_MAX_LENGTH >= X_BED_SIZE && Y_MAX_LENGTH >= Y_BED_SIZE,
  */
 #if DISABLED(DOGLCD) && (ENABLED(SHOW_CUSTOM_BOOTSCREEN) || ENABLED(CUSTOM_STATUS_SCREEN_IMAGE))
   #error "Graphical LCD is required for SHOW_CUSTOM_BOOTSCREEN and CUSTOM_STATUS_SCREEN_IMAGE."
+#endif
+
+/**
+ * LCD Lightweight Screen Style
+ */
+#if ENABLED(LIGHTWEIGHT_UI) && DISABLED(U8GLIB_ST7920)
+  #error "LIGHTWEIGHT_UI requires a U8GLIB_ST7920-based display."
 #endif
 
 /**
@@ -1115,7 +1122,9 @@ static_assert(X_MAX_LENGTH >= X_BED_SIZE && Y_MAX_LENGTH >= Y_BED_SIZE,
 #endif
 
 #if HAS_MESH
-  static_assert(DEFAULT_ZJERK > 0.1, "Low DEFAULT_ZJERK values are incompatible with mesh-based leveling.");
+  #if DISABLED(JUNCTION_DEVIATION)
+    static_assert(DEFAULT_ZJERK > 0.1, "Low DEFAULT_ZJERK values are incompatible with mesh-based leveling.");
+  #endif
 #elif ENABLED(G26_MESH_VALIDATION)
   #error "G26_MESH_VALIDATION requires MESH_BED_LEVELING, AUTO_BED_LEVELING_BILINEAR, or AUTO_BED_LEVELING_UBL."
 #endif

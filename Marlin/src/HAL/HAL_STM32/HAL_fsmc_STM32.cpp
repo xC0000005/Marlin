@@ -26,10 +26,11 @@
  * Communication interface for FSMC
  */
 
-#include "../../inc/MarlinConfig.h"
-
 #if HAS_GRAPHICAL_LCD
 #if defined(ARDUINO_ARCH_STM32) && !defined(STM32GENERIC)
+
+#include "../../inc/MarlinConfig.h"
+#include "U8glib.h"
 
 uint8_t u8g_com_st_core_fsmc_fn(u8g_t *u8g, uint8_t msg, uint8_t arg_val, void *arg_ptr)
 {

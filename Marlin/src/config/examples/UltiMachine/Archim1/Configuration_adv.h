@@ -483,14 +483,6 @@
 #define MINIMUM_PLANNER_SPEED 0.05 // (mm/s)
 
 //
-// Use Junction Deviation instead of traditional Jerk Limiting
-//
-//#define JUNCTION_DEVIATION
-#if ENABLED(JUNCTION_DEVIATION)
-  #define JUNCTION_DEVIATION_MM 0.02  // (mm) Distance from real junction edge
-#endif
-
-//
 // Backlash Compensation
 // Adds extra movement to axes on direction-changes to account for backlash.
 //
@@ -819,19 +811,19 @@
   // Swap the CW/CCW indicators in the graphics overlay
   //#define OVERLAY_GFX_REVERSE
 
+  /**
+   * ST7920-based LCDs can emulate a 16 x 4 character display using
+   * the ST7920 character-generator for very fast screen updates.
+   * Enable LIGHTWEIGHT_UI to use this special display mode.
+   *
+   * Since LIGHTWEIGHT_UI has limited space, the position and status
+   * message occupy the same line. Set STATUS_EXPIRE_SECONDS to the
+   * length of time to display the status message before clearing.
+   *
+   * Set STATUS_EXPIRE_SECONDS to zero to never clear the status.
+   * This will prevent position updates from being displayed.
+   */
   #if ENABLED(U8GLIB_ST7920)
-    /**
-     * ST7920-based LCDs can emulate a 16 x 4 character display using
-     * the ST7920 character-generator for very fast screen updates.
-     * Enable LIGHTWEIGHT_UI to use this special display mode.
-     *
-     * Since LIGHTWEIGHT_UI has limited space, the position and status
-     * message occupy the same line. Set STATUS_EXPIRE_SECONDS to the
-     * length of time to display the status message before clearing.
-     *
-     * Set STATUS_EXPIRE_SECONDS to zero to never clear the status.
-     * This will prevent position updates from being displayed.
-     */
     //#define LIGHTWEIGHT_UI
     #if ENABLED(LIGHTWEIGHT_UI)
       #define STATUS_EXPIRE_SECONDS 20
@@ -1389,10 +1381,20 @@
   #define STEALTHCHOP_E
 
   /**
-   * Adjust spreadCycle chopper parameters with the help of an example included in the library.
-   * The parameters are off time, hysteresis end and hysteresis start.
+   * Optimize spreadCycle chopper parameters by using predefined parameter sets
+   * or with the help of an example included in the library.
+   * Provided parameter sets are
+   * CHOPPER_DEFAULT_12V
+   * CHOPPER_DEFAULT_19V
+   * CHOPPER_DEFAULT_24V
+   * CHOPPER_DEFAULT_36V
+   * CHOPPER_PRUSAMK3_24V // Imported parameters from the official Prusa firmware for MK3 (24V)
+   * CHOPPER_MARLIN_119   // Old defaults from Marlin v1.1.9
+   *
+   * Define you own with
+   * { <off_time[1..15]>, <hysteresis_end[-3..12]>, hysteresis_start[1..8] }
    */
-  #define CHOPPER_TIMING { 4, -2, 1 }
+  #define CHOPPER_TIMING CHOPPER_DEFAULT_12V
 
   /**
    * Monitor Trinamic TMC2130 and TMC2208 drivers for error conditions,
