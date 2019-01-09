@@ -94,3 +94,16 @@ public:
   : U8GLIB(&u8g_dev_tft_320x240_upscale_from_128x64, cs, rs, reset)
   { }
 };
+
+//
+// Very basic support for 480x320 TFT screen
+// Tested on Lerdge-S/X/K TFT_V2.0 with ST7796V controller
+//
+extern u8g_dev_t u8g_dev_tft_480x320_upscale_from_128x64;
+
+class U8GLIB_TFT_480X320_UPSCALE_FROM_128X64 : public U8GLIB {
+public:
+  U8GLIB_TFT_480X320_UPSCALE_FROM_128X64(uint8_t cs, uint8_t rs, uint8_t reset = U8G_PIN_NONE)
+  : U8GLIB(&u8g_dev_tft_480x320_upscale_from_128x64, cs, rs, reset)
+  { }
+};

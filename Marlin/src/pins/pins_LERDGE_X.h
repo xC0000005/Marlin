@@ -150,7 +150,7 @@
 #define MISO_PIN  PC8
 #define MOSI_PIN  PD2
 #define SS_PIN    PC11
- 
+
 //
 // SD support
 //
@@ -163,15 +163,20 @@
 // THE FMC data control works.
 #define SD_DETECT_PIN      -1
 #define BEEPER_PIN         PD12
-#define LCD_PINS_RS        -1
+/*#define LCD_PINS_RS        -1
 #define LCD_PINS_ENABLE    -1
 #define LCD_PINS_D4        -1
 #define LCD_PINS_D5        -1
 #define LCD_PINS_D6        -1
-#define LCD_PINS_D7        -1
+#define LCD_PINS_D7        -1*/
 #define BTN_EN1            PE3
 #define BTN_EN2            PE4
 #define BTN_ENC            PE2
+
+#define LCD_RESET_PIN      PD6
+#define LCD_BACKLIGHT_PIN  PD3
+#define FSMC_CS_PIN        PD4
+#define FSMC_RS_PIN        PD11
 
 //
 // Filament runout
