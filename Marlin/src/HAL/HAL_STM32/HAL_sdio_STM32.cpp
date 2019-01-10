@@ -217,44 +217,27 @@ uint8_t BSP_SD_ITConfig(void)
   gpio_init_structure.Mode = GPIO_MODE_IT_RISING_FALLING;
   HAL_GPIO_Init(SD_detect_gpio_port, &gpio_init_structure);
 
-  if(SD_detect_gpio_pin == GPIO_PIN_0) {
-      sd_detect_EXTI_IRQn = EXTI0_IRQn;
-  } else {
-    if(SD_detect_gpio_pin == GPIO_PIN_1) {
-      sd_detect_EXTI_IRQn = EXTI1_IRQn;
-    } else {
-      if(SD_detect_gpio_pin == GPIO_PIN_2) {
-        sd_detect_EXTI_IRQn = EXTI2_IRQn;
-      } else {
-        if(SD_detect_gpio_pin == GPIO_PIN_3) {
-          sd_detect_EXTI_IRQn = EXTI3_IRQn;
-        } else {
-          if(SD_detect_gpio_pin == GPIO_PIN_4) {
-            sd_detect_EXTI_IRQn = EXTI4_IRQn;
-          } else {
-            if((SD_detect_gpio_pin == GPIO_PIN_5) ||\
-               (SD_detect_gpio_pin == GPIO_PIN_6) ||\
-               (SD_detect_gpio_pin == GPIO_PIN_7) ||\
-               (SD_detect_gpio_pin == GPIO_PIN_8) ||\
-               (SD_detect_gpio_pin == GPIO_PIN_9)) {
-              sd_detect_EXTI_IRQn = EXTI9_5_IRQn;
-            } else {
-              if((SD_detect_gpio_pin == GPIO_PIN_10) ||\
-                 (SD_detect_gpio_pin == GPIO_PIN_11) ||\
-                 (SD_detect_gpio_pin == GPIO_PIN_12) ||\
-                 (SD_detect_gpio_pin == GPIO_PIN_13) ||\
-                 (SD_detect_gpio_pin == GPIO_PIN_14) ||\
-                 (SD_detect_gpio_pin == GPIO_PIN_15)) {
-                sd_detect_EXTI_IRQn = EXTI15_10_IRQn;
-              } else {
-                sd_state = MSD_ERROR;
-              }
-            }
-          }
-        }
-      }
-    }
+  switch (SD_detect_gpio_pin) {
+    case GPIO_PIN_0: sd_detect_EXTI_IRQn = EXTI0_IRQn; break;
+    case GPIO_PIN_1: sd_detect_EXTI_IRQn = EXTI1_IRQn; break;
+    case GPIO_PIN_2: sd_detect_EXTI_IRQn = EXTI2_IRQn; break;
+    case GPIO_PIN_3: sd_detect_EXTI_IRQn = EXTI3_IRQn; break;
+    case GPIO_PIN_4: sd_detect_EXTI_IRQn = EXTI4_IRQn; break;
+    case GPIO_PIN_5:
+    case GPIO_PIN_6:
+    case GPIO_PIN_7:
+    case GPIO_PIN_8:
+    case GPIO_PIN_9: sd_detect_EXTI_IRQn = EXTI9_5_IRQn; break;
+    case GPIO_PIN_10:
+    case GPIO_PIN_11:
+    case GPIO_PIN_12:
+    case GPIO_PIN_13:
+    case GPIO_PIN_14:
+    case GPIO_PIN_15: sd_detect_EXTI_IRQn = EXTI15_10_IRQn; break;
+    default:
+      sd_state = MSD_ERROR;
   }
+
   if(sd_state == MSD_OK) {
     /* Enable and set SD detect EXTI Interrupt to the lowest priority */
     HAL_NVIC_SetPriority(sd_detect_EXTI_IRQn, 0x0F, 0x00);
@@ -290,6 +273,7 @@ uint8_t BSP_SD_IsDetected(void)
   */
 uint8_t BSP_SD_ReadBlocks(uint32_t *pData, uint64_t ReadAddr, uint32_t BlockSize, uint32_t NumOfBlocks)
 {
+  /* Review - The HAL Api uses different parameters for F4 vs F7 */
   if(HAL_SD_ReadBlocks(&uSdHandle, (uint8_t *)pData, ReadAddr, 1, 512) != SD_OK)
   {
     return MSD_ERROR;

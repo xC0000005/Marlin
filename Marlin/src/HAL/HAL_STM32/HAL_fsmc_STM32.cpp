@@ -69,25 +69,6 @@ static void HAL_FSMC_MspInit(void){
   HAL_GPIO_Init(GPIOD, &GPIO_InitStruct);
 }
 
-static uint32_t FSMC_DeInitialized = 0;
-
-static void HAL_FSMC_MspDeInit(void){
-  if (FSMC_DeInitialized) {
-    return;
-  }
-  FSMC_DeInitialized = 1;
-
-  __HAL_RCC_FSMC_CLK_DISABLE();
-
-  HAL_GPIO_DeInit(GPIOE, GPIO_PIN_7|GPIO_PIN_8|GPIO_PIN_9|GPIO_PIN_10
-                          |GPIO_PIN_11|GPIO_PIN_12|GPIO_PIN_13|GPIO_PIN_14
-                          |GPIO_PIN_15);
-
-  HAL_GPIO_DeInit(GPIOD, GPIO_PIN_8|GPIO_PIN_9|GPIO_PIN_10|GPIO_PIN_11
-                          |GPIO_PIN_14|GPIO_PIN_15|GPIO_PIN_0|GPIO_PIN_1
-                          |GPIO_PIN_4|GPIO_PIN_5|GPIO_PIN_7);
-}
-
 #define LCD_READ_ID     0x04   /* Read display identification information */
 
 /* Timing configuration */

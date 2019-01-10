@@ -63,14 +63,23 @@
 #include "HAL_LCD_com_defines.h"
 #include "string.h"
 
-#define WIDTH 128
+#define WIDTH 128 //Normal LCD width/height
 #define HEIGHT 64
 #define PAGE_HEIGHT 8
 
-#define X_MIN 32
-#define Y_MIN 56
-#define X_MAX (X_MIN + 2 * WIDTH  - 1)
-#define Y_MAX (Y_MIN + 2 * HEIGHT - 1)
+#define TFT_WIDTH 480 //TFT total Width/height
+#define TFT_HEIGHT 320
+
+#define XSCALE 3 //pixel scaling factor
+#define YSCALE 5
+
+//#define X_MIN ((TFT_WIDTH-(WIDTH*XSCALE))/2)
+//#define Y_MIN ((TFT_HEIGHT-(HEIGHT*XSCALE))/2)
+#define X_MIN ((TFT_WIDTH-(WIDTH*XSCALE))/2)
+//#define Y_MIN ((TFT_HEIGHT-(HEIGHT*YSCALE))/2)
+#define Y_MIN 0
+#define X_MAX (X_MIN + XSCALE * WIDTH  - 1)
+#define Y_MAX (Y_MIN + YSCALE * HEIGHT - 1)
 
 #define LCD_COLUMN      0x2A   /* Colomn address register */
 #define LCD_ROW         0x2B   /* Row address register */
@@ -80,6 +89,17 @@ static uint32_t lcd_id = 0;
 
 #define U8G_ESC_DATA(x) (uint8_t)(x >> 8), (uint8_t)(x & 0xFF)
 
+static int color_fg_r=0;
+static int color_fg_g=48; //pipboy green
+static int color_fg_b=0;
+
+static int color_bg_r=0;
+static int color_bg_g=0;
+static int color_bg_b=0;
+static uint16_t calcRGB16(uint8_t r, uint8_t g, uint8_t b) {
+	return (b & 0x1F) | ((g & 0x2F)<<5) | ((r & 0x1F) << 11);
+}
+
 static const uint8_t page_first_sequence[] = {
   U8G_ESC_ADR(0), LCD_COLUMN, U8G_ESC_ADR(1), U8G_ESC_DATA(X_MIN), U8G_ESC_DATA(X_MAX),
   U8G_ESC_ADR(0), LCD_ROW,    U8G_ESC_ADR(1), U8G_ESC_DATA(Y_MIN), U8G_ESC_DATA(Y_MAX),
@@ -88,8 +108,8 @@ static const uint8_t page_first_sequence[] = {
 };
 
 static const uint8_t clear_screen_sequence[] = {
-  U8G_ESC_ADR(0), LCD_COLUMN, U8G_ESC_ADR(1), 0x00, 0x00, 0x01, 0x3F,
-  U8G_ESC_ADR(0), LCD_ROW,    U8G_ESC_ADR(1), 0x00, 0x00, 0x00, 0xEF,
+  U8G_ESC_ADR(0), LCD_COLUMN, U8G_ESC_ADR(1), 0x00, 0x00, 0x01, 0xDF,
+  U8G_ESC_ADR(0), LCD_ROW,    U8G_ESC_ADR(1), 0x00, 0x00, 0x01, 0x3F,
   U8G_ESC_ADR(0), LCD_WRITE_RAM, U8G_ESC_ADR(1),
   U8G_ESC_END
 };
@@ -121,7 +141,7 @@ static const uint8_t st7789v_init_sequence[] = { // 0x8552 - ST7789V
 };
 
 static const uint8_t st7796v_init_sequence[] = { // ST7796
-    U8G_ESC_ADR(0),
+/*    U8G_ESC_ADR(0),
     0x10, //sleep mode enter
     U8G_ESC_DLY(10),
     0x01, //reset
@@ -151,20 +171,21 @@ static const uint8_t st7796v_init_sequence[] = { // ST7796
     U8G_ESC_ADR(0), 0xF0, U8G_ESC_ADR(1), 0x69, //?
     U8G_ESC_DLY(150),
     U8G_ESC_ADR(0), 0x29, //display on
-    0x2C, //write memory
+    0x2C, //write memory*/
     U8G_ESC_END
   };
 
 uint8_t u8g_dev_tft_480x320_upscale_from_128x64_fn(u8g_t *u8g, u8g_dev_t *dev, uint8_t msg, void *arg) {
   u8g_pb_t *pb = (u8g_pb_t *)(dev->dev_mem);
-  uint16_t buffer[256];
+  uint16_t buffer[128*XSCALE];
   uint32_t i, j, k;
+  uint8_t byte;
 
   switch(msg) {
     case U8G_DEV_MSG_INIT:
       dev->com_fn(u8g, U8G_COM_MSG_INIT, U8G_SPI_CLK_CYCLE_NONE, &lcd_id);
-//      if (lcd_id == 0x040404) return 0; // No connected display on FSMC
-//      if (lcd_id == 0xFFFFFF) return 0; // No connected display on SPI
+      if (lcd_id == 0x040404) return 0; // No connected display on FSMC
+      if (lcd_id == 0xFFFFFF) return 0; // No connected display on SPI
 
       memset(buffer, 0x00, sizeof(buffer));
 
@@ -187,18 +208,21 @@ uint8_t u8g_dev_tft_480x320_upscale_from_128x64_fn(u8g_t *u8g, u8g_dev_t *dev, u
       break;
 
     case U8G_DEV_MSG_PAGE_NEXT:
-      for (j = 0; j < 8; j++) {
+      for (j = 0; j < 8;  j++) {
         k = 0;
-        for (i = 0; i < (uint32_t)pb->width; i++) {
-          const uint8_t b = *(((uint8_t *)pb->buf) + i);
-          const uint16_t c = TEST(b, j) ? 0x7FFF : 0x0000;
-          buffer[k++] = c; buffer[k++] = c;
+        for (i = 0; i < (uint32_t) pb->width;  i++) {
+          byte = *(((uint8_t *)pb->buf) + i);
+          if (byte & (1 << j)) {
+          for(uint8_t n=0;n<XSCALE;n++)
+            buffer[k++] = calcRGB16(color_fg_r,color_fg_g,color_fg_b);
+          } else {
+          for(uint8_t n=0;n<XSCALE;n++)
+            buffer[k++] = calcRGB16(color_bg_r,color_bg_g,color_bg_b);
+          }
         }
-        for (k = 0; k < 2; k++) {
-          u8g_WriteSequence(u8g, dev, 128, (uint8_t*)buffer);
-          u8g_WriteSequence(u8g, dev, 128, (uint8_t*)&(buffer[64]));
-          u8g_WriteSequence(u8g, dev, 128, (uint8_t*)&(buffer[128]));
-          u8g_WriteSequence(u8g, dev, 128, (uint8_t*)&(buffer[192]));
+        for (k = 0; k < YSCALE; k++) {
+          for(uint16_t n=0;n<XSCALE*128;n+=64)
+            u8g_WriteSequence(u8g, dev, 128, (uint8_t *)&buffer[n]);
         }
       }
       break;
