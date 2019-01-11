@@ -65,7 +65,8 @@
       blockAddress = block;
     }
 
-    return BSP_SD_ReadBlocks((uint32_t *)dst, blockAddress, 512, 1) == MSD_OK;
+    /* Review - The HAL Api uses different parameters for F4 vs F7 */
+    return HAL_SD_ReadBlocks(&uSdHandle, (uint8_t *)dst, blockAddress, 1, 512) == SD_OK;
   }
 
   bool SDIO_WriteBlock(uint32_t block, const uint8_t *src) {
@@ -82,7 +83,7 @@
       blockAddress = block;
     }
 
-    return BSP_SD_WriteBlocks((uint32_t *)src, blockAddress, 512, 1) == MSD_OK;
+    return HAL_SD_WriteBlocks(&uSdHandle, (uint8_t *)src, blockAddress, 512, 1) == SD_OK;
   }
 
   uint32_t SDIO_GetCardSize(void) {
@@ -261,47 +262,6 @@ uint8_t BSP_SD_IsDetected(void)
   }
 
     return status;
-}
-
-/**
-  * @brief  Reads block(s) from a specified address in an SD card, in polling mode.
-  * @param  pData: Pointer to the buffer that will contain the data to transmit
-  * @param  ReadAddr: Address from where data is to be read
-  * @param  BlockSize: SD card data block size, that should be 512
-  * @param  NumOfBlocks: Number of SD blocks to read
-  * @retval SD status
-  */
-uint8_t BSP_SD_ReadBlocks(uint32_t *pData, uint64_t ReadAddr, uint32_t BlockSize, uint32_t NumOfBlocks)
-{
-  /* Review - The HAL Api uses different parameters for F4 vs F7 */
-  if(HAL_SD_ReadBlocks(&uSdHandle, (uint8_t *)pData, ReadAddr, 1, 512) != SD_OK)
-  {
-    return MSD_ERROR;
-  }
-  else
-  {
-    return MSD_OK;
-  }
-}
-
-/**
-  * @brief  Writes block(s) to a specified address in an SD card, in polling mode.
-  * @param  pData: Pointer to the buffer that will contain the data to transmit
-  * @param  WriteAddr: Address from where data is to be written
-  * @param  BlockSize: SD card data block size, that should be 512
-  * @param  NumOfBlocks: Number of SD blocks to write
-  * @retval SD status
-  */
-uint8_t BSP_SD_WriteBlocks(uint32_t *pData, uint64_t WriteAddr, uint32_t BlockSize, uint32_t NumOfBlocks)
-{
-  if(HAL_SD_WriteBlocks(&uSdHandle, (uint8_t *)pData, WriteAddr, BlockSize, NumOfBlocks) != SD_OK)
-  {
-    return MSD_ERROR;
-  }
-  else
-  {
-    return MSD_OK;
-  }
 }
 
 /**

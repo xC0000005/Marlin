@@ -27,7 +27,7 @@
 #define DEFAULT_MACHINE_NAME "LERDGE"
 #define BOARD_NAME "Lerdge X"
 
-//#define I2C_EEPROM
+#define I2C_EEPROM
 
 // Ignore temp readings during develpment.
 //#define BOGUS_TEMPERATURE_FAILSAFE_OVERRIDE
