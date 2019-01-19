@@ -159,16 +159,10 @@
 //
 // LCD / Controller
 //
-// These are not right since we need to understand However
-// THE FMC data control works.
+// The LCD is initialized in FSMC mode
 #define SD_DETECT_PIN      -1
 #define BEEPER_PIN         PD12
-/*#define LCD_PINS_RS        -1
-#define LCD_PINS_ENABLE    -1
-#define LCD_PINS_D4        -1
-#define LCD_PINS_D5        -1
-#define LCD_PINS_D6        -1
-#define LCD_PINS_D7        -1*/
+
 #define BTN_EN1            PE3
 #define BTN_EN2            PE4
 #define BTN_ENC            PE2
@@ -177,6 +171,7 @@
 #define LCD_BACKLIGHT_PIN  PD3
 #define FSMC_CS_PIN        PD4
 #define FSMC_RS_PIN        PD11
+#define TOUCH_CS           PB6
 
 //
 // Filament runout

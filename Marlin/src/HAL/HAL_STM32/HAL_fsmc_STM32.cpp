@@ -78,6 +78,7 @@ static void HAL_FSMC_MspInit(void){
 void LCD_IO_Init(uint8_t cs, uint8_t rs);
 void LCD_IO_WriteData(uint16_t RegValue);
 void LCD_IO_WriteReg(uint8_t Reg);
+void LCD_IO_WriteReg(uint8_t Reg, uint16_t RegValue);
 uint32_t LCD_IO_ReadData(uint16_t RegValue, uint8_t ReadSize);
 
 static uint8_t msgInitCount = 2; // Ignore all messages until 2nd U8G_COM_MSG_INIT
@@ -130,6 +131,11 @@ uint8_t u8g_com_st_core_fsmc_fn(u8g_t *u8g, uint8_t msg, uint8_t arg_val, void *
   return 1;
 }
 
+#define LCD_READ_ID     0xD3   /* Read display identification information */
+#define	LCD_REG       (*((volatile unsigned short *) 0x60000000)) // RS = 0	Command
+#define LCD_RAM       (*((volatile unsigned short *) 0x60020000)) // RS = 1	Data
+
+/*
 #define  LCD_REG       (*((volatile unsigned short *) 0x60000000)) // RS = 0 Command
 #define LCD_RAM       (*((volatile unsigned short *) 0x60020000)) // RS = 1 Data
 
@@ -174,6 +180,7 @@ static uint16_t LCD_ReadData(void) {
   tmp = Driver_LcdFSMCReadData();
   return tmp;
 }
+*/
 
 void LCD_Init(void)
 {
@@ -183,76 +190,76 @@ void LCD_Init(void)
   HAL_Delay(50);
   HAL_GPIO_WritePin(GPIOD, GPIO_PIN_6, GPIO_PIN_SET);
   HAL_Delay(50);
-  Driver_LcdFSMCWriteReg(0x11);  // Sleep out
+  LCD_IO_WriteReg(0x11);  // Sleep out
   HAL_Delay(50);
 
-  LCD_WriteReg(0xF0, 0xC3);
-  LCD_WriteReg(0xF0, 0x96);
-  LCD_WriteReg(0x36, 0x28);
-  LCD_WriteReg(0x3A, 0x55);
-  LCD_WriteReg(0xB4, 0x01);
-  LCD_WriteReg(0xB7, 0xC6);
-  LCD_WriteReg(0xC1, 0x15);
-  LCD_WriteReg(0xC2, 0xAF);
-  LCD_WriteReg(0xC3, 0x09);
-  LCD_WriteReg(0xC5, 0x22);
-  LCD_WriteReg(0xC6, 0x0);
-  LCD_WriteReg(0xE8, 0x40);
-  LCD_WriteReg(0x8A, 0x0);
-  LCD_WriteData(0x0);
-  LCD_WriteData(0x0);
-  LCD_WriteData(0x29);
-  LCD_WriteData(0x19);
-  LCD_WriteData(0xA5);
-  LCD_WriteData(0x33);
-  LCD_WriteReg(0xE0, 0xF0);
-  LCD_WriteData(0x04);
-  LCD_WriteData(0x08);
-  LCD_WriteData(0x09);
-  LCD_WriteData(0x08);
-  LCD_WriteData(0x15);
-  LCD_WriteData(0x2F);
-  LCD_WriteData(0x42);
-  LCD_WriteData(0x46);
-  LCD_WriteData(0x28);
-  LCD_WriteData(0x15);
-  LCD_WriteData(0x16);
-  LCD_WriteData(0x29);
-  LCD_WriteData(0x2D);
-  LCD_WriteReg(0xE1, 0xF0);
-  LCD_WriteData(0x04);
-  LCD_WriteData(0x09);
-  LCD_WriteData(0x09);
-  LCD_WriteData(0x08);
-  LCD_WriteData(0x15);
-  LCD_WriteData(0x2E);
-  LCD_WriteData(0x46);
-  LCD_WriteData(0x46);
-  LCD_WriteData(0x28);
-  LCD_WriteData(0x15);
-  LCD_WriteData(0x15);
-  LCD_WriteData(0x29);
-  LCD_WriteData(0x2D);
-  LCD_WriteReg(0x2A, 0x0);
-  LCD_WriteData(0x0);
-  LCD_WriteData(0x01);
-  LCD_WriteData(0x3F);
-  LCD_WriteReg(0x2B, 0x0);
-  LCD_WriteData(0x0);
-  LCD_WriteData(0x01);
-  LCD_WriteData(0xDF);
+  LCD_IO_WriteReg(0xF0, 0xC3);
+  LCD_IO_WriteReg(0xF0, 0x96);
+  LCD_IO_WriteReg(0x36, 0x28);
+  LCD_IO_WriteReg(0x3A, 0x55);
+  LCD_IO_WriteReg(0xB4, 0x01);
+  LCD_IO_WriteReg(0xB7, 0xC6);
+  LCD_IO_WriteReg(0xC1, 0x15);
+  LCD_IO_WriteReg(0xC2, 0xAF);
+  LCD_IO_WriteReg(0xC3, 0x09);
+  LCD_IO_WriteReg(0xC5, 0x22);
+  LCD_IO_WriteReg(0xC6, 0x0);
+  LCD_IO_WriteReg(0xE8, 0x40);
+  LCD_IO_WriteReg(0x8A, 0x0);
+  LCD_IO_WriteData(0x0);
+  LCD_IO_WriteData(0x0);
+  LCD_IO_WriteData(0x29);
+  LCD_IO_WriteData(0x19);
+  LCD_IO_WriteData(0xA5);
+  LCD_IO_WriteData(0x33);
+  LCD_IO_WriteReg(0xE0, 0xF0);
+  LCD_IO_WriteData(0x04);
+  LCD_IO_WriteData(0x08);
+  LCD_IO_WriteData(0x09);
+  LCD_IO_WriteData(0x08);
+  LCD_IO_WriteData(0x15);
+  LCD_IO_WriteData(0x2F);
+  LCD_IO_WriteData(0x42);
+  LCD_IO_WriteData(0x46);
+  LCD_IO_WriteData(0x28);
+  LCD_IO_WriteData(0x15);
+  LCD_IO_WriteData(0x16);
+  LCD_IO_WriteData(0x29);
+  LCD_IO_WriteData(0x2D);
+  LCD_IO_WriteReg(0xE1, 0xF0);
+  LCD_IO_WriteData(0x04);
+  LCD_IO_WriteData(0x09);
+  LCD_IO_WriteData(0x09);
+  LCD_IO_WriteData(0x08);
+  LCD_IO_WriteData(0x15);
+  LCD_IO_WriteData(0x2E);
+  LCD_IO_WriteData(0x46);
+  LCD_IO_WriteData(0x46);
+  LCD_IO_WriteData(0x28);
+  LCD_IO_WriteData(0x15);
+  LCD_IO_WriteData(0x15);
+  LCD_IO_WriteData(0x29);
+  LCD_IO_WriteData(0x2D);
+  LCD_IO_WriteReg(0x2A, 0x0);
+  LCD_IO_WriteData(0x0);
+  LCD_IO_WriteData(0x01);
+  LCD_IO_WriteData(0x3F);
+  LCD_IO_WriteReg(0x2B, 0x0);
+  LCD_IO_WriteData(0x0);
+  LCD_IO_WriteData(0x01);
+  LCD_IO_WriteData(0xDF);
 #if 1
-  Driver_LcdFSMCWriteReg(0x20);  // Invert off
+  LCD_IO_WriteReg(0x21);  // Invert off
 #else
-  Driver_LcdFSMCWriteReg(0x21);
+  LCD_IO_WriteReg(0x20);
 #endif
   ////
-  LCD_WriteReg(0x53, 0x24);
-  LCD_WriteReg(0xF0, 0x3C);
-  LCD_WriteReg(0xF0, 0x69);
+  LCD_IO_WriteReg(0x53, 0x24);
+  LCD_IO_WriteReg(0xF0, 0x3C);
+  LCD_IO_WriteReg(0xF0, 0x69);
   HAL_Delay(150);
-  Driver_LcdFSMCWriteReg(0x29);
-  Driver_LcdFSMCWriteReg(0x2C);
+  LCD_IO_WriteReg(0x29);
+  LCD_IO_WriteReg(0x2C);
 }
 
 void LCD_IO_Init(uint8_t cs, uint8_t rs) {
@@ -285,6 +292,12 @@ uint32_t LCD_IO_ReadData(uint16_t RegValue, uint8_t ReadSize) {
 		data |= (LCD_RAM & 0x00FF);
 	}
 	return (uint32_t)data;
+}
+
+void LCD_IO_WriteReg(uint8_t Reg, uint16_t RegValue)
+{
+  LCD_IO_WriteReg(Reg);
+  LCD_IO_WriteData(RegValue);
 }
 
 #endif
