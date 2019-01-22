@@ -79,8 +79,8 @@
 //  #define Z_CS_PIN         PD5
 //#endif
 
-#define E0_STEP_PIN        PA3
-#define E0_DIR_PIN         PA4
+#define E0_STEP_PIN        PA4
+#define E0_DIR_PIN         PA3
 #define E0_ENABLE_PIN      PA5
 //#ifndef E0_CS_PIN
 //  #define E0_CS_PIN         PB4
@@ -110,12 +110,12 @@
 #define HEATER_BED_PIN     PA2
 
 #ifndef FAN_PIN
-  #define FAN_PIN          PC15
+  //#define FAN_PIN          PC15
 #endif
-#define FAN1_PIN           PA0
-#define FAN2_PIN           -1
+#define FAN1_PIN           PC15
+#define FAN2_PIN           PA0
 
-#define ORIG_E0_AUTO_FAN_PIN  FAN1_PIN // Use this by NOT overriding E0_AUTO_FAN_PIN
+#define ORIG_E0_AUTO_FAN_PIN  PC15 // Use this by NOT overriding E0_AUTO_FAN_PIN
 
 //
 // Misc. Functions

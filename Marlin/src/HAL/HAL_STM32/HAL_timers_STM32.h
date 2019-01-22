@@ -62,7 +62,7 @@
 
 #elif defined STM32F4xx
 
-  #define HAL_TIMER_RATE (F_CPU/2) // frequency of timer peripherals
+  #define HAL_TIMER_RATE         (HAL_RCC_GetSysClockFreq() / 2)  // frequency of timer peripherals
 
   #ifndef STEP_TIMER
     #define STEP_TIMER 1
@@ -101,7 +101,7 @@
 #define TEMP_TIMER_PRESCALE     1000 // prescaler for setting Temp timer, 72Khz
 #define TEMP_TIMER_FREQUENCY    1000 // temperature interrupt frequency
 
-#define STEPPER_TIMER_PRESCALE 18             // prescaler for setting stepper timer, 4Mhz
+#define STEPPER_TIMER_PRESCALE 54 // was 40,prescaler for setting stepper timer, 2Mhz
 #define STEPPER_TIMER_RATE     (HAL_TIMER_RATE / STEPPER_TIMER_PRESCALE)   // frequency of stepper timer
 #define STEPPER_TIMER_TICKS_PER_US ((STEPPER_TIMER_RATE) / 1000000) // stepper timer ticks per µs
 

@@ -144,13 +144,16 @@ static const uint8_t ili3941_init_sequence[] = { // 0x7796 - ~ILI3941
   U8G_ESC_END
 };
 
-static int color_fg_r=0;
-static int color_fg_g=48; //pipboy green
-static int color_fg_b=0;
+// RDFGC Blue: 033fff
+// RDFGC White: fafcff
 
-static int color_bg_r=0;
-static int color_bg_g=0;
-static int color_bg_b=0;
+static int color_fg_r=0xFA;
+static int color_fg_g=0xFC; //pipboy green
+static int color_fg_b=0xFF;
+
+static int color_bg_r=0x03;
+static int color_bg_g=0x10;
+static int color_bg_b=0xFF;
 static uint16_t calcRGB16(uint8_t r, uint8_t g, uint8_t b) {
 	return (b & 0x1F) | ((g & 0x2F)<<5) | ((r & 0x1F) << 11);
 }

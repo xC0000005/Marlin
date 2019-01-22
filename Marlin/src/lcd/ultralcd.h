@@ -21,10 +21,15 @@
  */
 #pragma once
 
+extern uint8_t xpt2046_read_buttons();
 #include "../inc/MarlinConfig.h"
 
 #if HAS_BUZZER
   #include "../libs/buzzer.h"
+#endif
+
+#ifdef TOUCH_BUTTONS
+  #include "../HAL/shared/xpt2046.h"
 #endif
 
 #define HAS_ENCODER_ACTION (HAS_LCD_MENU || ENABLED(ULTIPANEL_FEEDMULTIPLY))
@@ -475,6 +480,10 @@ public:
     #if HAS_SLOW_BUTTONS
       static volatile uint8_t slow_buttons;
       static uint8_t read_slow_buttons();
+    #endif
+    #ifdef TOUCH_BUTTONS
+       volatile uint8_t touch_buttons;
+       uint8_t read_touch_buttons() { return xpt2046_read_buttons(); }
     #endif
     static void update_buttons();
     static inline bool button_pressed() { return BUTTON_CLICK(); }
