@@ -51,7 +51,6 @@
 #define MSG_AUTO_HOME_Y                     _UxGT("Home Y")
 #define MSG_AUTO_HOME_Z                     _UxGT("Home Z")
 #define MSG_AUTO_Z_ALIGN                    _UxGT("Z-Achsen ausgleichen")
-#define MSG_TMC_Z_CALIBRATION               _UxGT("Kalibriere Z")
 #define MSG_LEVEL_BED_HOMING                _UxGT("Home XYZ")
 #define MSG_LEVEL_BED_WAITING               _UxGT("Klick zum Starten")
 #define MSG_LEVEL_BED_NEXT_POINT            _UxGT("Nächste Koordinate")
@@ -438,3 +437,10 @@
   #define MSG_FILAMENT_CHANGE_CONT_PURGE_2  _UxGT("der Fila-Entladung")
   #define MSG_FILAMENT_CHANGE_RESUME_1      _UxGT("Fortsetzen...")
 #endif // LCD_HEIGHT < 4
+
+#define MSG_TMC_DRIVERS                     _UxGT("TMC Treiber") // Max length 18 characters
+#define MSG_TMC_CURRENT                     _UxGT("Treiber Strom")
+#define MSG_TMC_HYBRID_THRS                 _UxGT("Hybrid threshold")
+#define MSG_TMC_HOMING_THRS                 _UxGT("Sensorloses Homing")
+#define MSG_TMC_STEPPING_MODE               _UxGT("Schrittmodus")
+#define MSG_TMC_STEALTH_ENABLED             _UxGT("StealthChop einsch.")

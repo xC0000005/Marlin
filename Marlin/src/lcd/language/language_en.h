@@ -103,9 +103,6 @@
 #ifndef MSG_AUTO_Z_ALIGN
   #define MSG_AUTO_Z_ALIGN                    _UxGT("Auto Z-Align")
 #endif
-#ifndef MSG_TMC_Z_CALIBRATION
-  #define MSG_TMC_Z_CALIBRATION               _UxGT("Calibrate Z")
-#endif
 #ifndef MSG_LEVEL_BED_HOMING
   #define MSG_LEVEL_BED_HOMING                _UxGT("Homing XYZ")
 #endif
@@ -171,6 +168,21 @@
 #endif
 #ifndef MSG_COOLDOWN
   #define MSG_COOLDOWN                        _UxGT("Cooldown")
+#endif
+#ifndef MSG_LASER_MENU
+  #define MSG_LASER_MENU                      _UxGT("Laser Control")
+#endif
+#ifndef MSG_LASER_OFF
+  #define MSG_LASER_OFF                       _UxGT("Laser Off")
+#endif
+#ifndef MSG_LASER_ON
+  #define MSG_LASER_ON                        _UxGT("Laser On")
+#endif
+#ifndef MSG_LASER_POWER
+  #define MSG_LASER_POWER                     _UxGT("Laser power")
+#endif
+#ifndef MSG_SPINDLE_REVERSE
+  #define MSG_SPINDLE_REVERSE                 _UxGT("Spindle Reverse")
 #endif
 #ifndef MSG_SWITCH_PS_ON
   #define MSG_SWITCH_PS_ON                    _UxGT("Switch power on")
@@ -813,6 +825,9 @@
 #ifndef MSG_SINGLENOZZLE_RETRACT_SPD
   #define MSG_SINGLENOZZLE_RETRACT_SPD        _UxGT("Retract Speed")
 #endif
+#ifndef MSG_NOZZLE_STANDBY
+  #define MSG_NOZZLE_STANDBY                  _UxGT("Nozzle Standby")
+#endif
 #ifndef MSG_FILAMENTCHANGE
   #define MSG_FILAMENTCHANGE                  _UxGT("Change filament")
 #endif
@@ -1181,3 +1196,22 @@
     #define MSG_FILAMENT_CHANGE_RESUME_1      _UxGT("Resuming...")
   #endif
 #endif // LCD_HEIGHT < 4
+
+#ifndef MSG_TMC_DRIVERS
+  #define MSG_TMC_DRIVERS                     _UxGT("TMC drivers")
+#endif
+#ifndef MSG_TMC_CURRENT
+  #define MSG_TMC_CURRENT                     _UxGT("Driver current")
+#endif
+#ifndef MSG_TMC_HYBRID_THRS
+  #define MSG_TMC_HYBRID_THRS                 _UxGT("Hybrid threshold")
+#endif
+#ifndef MSG_TMC_HOMING_THRS
+  #define MSG_TMC_HOMING_THRS                 _UxGT("Sensorless homing")
+#endif
+#ifndef MSG_TMC_STEPPING_MODE
+  #define MSG_TMC_STEPPING_MODE               _UxGT("Stepping mode")
+#endif
+#ifndef MSG_TMC_STEALTH_ENABLED
+  #define MSG_TMC_STEALTH_ENABLED             _UxGT("StealthChop enabled")
+#endif

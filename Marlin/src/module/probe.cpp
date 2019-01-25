@@ -38,8 +38,8 @@
 #include "../gcode/gcode.h"
 #include "../lcd/ultralcd.h"
 
-#if ENABLED(BLTOUCH) || ENABLED(Z_PROBE_SLED) || ENABLED(Z_PROBE_ALLEN_KEY) || ENABLED(PROBE_TRIGGERED_WHEN_STOWED_TEST)
-  #include "../Marlin.h" // for stop()
+#if ENABLED(BLTOUCH) || ENABLED(Z_PROBE_SLED) || ENABLED(Z_PROBE_ALLEN_KEY) || ENABLED(PROBE_TRIGGERED_WHEN_STOWED_TEST) || (QUIET_PROBING && ENABLED(PROBING_STEPPERS_OFF))
+  #include "../Marlin.h" // for stop(), disable_e_steppers
 #endif
 
 #if HAS_LEVELING
@@ -268,31 +268,13 @@ float zprobe_zoffset; // Initialized by settings.load()
 
 #endif // Z_PROBE_ALLEN_KEY
 
-#if ENABLED(PROBING_FANS_OFF)
-
-  void fans_pause(const bool p) {
-    if (p != fans_paused) {
-      fans_paused = p;
-      if (p)
-        for (uint8_t x = 0; x < FAN_COUNT; x++) {
-          paused_fan_speed[x] = fan_speed[x];
-          fan_speed[x] = 0;
-        }
-      else
-        for (uint8_t x = 0; x < FAN_COUNT; x++)
-          fan_speed[x] = paused_fan_speed[x];
-    }
-  }
-
-#endif // PROBING_FANS_OFF
-
 #if QUIET_PROBING
   void probing_pause(const bool p) {
     #if ENABLED(PROBING_HEATERS_OFF)
       thermalManager.pause(p);
     #endif
     #if ENABLED(PROBING_FANS_OFF)
-      fans_pause(p);
+      thermalManager.set_fans_paused(p);
     #endif
     #if ENABLED(PROBING_STEPPERS_OFF)
       disable_e_steppers();
