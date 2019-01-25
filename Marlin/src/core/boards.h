@@ -245,6 +245,8 @@
 #define BOARD_ARMED            1807   // Arm'ed STM32F4 based controller
 #define BOARD_RUMBA32          1809   // RUMBA32 STM32F4 based controller
 #define BOARD_STEVAL           1866   // STEVAL-3DP001V1 3D PRINTER BOARD
+#define BOARD_LERDGE_X         1867   // Lerdge-X 3D PRINTER BOARD
+#define BOARD_LERDGE_K         1868   // Lerdge-K 3D PRINTER BOARD
 
 //
 // ARM Cortex M7

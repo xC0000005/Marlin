@@ -427,6 +427,10 @@
   #include "pins_RUMBA32.h"           // STM32F4                                    env:RUMBA32
 #elif MB(STEVAL)
   #include "pins_STEVAL.h"            // STM32F4                                    env:STM32F4
+#elif MB(LERDGE_X)
+  #include "pins_LERDGE_X.h"            // STM32F4                                    env:STM32F4
+#elif MB(LERDGE_K)
+  #include "pins_LERDGE_K.h"            // STM32F4                                    env:STM32F4
 
 //
 // ARM Cortex M7
