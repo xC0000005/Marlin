@@ -26,7 +26,7 @@
 #endif
 
 #define DEFAULT_MACHINE_NAME "LERDGE"
-#define BOARD_NAME "Lerdge K"
+#define BOARD_NAME "Lerdge X"
 
 //#define I2C_EEPROM
 
