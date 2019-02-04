@@ -174,6 +174,16 @@
   //#define E_MUX2_PIN 44  // Needed for 5 to 8 inputs
 #endif
 
+/**
+ * Prusa Multi-Material Unit v2
+ *
+ * Requires NOZZLE_PARK_FEATURE to park print head in case MMU unit fails.
+ * Requires EXTRUDERS = 5
+ *
+ * For additional configuration see Configuration_adv.h
+ */
+//#define PRUSA_MMU2
+
 // A dual extruder that uses a single stepper motor
 //#define SWITCHING_EXTRUDER
 #if ENABLED(SWITCHING_EXTRUDER)
@@ -188,7 +198,8 @@
 //#define SWITCHING_NOZZLE
 #if ENABLED(SWITCHING_NOZZLE)
   #define SWITCHING_NOZZLE_SERVO_NR 0
-  #define SWITCHING_NOZZLE_SERVO_ANGLES { 0, 90 }   // Angles for E0, E1
+  //#define SWITCHING_NOZZLE_E1_SERVO_NR 1          // If two servos are used, the index of the second
+  #define SWITCHING_NOZZLE_SERVO_ANGLES { 0, 90 }   // Angles for E0, E1 (single servo) or lowered/raised (dual servo)
 #endif
 
 /**
@@ -984,7 +995,20 @@
   #define FIL_RUNOUT_INVERTING false // set to true to invert the logic of the sensor.
   #define FIL_RUNOUT_PULLUP          // Use internal pullup for filament runout pins.
   //#define FIL_RUNOUT_PULLDOWN      // Use internal pulldown for filament runout pins.
+
+  // Set one or more commands to run on filament runout.
+  //  - Always applies to SD-card printing.
+  //  - Applies to host-based printing if ACTION_ON_FILAMENT_RUNOUT is not set.
   #define FILAMENT_RUNOUT_SCRIPT "M600"
+
+  // With this option, if filament runs out during host-based printing, Marlin
+  // will send "//action:<ACTION_ON_FILAMENT_RUNOUT>" to the host and let the
+  // host handle filament change. If left undefined the FILAMENT_RUNOUT_SCRIPT
+  // will be used on filament runout for both host-based and SD-card printing.
+  //
+  // The host must be able to respond to the //action: command set here.
+  //
+  //#define ACTION_ON_FILAMENT_RUNOUT "pause: filament_runout"
 
   // After a runout is detected, continue printing this length of filament
   // before executing the runout script. Useful for a sensor at the end of

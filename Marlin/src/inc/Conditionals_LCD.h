@@ -368,7 +368,8 @@
  *  E_MANUAL     - Number of E steppers for LCD move options
  *
  */
-#if ENABLED(SWITCHING_EXTRUDER)                               // One stepper for every two EXTRUDERS
+
+#if ENABLED(SWITCHING_EXTRUDER)   // One stepper for every two EXTRUDERS
   #if EXTRUDERS > 4
     #define E_STEPPERS    3
   #elif EXTRUDERS > 2
@@ -385,6 +386,11 @@
 #elif ENABLED(SWITCHING_TOOLHEAD)
   #define E_STEPPERS      EXTRUDERS
   #define E_MANUAL        EXTRUDERS
+#elif ENABLED(PRUSA_MMU2)
+  #define E_STEPPERS 1
+  #ifndef TOOLCHANGE_ZRAISE
+    #define TOOLCHANGE_ZRAISE 0
+  #endif
 #endif
 
 // No inactive extruders with MK2_MULTIPLEXER or SWITCHING_NOZZLE
@@ -392,8 +398,8 @@
   #undef DISABLE_INACTIVE_EXTRUDER
 #endif
 
-// MK2 Multiplexer forces SINGLENOZZLE
-#if ENABLED(MK2_MULTIPLEXER)
+// Prusa MK2 Multiplexer and MMU 2.0 force SINGLENOZZLE
+#if ENABLED(MK2_MULTIPLEXER) || ENABLED(PRUSA_MMU2)
   #define SINGLENOZZLE
 #endif
 
@@ -420,6 +426,7 @@
 #define HOTEND_LOOP() for (int8_t e = 0; e < HOTENDS; e++)
 
 #define DO_SWITCH_EXTRUDER (ENABLED(SWITCHING_EXTRUDER) && (DISABLED(SWITCHING_NOZZLE) || SWITCHING_EXTRUDER_SERVO_NR != SWITCHING_NOZZLE_SERVO_NR))
+#define SWITCHING_NOZZLE_TWO_SERVOS defined(SWITCHING_NOZZLE_E1_SERVO_NR)
 
 #define HAS_HOTEND_OFFSET (HOTENDS > 1)
 
@@ -428,11 +435,11 @@
  */
 #if ENABLED(DISTINCT_E_FACTORS) && E_STEPPERS > 1
   #define XYZE_N (XYZ + E_STEPPERS)
-  #define E_AXIS_N(E) (uint8_t(E_AXIS) + E)
+  #define E_AXIS_N(E) (E_AXIS + E)
 #else
   #undef DISTINCT_E_FACTORS
   #define XYZE_N XYZE
-  #define E_AXIS_N(E) uint8_t(E_AXIS)
+  #define E_AXIS_N(E) E_AXIS
 #endif
 
 /**
@@ -526,3 +533,18 @@
 #define IS_SCARA     (ENABLED(MORGAN_SCARA) || ENABLED(MAKERARM_SCARA))
 #define IS_KINEMATIC (ENABLED(DELTA) || IS_SCARA)
 #define IS_CARTESIAN !IS_KINEMATIC
+
+#define HAS_ACTION_COMMANDS (defined(ACTION_ON_KILL) || defined(ACTION_ON_PAUSE) || defined(ACTION_ON_PAUSED) || defined(ACTION_ON_RESUME) || defined(ACTION_ON_RESUMED) || defined(ACTION_ON_CANCEL) || defined(G29_ACTION_ON_RECOVER) || defined(G29_ACTION_ON_FAILURE) || defined(ACTION_ON_FILAMENT_RUNOUT))
+
+#ifndef INVERT_X_DIR
+  #define INVERT_X_DIR false
+#endif
+#ifndef INVERT_Y_DIR
+  #define INVERT_Y_DIR false
+#endif
+#ifndef INVERT_Z_DIR
+  #define INVERT_Z_DIR false
+#endif
+#ifndef INVERT_E_DIR
+  #define INVERT_E_DIR false
+#endif

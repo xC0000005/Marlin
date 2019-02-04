@@ -130,7 +130,7 @@ void GcodeSuite::dwell(millis_t time) {
     while (G29()) { // G29 should return true for failed probes ONLY
       if (retries--) {
         #ifdef G29_ACTION_ON_RECOVER
-          SERIAL_ECHOLNPGM("//action:" G29_ACTION_ON_RECOVER);
+          host_action(PSTR(G29_ACTION_ON_RECOVER));
         #endif
         #ifdef G29_RECOVER_COMMANDS
           process_subcommands_now_P(PSTR(G29_RECOVER_COMMANDS));
@@ -141,7 +141,7 @@ void GcodeSuite::dwell(millis_t time) {
           process_subcommands_now_P(PSTR(G29_FAILURE_COMMANDS));
         #endif
         #ifdef G29_ACTION_ON_FAILURE
-          SERIAL_ECHOLNPGM("//action:" G29_ACTION_ON_FAILURE);
+          host_action(PSTR(G29_ACTION_ON_FAILURE));
         #endif
         #if ENABLED(G29_HALT_ON_FAILURE)
           kill(PSTR(MSG_ERR_PROBING_FAILED));
@@ -555,6 +555,10 @@ void GcodeSuite::process_parsed_command(
       #if HAS_BED_PROBE
         case 401: M401(); break;                                  // M401: Deploy probe
         case 402: M402(); break;                                  // M402: Stow probe
+      #endif
+
+      #if ENABLED(PRUSA_MMU2)
+        case 403: M403(); break;
       #endif
 
       #if ENABLED(FILAMENT_WIDTH_SENSOR)

@@ -156,6 +156,10 @@
   #include "feature/controllerfan.h"
 #endif
 
+#if ENABLED(PRUSA_MMU2)
+  #include "feature/prusa_MMU2/mmu2.h"
+#endif
+
 #if ENABLED(EXTENSIBLE_UI)
   #include "lcd/extensible_ui/ui_api.h"
 #endif
@@ -310,6 +314,38 @@ void disable_all_steppers() {
   disable_Z();
   disable_e_steppers();
 }
+
+#if HAS_ACTION_COMMANDS
+
+  void host_action(const char * const pstr, const bool eol=true) {
+    SERIAL_ECHOPGM("//action:");
+    serialprintPGM(pstr);
+    if (eol) SERIAL_EOL();
+  }
+
+  #ifdef ACTION_ON_KILL
+    void host_action_kill() { host_action(PSTR(ACTION_ON_KILL)); }
+  #endif
+  #ifdef ACTION_ON_PAUSE
+    void host_action_pause() { host_action(PSTR(ACTION_ON_PAUSE)); }
+  #endif
+  #ifdef ACTION_ON_PAUSED
+    void host_action_paused() { host_action(PSTR(ACTION_ON_PAUSED)); }
+  #endif
+  #ifdef ACTION_ON_RESUME
+    void host_action_resume() { host_action(PSTR(ACTION_ON_RESUME)); }
+  #endif
+  #ifdef ACTION_ON_RESUMED
+    void host_action_resumed() { host_action(PSTR(ACTION_ON_RESUMED)); }
+  #endif
+  #ifdef ACTION_ON_CANCEL
+    void host_action_cancel() { host_action(PSTR(ACTION_ON_CANCEL)); }
+  #endif
+  #ifdef ACTION_ON_FILAMENT_RUNOUT
+    void host_action_filament_runout(const bool eol/*=true*/) { host_action(PSTR(ACTION_ON_FILAMENT_RUNOUT), eol); }
+  #endif
+
+#endif // HAS_ACTION_COMMANDS
 
 /**
  * Manage several activities:
@@ -600,6 +636,10 @@ void idle(
   #if ENABLED(USB_FLASH_DRIVE_SUPPORT)
     Sd2Card::idle();
   #endif
+
+  #if ENABLED(PRUSA_MMU2)
+    mmu2.mmuLoop();
+  #endif
 }
 
 /**
@@ -618,7 +658,7 @@ void kill(PGM_P const lcd_msg/*=NULL*/) {
   #endif
 
   #ifdef ACTION_ON_KILL
-    SERIAL_ECHOLNPGM("//action:" ACTION_ON_KILL);
+    host_action_kill();
   #endif
 
   minkill();
@@ -926,7 +966,13 @@ void setup() {
   #endif
 
   #if ENABLED(SWITCHING_NOZZLE)
-    move_nozzle_servo(0);     // Initialize nozzle servo
+    // Initialize nozzle servo(s)
+    #if SWITCHING_NOZZLE_TWO_SERVOS
+      lower_nozzle(0);
+      raise_nozzle(1);
+    #else
+      move_nozzle_servo(0);
+    #endif
   #endif
 
   #if ENABLED(PARKING_EXTRUDER)
@@ -951,6 +997,10 @@ void setup() {
 
   #if HAS_TRINAMIC && DISABLED(PS_DEFAULT_OFF)
     test_tmc_connection(true, true, true, true);
+  #endif
+
+  #if ENABLED(PRUSA_MMU2)
+    mmu2.init();
   #endif
 }
 

@@ -78,6 +78,9 @@
   #define THERMAL_PROTECTION_HYSTERESIS 4     // Degrees Celsius
 
   //#define ADAPTIVE_FAN_SLOWING              // Slow part cooling fan if temperature drops
+  #if ENABLED(ADAPTIVE_FAN_SLOWING) && ENABLED(PIDTEMP)
+    //#define NO_FAN_SLOWING_IN_PID_TUNING    // Don't slow fan speed during M303
+  #endif
 
   /**
    * Whenever an M104, M109, or M303 increases the target temperature, the
@@ -1949,25 +1952,38 @@
  * Specify an action command to send to the host on pause and resume.
  * Will be sent in the form '//action:ACTION_ON_PAUSE', e.g. '//action:pause'.
  * The host must be configured to handle the action command.
+ *
+ *   PAUSE / RESUME : Used in non-parking scenarios where the host handles the
+ *                    action while Marlin continues to process G-Code. (M24/M25)
+ *
+ * PAUSED / RESUMED : Used in scenarios where Marlin handles pause and filament-
+ *                    change actions and the host needs to stop sending commands
+ *                    until the machine is ready to resume. (M125/M600)
+ *
+ *           CANCEL : Instructs the host to abort the print job. Used when the
+ *                    print is canceled from the LCD menu.
  */
-//#define ACTION_ON_PAUSE "pause"
-//#define ACTION_ON_RESUME "resume"
+//#define ACTION_ON_PAUSE   "pause"
+//#define ACTION_ON_RESUME  "resume"
+//#define ACTION_ON_PAUSED  "paused"
+//#define ACTION_ON_RESUMED "resumed"
+//#define ACTION_ON_CANCEL  "cancel"
 
 //===========================================================================
 //====================== I2C Position Encoder Settings ======================
 //===========================================================================
 
 /**
- *  I2C position encoders for closed loop control.
- *  Developed by Chris Barr at Aus3D.
+ * I2C position encoders for closed loop control.
+ * Developed by Chris Barr at Aus3D.
  *
- *  Wiki: http://wiki.aus3d.com.au/Magnetic_Encoder
- *  Github: https://github.com/Aus3D/MagneticEncoder
+ * Wiki: http://wiki.aus3d.com.au/Magnetic_Encoder
+ * Github: https://github.com/Aus3D/MagneticEncoder
  *
- *  Supplier: http://aus3d.com.au/magnetic-encoder-module
- *  Alternative Supplier: http://reliabuild3d.com/
+ * Supplier: http://aus3d.com.au/magnetic-encoder-module
+ * Alternative Supplier: http://reliabuild3d.com/
  *
- *  Reilabuild encoders have been modified to improve reliability.
+ * Reliabuild encoders have been modified to improve reliability.
  */
 
 //#define I2C_POSITION_ENCODERS
@@ -2090,6 +2106,59 @@
   #define WIFI_SSID "Wifi SSID"
   #define WIFI_PWD  "Wifi Password"
 #endif
+
+/**
+ * Prusa Multi-Material Unit v2
+ * Enable in Configuration.h
+ */
+#if ENABLED(PRUSA_MMU2)
+
+  // Serial port used for communication with MMU2.
+  // For AVR enable the UART port used for the MMU. (e.g., internalSerial)
+  // For 32-bit boards check your HAL for available serial ports. (e.g., Serial2)
+  #define INTERNAL_SERIAL_PORT 2
+  #define MMU2_SERIAL internalSerial
+
+  // Use hardware reset for MMU if a pin is defined for it
+  //#define MMU2_RST_PIN 23
+
+  // Enable if the MMU2 has 12V stepper motors (MMU2 Firmware 1.0.2 and up)
+  //#define MMU2_MODE_12V
+
+  // G-code to execute when MMU2 F.I.N.D.A. probe detects filament runout
+  #define MMU2_FILAMENT_RUNOUT_SCRIPT "M600"
+
+  // Add an LCD menu for MMU2
+  //#define MMU2_MENUS
+  #if ENABLED(MMU2_MENUS)
+    // Settings for filament load / unload from the LCD menu.
+    // This is for Prusa MK3-style extruders. Customize for your hardware.
+    #define MMU2_FILAMENTCHANGE_EJECT_FEED 80.0
+    #define MMU2_LOAD_TO_NOZZLE_SEQUENCE \
+      {  7.2,  562 }, \
+      { 14.4,  871 }, \
+      { 36.0, 1393 }, \
+      { 14.4,  871 }, \
+      { 50.0,  198 }
+
+    #define MMU2_RAMMING_SEQUENCE \
+      {   1.0, 1000 }, \
+      {   1.0, 1500 }, \
+      {   2.0, 2000 }, \
+      {   1.5, 3000 }, \
+      {   2.5, 4000 }, \
+      { -15.0, 5000 }, \
+      { -14.0, 1200 }, \
+      {  -6.0,  600 }, \
+      {  10.0,  700 }, \
+      { -10.0,  400 }, \
+      { -50.0, 2000 }
+
+  #endif
+
+  //#define MMU2_DEBUG  // Write debug info to serial output
+
+#endif // PRUSA_MMU2
 
 // @section develop
 

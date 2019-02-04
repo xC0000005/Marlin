@@ -89,7 +89,7 @@ Stepper stepper; // Singleton
 #include "planner.h"
 #include "motion.h"
 
-#include "../module/temperature.h"
+#include "temperature.h"
 #include "../lcd/ultralcd.h"
 #include "../core/language.h"
 #include "../gcode/queue.h"
@@ -129,10 +129,10 @@ Stepper stepper; // Singleton
 
 // private:
 
-block_t* Stepper::current_block = NULL; // A pointer to the block currently being traced
+block_t* Stepper::current_block; // (= NULL) A pointer to the block currently being traced
 
-uint8_t Stepper::last_direction_bits = 0,
-        Stepper::axis_did_move;
+uint8_t Stepper::last_direction_bits, // = 0
+        Stepper::axis_did_move; // = 0
 
 bool Stepper::abort_current_block;
 
@@ -2150,9 +2150,13 @@ void Stepper::init() {
 
   sei();
 
-  Z_DIR_WRITE(0);    // Init directions to last_direction_bits = 0  Keeps Z from being reversed
-  Z2_DIR_WRITE(0);
-  Z3_DIR_WRITE(0);
+  // Init direction bits for first moves
+  last_direction_bits = 0
+    | (INVERT_X_DIR ? _BV(X_AXIS) : 0)
+    | (INVERT_Y_DIR ? _BV(Y_AXIS) : 0)
+    | (INVERT_Z_DIR ? _BV(Z_AXIS) : 0);
+
+  set_directions();
 }
 
 /**
