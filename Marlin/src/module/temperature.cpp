@@ -33,7 +33,9 @@
 #include "../core/language.h"
 #include "../HAL/shared/Delay.h"
 
-#if ENABLED(HEATER_0_USES_MAX6675)
+#define MAX6675_SEPARATE_SPI (ENABLED(HEATER_0_USES_MAX6675) || ENABLED(HEATER_1_USES_MAX6675)) && PIN_EXISTS(MAX6675_SCK) && PIN_EXISTS(MAX6675_DO)
+
+#if MAX6675_SEPARATE_SPI
   #include "../libs/private_spi.h"
 #endif
 
@@ -328,6 +330,8 @@ uint8_t Temperature::soft_pwm_amount[HOTENDS];
    *
    * Alternately heat and cool the nozzle, observing its behavior to
    * determine the best PID values to achieve a stable temperature.
+   * Needs sufficient heater power to make some overshoot at target
+   * temperature to succeed.
    */
   void Temperature::PID_autotune(const float &target, const int8_t heater, const int8_t ncycles, const bool set_result/*=false*/) {
     float current = 0.0;
@@ -538,7 +542,7 @@ uint8_t Temperature::soft_pwm_amount[HOTENDS];
         break;
       }
 
-      if (cycles > ncycles) {
+      if (cycles > ncycles && cycles > 2) {
         SERIAL_ECHOLNPGM(MSG_PID_AUTOTUNE_FINISHED);
 
         #if HAS_PID_FOR_BOTH
@@ -704,14 +708,14 @@ float Temperature::get_pid_output(const int8_t e) {
   #else
     #define _HOTEND_TEST (e == active_extruder)
   #endif
+  float pid_output;
   #if ENABLED(PIDTEMP)
     #if DISABLED(PID_OPENLOOP)
       static hotend_pid_t work_pid[HOTENDS];
       static float temp_iState[HOTENDS] = { 0 },
                    temp_dState[HOTENDS] = { 0 };
       static bool pid_reset[HOTENDS] = { false };
-      float pid_output,
-            pid_error = target_temperature[HOTEND_INDEX] - current_temperature[HOTEND_INDEX];
+      float pid_error = target_temperature[HOTEND_INDEX] - current_temperature[HOTEND_INDEX];
       work_pid[HOTEND_INDEX].Kd = PID_K2 * PID_PARAM(Kd, HOTEND_INDEX) * (current_temperature[HOTEND_INDEX] - temp_dState[HOTEND_INDEX]) + float(PID_K1) * work_pid[HOTEND_INDEX].Kd;
       temp_dState[HOTEND_INDEX] = current_temperature[HOTEND_INDEX];
       #if HEATER_IDLE_HANDLER
@@ -1205,13 +1209,7 @@ void Temperature::updateTemperaturesFromRawValues() {
 
 #endif
 
-#if ENABLED(HEATER_0_USES_MAX6675)
-  #ifndef MAX6675_SCK_PIN
-    #define MAX6675_SCK_PIN SCK_PIN
-  #endif
-  #ifndef MAX6675_DO_PIN
-    #define MAX6675_DO_PIN MISO_PIN
-  #endif
+#if MAX6675_SEPARATE_SPI
   SPIclass<MAX6675_DO_PIN, MOSI_PIN, MAX6675_SCK_PIN> max6675_spi;
 #endif
 
@@ -1289,7 +1287,7 @@ void Temperature::init() {
     #endif
   #endif
 
-  #if ENABLED(HEATER_0_USES_MAX6675)
+  #if MAX6675_SEPARATE_SPI
 
     OUT_WRITE(SCK_PIN, LOW);
     OUT_WRITE(MOSI_PIN, HIGH);
@@ -1300,7 +1298,7 @@ void Temperature::init() {
     OUT_WRITE(SS_PIN, HIGH);
     OUT_WRITE(MAX6675_SS_PIN, HIGH);
 
-  #endif // HEATER_0_USES_MAX6675
+  #endif
 
   #if ENABLED(HEATER_1_USES_MAX6675)
     OUT_WRITE(MAX6675_SS2_PIN, HIGH);
@@ -1792,7 +1790,7 @@ void Temperature::disable_all_heaters() {
     //
     // TODO: spiBegin, spiRec and spiInit doesn't work when soft spi is used.
     //
-    #if MB(MIGHTYBOARD_REVE)
+    #if MAX6675_SEPARATE_SPI
       spiBegin();
       spiInit(MAX6675_SPEED_BITS);
     #endif
@@ -1813,7 +1811,7 @@ void Temperature::disable_all_heaters() {
     max6675_temp = 0;
     for (uint8_t i = sizeof(max6675_temp); i--;) {
       max6675_temp |= (
-        #if MB(MIGHTYBOARD_REVE)
+        #if MAX6675_SEPARATE_SPI
           max6675_spi.receive()
         #else
           spiRec()

@@ -1104,8 +1104,8 @@
 #ifndef MSG_FILAMENT_CHANGE_NOZZLE
   #define MSG_FILAMENT_CHANGE_NOZZLE          _UxGT("  Nozzle: ")
 #endif
-#ifndef MSG_RUNOUT_SENSOR_ENABLE
-  #define MSG_RUNOUT_SENSOR_ENABLE            _UxGT("Runout Sensor")
+#ifndef MSG_RUNOUT_SENSOR
+  #define MSG_RUNOUT_SENSOR                   _UxGT("Runout Sensor")
 #endif
 #ifndef MSG_ERR_HOMING_FAILED
   #define MSG_ERR_HOMING_FAILED               _UxGT("Homing failed")
@@ -1203,6 +1203,61 @@
 #endif
 #ifndef MSG_MMU2_EJECT_RECOVER
   #define MSG_MMU2_EJECT_RECOVER              _UxGT("Remove, click")
+#endif
+
+#ifndef MSG_MIX
+  #define MSG_MIX                             _UxGT("Mix")
+#endif
+#ifndef MSG_MIX_COMPONENT
+  #define MSG_MIX_COMPONENT                   _UxGT("Component")
+#endif
+#ifndef MSG_MIXER
+  #define MSG_MIXER                           _UxGT("Mixer")
+#endif
+#ifndef MSG_GRADIENT
+  #define MSG_GRADIENT                        _UxGT("Gradient")
+#endif
+#ifndef MSG_FULL_GRADIENT
+  #define MSG_FULL_GRADIENT                   _UxGT("Full gradient")
+#endif
+#ifndef MSG_TOGGLE_MIX
+  #define MSG_TOGGLE_MIX                      _UxGT("Toggle mix")
+#endif
+#ifndef MSG_CYCLE_MIX
+  #define MSG_CYCLE_MIX                       _UxGT("Cycle mix")
+#endif
+#ifndef MSG_GRADIENT_MIX
+  #define MSG_GRADIENT_MIX                    _UxGT("Gradient mix")
+#endif
+#ifndef MSG_REVERSE_GRADIENT
+  #define MSG_REVERSE_GRADIENT                _UxGT("Reverse Gradient")
+#endif
+#ifndef MSG_ACTIVE_VTOOL
+  #define MSG_ACTIVE_VTOOL                    _UxGT("Active V-tool")
+#endif
+#ifndef MSG_START_VTOOL
+  #define MSG_START_VTOOL                     _UxGT("Start V-tool")
+#endif
+#ifndef MSG_END_VTOOL
+  #define MSG_END_VTOOL                       _UxGT("  End V-tool")
+#endif
+#ifndef MSG_GRADIENT_ALIAS
+  #define MSG_GRADIENT_ALIAS                  _UxGT("Alias V-tool")
+#endif
+#ifndef MSG_RESET_VTOOLS
+  #define MSG_RESET_VTOOLS                    _UxGT("Reset V-tools")
+#endif
+#ifndef MSG_COMMIT_VTOOL
+  #define MSG_COMMIT_VTOOL                    _UxGT("Commit V-tool Mix")
+#endif
+#ifndef MSG_VTOOLS_RESET
+  #define MSG_VTOOLS_RESET                    _UxGT("V-tools were reset")
+#endif
+#ifndef MSG_START_Z
+  #define MSG_START_Z                         _UxGT("Start Z")
+#endif
+#ifndef MSG_END_Z
+  #define MSG_END_Z                           _UxGT("  End Z")
 #endif
 
 //
