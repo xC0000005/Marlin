@@ -1,6 +1,6 @@
 /**
  * Marlin 3D Printer Firmware
- * Copyright (C) 2016 MarlinFirmware [https://github.com/MarlinFirmware/Marlin]
+ * Copyright (C) 2019 MarlinFirmware [https://github.com/MarlinFirmware/Marlin]
  *
  * Based on Sprinter and grbl.
  * Copyright (C) 2011 Camiel Gubbels / Erik van der Zalm
@@ -37,6 +37,10 @@ MMU2 mmu2;
 #include "../../module/planner.h"
 #include "../../module/stepper_indirection.h"
 #include "../../Marlin.h"
+
+#if ENABLED(HOST_PROMPT_SUPPORT)
+  #include "../../feature/host_actions.h"
+#endif
 
 #define MMU_TODELAY 100
 #define MMU_TIMEOUT 10
@@ -553,7 +557,7 @@ void MMU2::toolChange(const char* special) {
     set_runout_valid(false);
     KEEPALIVE_STATE(IN_HANDLER);
 
-    switch(*special) {
+    switch (*special) {
       case '?': {
         uint8_t index = mmu2_chooseFilament();
         while (!thermalManager.wait_for_hotend(active_extruder, false)) safe_delay(100);
@@ -791,6 +795,9 @@ void MMU2::filamentRunout() {
       LCD_MESSAGEPGM(MSG_MMU2_EJECT_RECOVER);
       BUZZ(200, 404);
       wait_for_user = true;
+      #if ENABLED(HOST_PROMPT_SUPPORT)
+        host_prompt_do(PROMPT_USER_CONTINUE, PSTR("MMU2 Eject Recover"), PSTR("Continue"));
+      #endif
       while (wait_for_user) idle();
       BUZZ(200, 404);
       BUZZ(200, 404);

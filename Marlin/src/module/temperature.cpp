@@ -1,6 +1,6 @@
 /**
  * Marlin 3D Printer Firmware
- * Copyright (C) 2016 MarlinFirmware [https://github.com/MarlinFirmware/Marlin]
+ * Copyright (C) 2019 MarlinFirmware [https://github.com/MarlinFirmware/Marlin]
  *
  * Based on Sprinter and grbl.
  * Copyright (C) 2011 Camiel Gubbels / Erik van der Zalm
@@ -41,6 +41,13 @@
 
 #if ENABLED(BABYSTEPPING) || ENABLED(PID_EXTRUSION_SCALING)
   #include "stepper.h"
+#endif
+
+#if ENABLED(BABYSTEPPING)
+  #include "../module/motion.h"
+  #if ENABLED(BABYSTEP_ALWAYS_AVAILABLE)
+    #include "../gcode/gcode.h"
+  #endif
 #endif
 
 #include "printcounter.h"
@@ -260,12 +267,10 @@ int16_t Temperature::current_temperature_raw[HOTENDS], // = { 0 }
 
 volatile bool Temperature::temp_meas_ready = false;
 
-#if ENABLED(PIDTEMP)
-  #if ENABLED(PID_EXTRUSION_SCALING)
-    long Temperature::last_e_position;
-    long Temperature::lpq[LPQ_MAX_LEN];
-    int Temperature::lpq_ptr = 0;
-  #endif
+#if ENABLED(PID_EXTRUSION_SCALING)
+  long Temperature::last_e_position;
+  long Temperature::lpq[LPQ_MAX_LEN];
+  int Temperature::lpq_ptr = 0;
 #endif
 
 uint16_t Temperature::raw_temp_value[MAX_EXTRUDERS] = { 0 };
@@ -311,6 +316,8 @@ uint8_t Temperature::soft_pwm_amount[HOTENDS];
   millis_t Temperature::heater_idle_timeout_ms[HOTENDS] = { 0 };
   bool Temperature::heater_idle_timeout_exceeded[HOTENDS] = { false };
 #endif
+
+// public:
 
 #if HAS_ADC_BUTTONS
   uint32_t Temperature::current_ADCKey_raw = 0;
@@ -803,7 +810,7 @@ float Temperature::get_pid_output(const int8_t e) {
         pid_output = 0;
       else
     #endif
-    pid_output = (current_temperature[HOTEND_INDEX] < target_temperature[HOTEND_INDEX]) ? PID_MAX : 0;
+    pid_output = (current_temperature[HOTEND_INDEX] < target_temperature[HOTEND_INDEX]) ? BANG_MAX : 0;
   #endif
 
   return pid_output;
@@ -2475,15 +2482,22 @@ void Temperature::isr() {
   //
 
   #if ENABLED(BABYSTEPPING)
-    LOOP_XYZ(axis) {
-      const int16_t curTodo = babystepsTodo[axis]; // get rid of volatile for performance
-      if (curTodo) {
-        stepper.babystep((AxisEnum)axis, curTodo > 0);
-        if (curTodo > 0) babystepsTodo[axis]--;
-                    else babystepsTodo[axis]++;
+    #if ENABLED(BABYSTEP_XY) || ENABLED(I2C_POSITION_ENCODERS)
+      LOOP_XYZ(axis) {
+        const int16_t curTodo = babystepsTodo[axis]; // get rid of volatile for performance
+        if (curTodo) {
+          stepper.babystep((AxisEnum)axis, curTodo > 0);
+          if (curTodo > 0) babystepsTodo[axis]--; else babystepsTodo[axis]++;
+        }
       }
-    }
-  #endif // BABYSTEPPING
+    #else
+      const int16_t curTodo = babystepsTodo[Z_AXIS];
+      if (curTodo) {
+        stepper.babystep(Z_AXIS, curTodo > 0);
+        if (curTodo > 0) babystepsTodo[Z_AXIS]--; else babystepsTodo[Z_AXIS]++;
+      }
+    #endif
+  #endif
 
   // Poll endstops state, if required
   endstops.poll();
@@ -2491,6 +2505,70 @@ void Temperature::isr() {
   // Periodically call the planner timer
   planner.tick();
 }
+
+#if ENABLED(BABYSTEPPING)
+
+  #if ENABLED(BABYSTEP_ALWAYS_AVAILABLE)
+    #define BSA_ENABLE(AXIS) do{ switch (AXIS) { case X_AXIS: enable_X(); break; case Y_AXIS: enable_Y(); break; case Z_AXIS: enable_Z(); } }while(0)
+  #else
+    #define BSA_ENABLE(AXIS) NOOP
+  #endif
+
+  #if ENABLED(BABYSTEP_WITHOUT_HOMING)
+    #define CAN_BABYSTEP(AXIS) true
+  #else
+    #define CAN_BABYSTEP(AXIS) TEST(axis_known_position, AXIS)
+  #endif
+
+  extern uint8_t axis_known_position;
+
+  void Temperature::babystep_axis(const AxisEnum axis, const int16_t distance) {
+    if (!CAN_BABYSTEP(axis)) return;
+    #if IS_CORE
+      #if ENABLED(BABYSTEP_XY)
+        switch (axis) {
+          case CORE_AXIS_1: // X on CoreXY and CoreXZ, Y on CoreYZ
+            BSA_ENABLE(CORE_AXIS_1);
+            BSA_ENABLE(CORE_AXIS_2);
+            babystepsTodo[CORE_AXIS_1] += distance * 2;
+            babystepsTodo[CORE_AXIS_2] += distance * 2;
+            break;
+          case CORE_AXIS_2: // Y on CoreXY, Z on CoreXZ and CoreYZ
+            BSA_ENABLE(CORE_AXIS_1);
+            BSA_ENABLE(CORE_AXIS_2);
+            babystepsTodo[CORE_AXIS_1] += CORESIGN(distance * 2);
+            babystepsTodo[CORE_AXIS_2] -= CORESIGN(distance * 2);
+            break;
+          case NORMAL_AXIS: // Z on CoreXY, Y on CoreXZ, X on CoreYZ
+          default:
+            BSA_ENABLE(NORMAL_AXIS);
+            babystepsTodo[NORMAL_AXIS] += distance;
+            break;
+        }
+      #elif CORE_IS_XZ || CORE_IS_YZ
+        // Only Z stepping needs to be handled here
+        BSA_ENABLE(CORE_AXIS_1);
+        BSA_ENABLE(CORE_AXIS_2);
+        babystepsTodo[CORE_AXIS_1] += CORESIGN(distance * 2);
+        babystepsTodo[CORE_AXIS_2] -= CORESIGN(distance * 2);
+      #else
+        BSA_ENABLE(Z_AXIS);
+        babystepsTodo[Z_AXIS] += distance;
+      #endif
+    #else
+      #if ENABLED(BABYSTEP_XY)
+        BSA_ENABLE(axis);
+      #else
+        BSA_ENABLE(Z_AXIS);
+      #endif
+      babystepsTodo[axis] += distance;
+    #endif
+    #if ENABLED(BABYSTEP_ALWAYS_AVAILABLE)
+      gcode.reset_stepper_timeout();
+    #endif
+  }
+
+#endif // BABYSTEPPING
 
 #if HAS_TEMP_SENSOR
 
@@ -2500,17 +2578,14 @@ void Temperature::isr() {
     #if ENABLED(SHOW_TEMP_ADC_VALUES)
       , const float r
     #endif
-    #if NUM_SERIAL > 1
-      , const int8_t port=-1
-    #endif
     , const int8_t e=-3
   ) {
     #if !(HAS_HEATED_BED && HAS_TEMP_HOTEND && HAS_TEMP_CHAMBER) && HOTENDS <= 1
       UNUSED(e);
     #endif
 
-    SERIAL_CHAR_P(port, ' ');
-    SERIAL_CHAR_P(port,
+    SERIAL_CHAR(' ');
+    SERIAL_CHAR(
       #if HAS_TEMP_CHAMBER && HAS_HEATED_BED && HAS_TEMP_HOTEND
         e == -2 ? 'C' : e == -1 ? 'B' : 'T'
       #elif HAS_HEATED_BED && HAS_TEMP_HOTEND
@@ -2522,30 +2597,23 @@ void Temperature::isr() {
       #endif
     );
     #if HOTENDS > 1
-      if (e >= 0) SERIAL_CHAR_P(port, '0' + e);
+      if (e >= 0) SERIAL_CHAR('0' + e);
     #endif
-    SERIAL_CHAR_P(port, ':');
-    SERIAL_ECHO_P(port, c);
-    SERIAL_ECHOPAIR_P(port, " /" , t);
+    SERIAL_CHAR(':');
+    SERIAL_ECHO(c);
+    SERIAL_ECHOPAIR(" /" , t);
     #if ENABLED(SHOW_TEMP_ADC_VALUES)
-      SERIAL_ECHOPAIR_P(port, " (", r / OVERSAMPLENR);
-      SERIAL_CHAR_P(port, ')');
+      SERIAL_ECHOPAIR(" (", r / OVERSAMPLENR);
+      SERIAL_CHAR(')');
     #endif
     delay(2);
   }
 
-  void Temperature::print_heater_states(const uint8_t target_extruder
-    #if NUM_SERIAL > 1
-      , const int8_t port
-    #endif
-  ) {
+  void Temperature::print_heater_states(const uint8_t target_extruder) {
     #if HAS_TEMP_HOTEND
       print_heater_state(degHotend(target_extruder), degTargetHotend(target_extruder)
         #if ENABLED(SHOW_TEMP_ADC_VALUES)
           , rawHotendTemp(target_extruder)
-        #endif
-        #if NUM_SERIAL > 1
-          , port
         #endif
       );
     #endif
@@ -2553,9 +2621,6 @@ void Temperature::isr() {
       print_heater_state(degBed(), degTargetBed()
         #if ENABLED(SHOW_TEMP_ADC_VALUES)
           , rawBedTemp()
-        #endif
-        #if NUM_SERIAL > 1
-          , port
         #endif
         , -1 // BED
       );
@@ -2573,23 +2638,20 @@ void Temperature::isr() {
         #if ENABLED(SHOW_TEMP_ADC_VALUES)
           , rawHotendTemp(e)
         #endif
-        #if NUM_SERIAL > 1
-          , port
-        #endif
         , e
       );
     #endif
-    SERIAL_ECHOPGM_P(port, " @:");
-    SERIAL_ECHO_P(port, getHeaterPower(target_extruder));
+    SERIAL_ECHOPGM(" @:");
+    SERIAL_ECHO(getHeaterPower(target_extruder));
     #if HAS_HEATED_BED
-      SERIAL_ECHOPGM_P(port, " B@:");
-      SERIAL_ECHO_P(port, getHeaterPower(-1));
+      SERIAL_ECHOPGM(" B@:");
+      SERIAL_ECHO(getHeaterPower(-1));
     #endif
     #if HOTENDS > 1
       HOTEND_LOOP() {
-        SERIAL_ECHOPAIR_P(port, " @", e);
-        SERIAL_CHAR_P(port, ':');
-        SERIAL_ECHO_P(port, getHeaterPower(e));
+        SERIAL_ECHOPAIR(" @", e);
+        SERIAL_CHAR(':');
+        SERIAL_ECHO(getHeaterPower(e));
       }
     #endif
   }
@@ -2654,7 +2716,7 @@ void Temperature::isr() {
       #endif
 
       float target_temp = -1.0, old_temp = 9999.0;
-      bool wants_to_cool = false;
+      bool wants_to_cool = false, first_loop = true;
       wait_for_heatup = true;
       millis_t now, next_temp_ms = 0, next_cool_check_ms = 0;
       do {
@@ -2697,7 +2759,10 @@ void Temperature::isr() {
 
           if (!residency_start_ms) {
             // Start the TEMP_RESIDENCY_TIME timer when we reach target temp for the first time.
-            if (temp_diff < TEMP_WINDOW) residency_start_ms = now;
+            if (temp_diff < TEMP_WINDOW) {
+              residency_start_ms = now;
+              if (first_loop) residency_start_ms += (TEMP_RESIDENCY_TIME) * 1000UL;
+            }
           }
           else if (temp_diff > TEMP_HYSTERESIS) {
             // Restart the timer whenever the temperature falls outside the hysteresis.
@@ -2723,6 +2788,8 @@ void Temperature::isr() {
             ui.quick_feedback();
           }
         #endif
+
+        first_loop = false;
 
       } while (wait_for_heatup && TEMP_CONDITIONS);
 
@@ -2766,7 +2833,7 @@ void Temperature::isr() {
       #endif
 
       float target_temp = -1, old_temp = 9999;
-      bool wants_to_cool = false;
+      bool wants_to_cool = false, first_loop = true;
       wait_for_heatup = true;
       millis_t now, next_temp_ms = 0, next_cool_check_ms = 0;
 
@@ -2820,7 +2887,10 @@ void Temperature::isr() {
 
           if (!residency_start_ms) {
             // Start the TEMP_BED_RESIDENCY_TIME timer when we reach target temp for the first time.
-            if (temp_diff < TEMP_BED_WINDOW) residency_start_ms = now;
+            if (temp_diff < TEMP_BED_WINDOW) {
+              residency_start_ms = now;
+              if (first_loop) residency_start_ms += (TEMP_BED_RESIDENCY_TIME) * 1000UL;
+            }
           }
           else if (temp_diff > TEMP_BED_HYSTERESIS) {
             // Restart the timer whenever the temperature falls outside the hysteresis.
@@ -2846,6 +2916,8 @@ void Temperature::isr() {
             ui.quick_feedback();
           }
         #endif
+
+        first_loop = false;
 
       } while (wait_for_heatup && TEMP_BED_CONDITIONS);
 

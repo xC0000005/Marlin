@@ -1,6 +1,6 @@
 /**
  * Marlin 3D Printer Firmware
- * Copyright (C) 2016 MarlinFirmware [https://github.com/MarlinFirmware/Marlin]
+ * Copyright (C) 2019 MarlinFirmware [https://github.com/MarlinFirmware/Marlin]
  *
  * Based on Sprinter and grbl.
  * Copyright (C) 2011 Camiel Gubbels / Erik van der Zalm
@@ -34,6 +34,10 @@ GcodeSuite gcode;
 
 #if ENABLED(PRINTCOUNTER)
   #include "../module/printcounter.h"
+#endif
+
+#if ENABLED(HOST_PROMPT_SUPPORT)
+  #include "../feature/host_actions.h"
 #endif
 
 #include "../Marlin.h" // for idle() and suspend_auto_report
@@ -128,27 +132,17 @@ void GcodeSuite::dwell(millis_t time) {
   void GcodeSuite::G29_with_retry() {
     uint8_t retries = G29_MAX_RETRIES;
     while (G29()) { // G29 should return true for failed probes ONLY
-      if (retries--) {
-        #ifdef G29_ACTION_ON_RECOVER
-          host_action(PSTR(G29_ACTION_ON_RECOVER));
-        #endif
-        #ifdef G29_RECOVER_COMMANDS
-          process_subcommands_now_P(PSTR(G29_RECOVER_COMMANDS));
-        #endif
-      }
+      if (retries--) event_probe_recover();
       else {
-        #ifdef G29_FAILURE_COMMANDS
-          process_subcommands_now_P(PSTR(G29_FAILURE_COMMANDS));
-        #endif
-        #ifdef G29_ACTION_ON_FAILURE
-          host_action(PSTR(G29_ACTION_ON_FAILURE));
-        #endif
-        #if ENABLED(G29_HALT_ON_FAILURE)
-          kill(PSTR(MSG_ERR_PROBING_FAILED));
-        #endif
+        event_probe_failure();
         return;
       }
     }
+
+    #if ENABLED(HOST_PROMPT_SUPPORT)
+      host_action_prompt_end();
+    #endif
+
     #ifdef G29_SUCCESS_COMMANDS
       process_subcommands_now_P(PSTR(G29_SUCCESS_COMMANDS));
     #endif
@@ -212,6 +206,8 @@ void GcodeSuite::process_parsed_command(
       #if ENABLED(INCH_MODE_SUPPORT)
         case 20: G20(); break;                                    // G20: Inch Mode
         case 21: G21(); break;                                    // G21: MM Mode
+      #else
+        case 21: NOOP; break;                                     // No error on unknown G21
       #endif
 
       #if ENABLED(G26_MESH_VALIDATION)
@@ -365,8 +361,15 @@ void GcodeSuite::process_parsed_command(
         case 108: M108(); break;                                  // M108: Cancel Waiting
         case 112: M112(); break;                                  // M112: Emergency Stop
         case 410: M410(); break;                                  // M410: Quickstop - Abort all the planned moves.
+        #if ENABLED(HOST_PROMPT_SUPPORT)
+          case 876: M876(); break;                                  // M876: Handle Host prompt responses
+        #endif
       #else
-        case 108: case 112: case 410: break;
+        case 108: case 112: case 410:
+        #if ENABLED(HOST_PROMPT_SUPPORT)
+          case 876:
+        #endif
+        break;
       #endif
 
       #if ENABLED(HOST_KEEPALIVE_FEATURE)
@@ -523,8 +526,8 @@ void GcodeSuite::process_parsed_command(
         case 304: M304(); break;                                  // M304: Set bed PID parameters
       #endif
 
-      #if PIN_EXISTS(CHDK) || HAS_PHOTOGRAPH
-        case 240: M240(); break;                                  // M240: Trigger a camera by emulating a Canon RC-1 : http://www.doc-diy.net/photo/rc-1_hacked/
+      #if ENABLED(PHOTO_GCODE)
+        case 240: M240(); break;                                  // M240: Trigger a camera
       #endif
 
       #if HAS_LCD_CONTRAST
@@ -575,7 +578,7 @@ void GcodeSuite::process_parsed_command(
         case 407: M407(); break;                                  // M407: Display measured filament diameter
       #endif
 
-      #if ENABLED(FILAMENT_RUNOUT_SENSOR)
+      #if HAS_FILAMENT_SENSOR
         case 412: M412(); break;                                  // M412: Enable/Disable filament runout detection
       #endif
 
@@ -661,7 +664,7 @@ void GcodeSuite::process_parsed_command(
       #endif
 
       #if HAS_TRINAMIC
-        case 122: M122(); break;
+        case 122: M122(); break;                                  // M122: Report driver configuration and status
         case 906: M906(); break;                                  // M906: Set motor current in milliamps using axis codes X, Y, Z, E
         #if HAS_STEALTHCHOP
           case 569: M569(); break;                                // M569: Enable stealthChop on an axis.
@@ -720,6 +723,10 @@ void GcodeSuite::process_parsed_command(
         case 422: M422(); break;                                  // M422: Set Z Stepper automatic alignment position using probe
       #endif
 
+      #if ENABLED(PLATFORM_M997_SUPPORT)
+        case 997: M997(); break;                                  // M997: Perform in-application firmware update
+      #endif
+
       case 999: M999(); break;                                    // M999: Restart after being Stopped
 
       #if ENABLED(POWER_LOSS_RECOVERY)
@@ -750,6 +757,8 @@ void GcodeSuite::process_parsed_command(
  */
 void GcodeSuite::process_next_command() {
   char * const current_command = command_queue[cmd_queue_index_r];
+
+  PORT_REDIRECT(command_queue_port[cmd_queue_index_r]);
 
   if (DEBUGGING(ECHO)) {
     SERIAL_ECHO_START();

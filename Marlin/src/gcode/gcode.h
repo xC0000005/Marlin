@@ -1,6 +1,6 @@
 /**
  * Marlin 3D Printer Firmware
- * Copyright (C) 2016 MarlinFirmware [https://github.com/MarlinFirmware/Marlin]
+ * Copyright (C) 2019 MarlinFirmware [https://github.com/MarlinFirmware/Marlin]
  *
  * Based on Sprinter and grbl.
  * Copyright (C) 2011 Camiel Gubbels / Erik van der Zalm
@@ -172,7 +172,7 @@
  * M220 - Set Feedrate Percentage: "M220 S<percent>" (i.e., "FR" on the LCD)
  * M221 - Set Flow Percentage: "M221 S<percent>"
  * M226 - Wait until a pin is in a given state: "M226 P<pin> S<state>"
- * M240 - Trigger a camera to take a photograph. (Requires CHDK_PIN or PHOTOGRAPH_PIN)
+ * M240 - Trigger a camera to take a photograph. (Requires PHOTO_GCODE)
  * M250 - Set LCD contrast: "M250 C<contrast>" (0-63). (Requires LCD support)
  * M260 - i2c Send Data (Requires EXPERIMENTAL_I2CBUS)
  * M261 - i2c Request Data (Requires EXPERIMENTAL_I2CBUS)
@@ -254,6 +254,7 @@
  *
  * ************ Custom codes - This can change to suit future G-code regulations
  * M928 - Start SD logging: "M928 filename.gco". Stop with M29. (Requires SDSUPPORT)
+ * M997 - Perform in-application firmware update
  * M999 - Restart after being stopped by error
  *
  * "T" Codes
@@ -533,6 +534,9 @@ private:
     static void M108();
     static void M112();
     static void M410();
+    #if ENABLED(HOST_PROMPT_SUPPORT)
+      static void M876();
+    #endif
   #endif
 
   static void M109();
@@ -636,7 +640,7 @@ private:
   static void M221();
   static void M226();
 
-  #if PIN_EXISTS(CHDK) || HAS_PHOTOGRAPH
+  #if ENABLED(PHOTO_GCODE)
     static void M240();
   #endif
 
@@ -720,7 +724,7 @@ private:
     static void M407();
   #endif
 
-  #if ENABLED(FILAMENT_RUNOUT_SENSOR)
+  #if HAS_FILAMENT_SENSOR
     static void M412();
   #endif
 
@@ -853,6 +857,10 @@ private:
 
   #if ENABLED(MAGNETIC_PARKING_EXTRUDER)
     static void M951();
+  #endif
+
+  #if ENABLED(PLATFORM_M997_SUPPORT)
+    static void M997();
   #endif
 
   static void M999();

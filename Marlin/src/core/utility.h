@@ -1,6 +1,6 @@
 /**
  * Marlin 3D Printer Firmware
- * Copyright (C) 2016 MarlinFirmware [https://github.com/MarlinFirmware/Marlin]
+ * Copyright (C) 2019 MarlinFirmware [https://github.com/MarlinFirmware/Marlin]
  *
  * Based on Sprinter and grbl.
  * Copyright (C) 2011 Camiel Gubbels / Erik van der Zalm
@@ -120,8 +120,6 @@ inline void serial_delay(const millis_t ms) {
   void log_machine_info();
 #endif
 
-void print_bin(const uint16_t val);
-
 template<typename T>
 class restorer {
   T& ref_;
@@ -133,5 +131,5 @@ public:
   inline void restore() { ref_ = val_; }
 };
 
-#define REMEMBER(N,X, ...) restorer<typeof(X)> N##_restorer(X, ##__VA_ARGS__)
-#define RESTORE(N) N##_restorer.restore()
+#define REMEMBER(N,X, ...) restorer<typeof(X)> restorer_##N(X, ##__VA_ARGS__)
+#define RESTORE(N) restorer_##N.restore()
