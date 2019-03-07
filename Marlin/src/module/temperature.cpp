@@ -456,37 +456,26 @@ uint8_t Temperature::soft_pwm_amount[HOTENDS];
               bias = constrain(bias, 20, max_pow - 20);
               d = (bias > max_pow >> 1) ? max_pow - 1 - bias : bias;
 
-              SERIAL_ECHOPAIR(MSG_BIAS, bias);
-              SERIAL_ECHOPAIR(MSG_D, d);
-              SERIAL_ECHOPAIR(MSG_T_MIN, min);
-              SERIAL_ECHOPAIR(MSG_T_MAX, max);
+              SERIAL_ECHOPAIR(MSG_BIAS, bias, MSG_D, d, MSG_T_MIN, min, MSG_T_MAX, max);
               if (cycles > 2) {
                 float Ku = (4.0f * d) / (float(M_PI) * (max - min) * 0.5f),
                       Tu = ((float)(t_low + t_high) * 0.001f);
-                SERIAL_ECHOPAIR(MSG_KU, Ku);
-                SERIAL_ECHOPAIR(MSG_TU, Tu);
                 tune_pid.Kp = 0.6f * Ku;
                 tune_pid.Ki = 2 * tune_pid.Kp / Tu;
                 tune_pid.Kd = tune_pid.Kp * Tu * 0.125f;
+                SERIAL_ECHOPAIR(MSG_KU, Ku, MSG_TU, Tu);
                 SERIAL_ECHOLNPGM("\n" MSG_CLASSIC_PID);
-                SERIAL_ECHOPAIR(MSG_KP, tune_pid.Kp);
-                SERIAL_ECHOPAIR(MSG_KI, tune_pid.Ki);
-                SERIAL_ECHOLNPAIR(MSG_KD, tune_pid.Kd);
+                SERIAL_ECHOLNPAIR(MSG_KP, tune_pid.Kp, MSG_KI, tune_pid.Ki, MSG_KD, tune_pid.Kd);
                 /**
                 tune_pid.Kp = 0.33*Ku;
                 tune_pid.Ki = tune_pid.Kp/Tu;
                 tune_pid.Kd = tune_pid.Kp*Tu/3;
                 SERIAL_ECHOLNPGM(" Some overshoot");
-                SERIAL_ECHOPAIR(" Kp: ", tune_pid.Kp);
-                SERIAL_ECHOPAIR(" Ki: ", tune_pid.Ki);
-                SERIAL_ECHOPAIR(" Kd: ", tune_pid.Kd);
+                SERIAL_ECHOLNPAIR(" Kp: ", tune_pid.Kp, " Ki: ", tune_pid.Ki, " Kd: ", tune_pid.Kd, " No overshoot");
                 tune_pid.Kp = 0.2*Ku;
                 tune_pid.Ki = 2*tune_pid.Kp/Tu;
                 tune_pid.Kd = tune_pid.Kp*Tu/3;
-                SERIAL_ECHOLNPGM(" No overshoot");
-                SERIAL_ECHOPAIR(" Kp: ", tune_pid.Kp);
-                SERIAL_ECHOPAIR(" Ki: ", tune_pid.Ki);
-                SERIAL_ECHOPAIR(" Kd: ", tune_pid.Kd);
+                SERIAL_ECHOPAIR(" Kp: ", tune_pid.Kp, " Ki: ", tune_pid.Ki, " Kd: ", tune_pid.Kd);
                 */
               }
             }
@@ -632,15 +621,16 @@ int Temperature::getHeaterPower(const int heater) {
 #if HAS_AUTO_FAN
 
   void Temperature::checkExtruderAutoFans() {
-    static const pin_t fanPin[] PROGMEM = { E0_AUTO_FAN_PIN, E1_AUTO_FAN_PIN, E2_AUTO_FAN_PIN, E3_AUTO_FAN_PIN, E4_AUTO_FAN_PIN, E5_AUTO_FAN_PIN, CHAMBER_AUTO_FAN_PIN };
     static const uint8_t fanBit[] PROGMEM = {
                     0,
       AUTO_1_IS_0 ? 0 :               1,
       AUTO_2_IS_0 ? 0 : AUTO_2_IS_1 ? 1 :               2,
       AUTO_3_IS_0 ? 0 : AUTO_3_IS_1 ? 1 : AUTO_3_IS_2 ? 2 :               3,
-      AUTO_4_IS_0 ? 0 : AUTO_4_IS_1 ? 1 : AUTO_4_IS_2 ? 2 : AUTO_4_IS_3 ? 3 :                   4,
-      AUTO_5_IS_0 ? 0 : AUTO_5_IS_1 ? 1 : AUTO_5_IS_2 ? 2 : AUTO_5_IS_3 ? 3 : AUTO_5_IS_4 ? 4 : 5,
-      AUTO_CHAMBER_IS_0 ? 0 : AUTO_CHAMBER_IS_1 ? 1 : AUTO_CHAMBER_IS_2 ? 2 : AUTO_CHAMBER_IS_3 ? 3 : AUTO_CHAMBER_IS_4 ? 4 : 5
+      AUTO_4_IS_0 ? 0 : AUTO_4_IS_1 ? 1 : AUTO_4_IS_2 ? 2 : AUTO_4_IS_3 ? 3 :               4,
+      AUTO_5_IS_0 ? 0 : AUTO_5_IS_1 ? 1 : AUTO_5_IS_2 ? 2 : AUTO_5_IS_3 ? 3 : AUTO_5_IS_4 ? 4 : 5
+      #if HAS_TEMP_CHAMBER
+        , AUTO_CHAMBER_IS_0 ? 0 : AUTO_CHAMBER_IS_1 ? 1 : AUTO_CHAMBER_IS_2 ? 2 : AUTO_CHAMBER_IS_3 ? 3 : AUTO_CHAMBER_IS_4 ? 4 : AUTO_CHAMBER_IS_5 ? 5 : 6
+      #endif
     };
     uint8_t fanState = 0;
 
@@ -650,29 +640,50 @@ int Temperature::getHeaterPower(const int heater) {
 
     #if HAS_TEMP_CHAMBER
       if (current_temperature_chamber > EXTRUDER_AUTO_FAN_TEMPERATURE)
-        SBI(fanState, pgm_read_byte(&fanBit[5]));
+        SBI(fanState, pgm_read_byte(&fanBit[6]));
     #endif
 
+    #define _UPDATE_AUTO_FAN(P,D,A) do{           \
+      if (USEABLE_HARDWARE_PWM(P##_AUTO_FAN_PIN)) \
+        analogWrite(P##_AUTO_FAN_PIN, A);         \
+      else                                        \
+        WRITE(P##_AUTO_FAN_PIN, D);               \
+    }while(0)
+
     uint8_t fanDone = 0;
-    for (uint8_t f = 0; f < COUNT(fanPin); f++) {
-      const pin_t pin =
-        #ifdef ARDUINO
-          pgm_read_byte(&fanPin[f])
-        #else
-          fanPin[f]
-        #endif
-      ;
+    for (uint8_t f = 0; f < COUNT(fanBit); f++) {
       const uint8_t bit = pgm_read_byte(&fanBit[f]);
-      if (pin >= 0 && !TEST(fanDone, bit)) {
-        uint8_t newFanSpeed = TEST(fanState, bit) ? EXTRUDER_AUTO_FAN_SPEED : 0;
-        #if ENABLED(AUTO_POWER_E_FANS)
-          autofan_speed[f] = newFanSpeed;
+      if (TEST(fanDone, bit)) continue;
+      const bool fan_on = TEST(fanState, bit);
+      const uint8_t speed = fan_on ? EXTRUDER_AUTO_FAN_SPEED : 0;
+      #if ENABLED(AUTO_POWER_E_FANS)
+        autofan_speed[f] = speed;
+      #endif
+      switch (f) {
+        #if HAS_AUTO_FAN_0
+          case 0: _UPDATE_AUTO_FAN(E0, fan_on, speed); break;
         #endif
-        // this idiom allows both digital and PWM fan outputs (see M42 handling).
-        digitalWrite(pin, newFanSpeed);
-        analogWrite(pin, newFanSpeed);
-        SBI(fanDone, bit);
+        #if HAS_AUTO_FAN_1
+          case 1: _UPDATE_AUTO_FAN(E1, fan_on, speed); break;
+        #endif
+        #if HAS_AUTO_FAN_2
+          case 2: _UPDATE_AUTO_FAN(E2, fan_on, speed); break;
+        #endif
+        #if HAS_AUTO_FAN_3
+          case 3: _UPDATE_AUTO_FAN(E3, fan_on, speed); break;
+        #endif
+        #if HAS_AUTO_FAN_4
+          case 4: _UPDATE_AUTO_FAN(E4, fan_on, speed); break;
+        #endif
+        #if HAS_AUTO_FAN_5
+          case 5: _UPDATE_AUTO_FAN(E5, fan_on, speed); break;
+        #endif
+        #if HAS_AUTO_CHAMBER_FAN
+          case 6: _UPDATE_AUTO_FAN(CHAMBER, fan_on, speed); break;
+        #endif
       }
+      SBI(fanDone, bit);
+      UNUSED(fan_on); UNUSED(speed);
     }
   }
 
@@ -725,62 +736,57 @@ float Temperature::get_pid_output(const int8_t e) {
       float pid_error = target_temperature[HOTEND_INDEX] - current_temperature[HOTEND_INDEX];
       work_pid[HOTEND_INDEX].Kd = PID_K2 * PID_PARAM(Kd, HOTEND_INDEX) * (current_temperature[HOTEND_INDEX] - temp_dState[HOTEND_INDEX]) + float(PID_K1) * work_pid[HOTEND_INDEX].Kd;
       temp_dState[HOTEND_INDEX] = current_temperature[HOTEND_INDEX];
-      #if HEATER_IDLE_HANDLER
-        if (heater_idle_timeout_exceeded[HOTEND_INDEX]) {
-          pid_output = 0;
-          pid_reset[HOTEND_INDEX] = true;
+
+      if (target_temperature[HOTEND_INDEX] == 0
+        || pid_error < -(PID_FUNCTIONAL_RANGE)
+        #if HEATER_IDLE_HANDLER
+          || heater_idle_timeout_exceeded[HOTEND_INDEX]
+        #endif
+      ) {
+        pid_output = 0;
+        pid_reset[HOTEND_INDEX] = true;
+      }
+      else if (pid_error > PID_FUNCTIONAL_RANGE) {
+        pid_output = BANG_MAX;
+        pid_reset[HOTEND_INDEX] = true;
+      }
+      else {
+        if (pid_reset[HOTEND_INDEX]) {
+          temp_iState[HOTEND_INDEX] = 0.0;
+          pid_reset[HOTEND_INDEX] = false;
         }
-        else
-      #endif
-          if (pid_error > PID_FUNCTIONAL_RANGE) {
-            pid_output = BANG_MAX;
-            pid_reset[HOTEND_INDEX] = true;
-          }
-          else if (pid_error < -(PID_FUNCTIONAL_RANGE) || target_temperature[HOTEND_INDEX] == 0
-            #if HEATER_IDLE_HANDLER
-              || heater_idle_timeout_exceeded[HOTEND_INDEX]
-            #endif
-          ) {
-            pid_output = 0;
-            pid_reset[HOTEND_INDEX] = true;
-          }
-          else {
-            if (pid_reset[HOTEND_INDEX]) {
-              temp_iState[HOTEND_INDEX] = 0.0;
-              pid_reset[HOTEND_INDEX] = false;
+        temp_iState[HOTEND_INDEX] += pid_error;
+        work_pid[HOTEND_INDEX].Kp = PID_PARAM(Kp, HOTEND_INDEX) * pid_error;
+        work_pid[HOTEND_INDEX].Ki = PID_PARAM(Ki, HOTEND_INDEX) * temp_iState[HOTEND_INDEX];
+
+        pid_output = work_pid[HOTEND_INDEX].Kp + work_pid[HOTEND_INDEX].Ki - work_pid[HOTEND_INDEX].Kd;
+
+        #if ENABLED(PID_EXTRUSION_SCALING)
+          work_pid[HOTEND_INDEX].Kc = 0;
+          if (_HOTEND_TEST) {
+            const long e_position = stepper.position(E_AXIS);
+            if (e_position > last_e_position) {
+              lpq[lpq_ptr] = e_position - last_e_position;
+              last_e_position = e_position;
             }
-            temp_iState[HOTEND_INDEX] += pid_error;
-            work_pid[HOTEND_INDEX].Kp = PID_PARAM(Kp, HOTEND_INDEX) * pid_error;
-            work_pid[HOTEND_INDEX].Ki = PID_PARAM(Ki, HOTEND_INDEX) * temp_iState[HOTEND_INDEX];
+            else
+              lpq[lpq_ptr] = 0;
 
-            pid_output = work_pid[HOTEND_INDEX].Kp + work_pid[HOTEND_INDEX].Ki - work_pid[HOTEND_INDEX].Kd;
-
-            #if ENABLED(PID_EXTRUSION_SCALING)
-              work_pid[HOTEND_INDEX].Kc = 0;
-              if (_HOTEND_TEST) {
-                const long e_position = stepper.position(E_AXIS);
-                if (e_position > last_e_position) {
-                  lpq[lpq_ptr] = e_position - last_e_position;
-                  last_e_position = e_position;
-                }
-                else
-                  lpq[lpq_ptr] = 0;
-
-                if (++lpq_ptr >= lpq_len) lpq_ptr = 0;
-                work_pid[HOTEND_INDEX].Kc = (lpq[lpq_ptr] * planner.steps_to_mm[E_AXIS]) * PID_PARAM(Kc, HOTEND_INDEX);
-                pid_output += work_pid[HOTEND_INDEX].Kc;
-              }
-            #endif // PID_EXTRUSION_SCALING
-
-            if (pid_output > PID_MAX) {
-              if (pid_error > 0) temp_iState[HOTEND_INDEX] -= pid_error; // conditional un-integration
-              pid_output = PID_MAX;
-            }
-            else if (pid_output < 0) {
-              if (pid_error < 0) temp_iState[HOTEND_INDEX] -= pid_error; // conditional un-integration
-              pid_output = 0;
-            }
+            if (++lpq_ptr >= lpq_len) lpq_ptr = 0;
+            work_pid[HOTEND_INDEX].Kc = (lpq[lpq_ptr] * planner.steps_to_mm[E_AXIS]) * PID_PARAM(Kc, HOTEND_INDEX);
+            pid_output += work_pid[HOTEND_INDEX].Kc;
           }
+        #endif // PID_EXTRUSION_SCALING
+
+        if (pid_output > PID_MAX) {
+          if (pid_error > 0) temp_iState[HOTEND_INDEX] -= pid_error; // conditional un-integration
+          pid_output = PID_MAX;
+        }
+        else if (pid_output < 0) {
+          if (pid_error < 0) temp_iState[HOTEND_INDEX] -= pid_error; // conditional un-integration
+          pid_output = 0;
+        }
+      }
 
     #else // PID_OPENLOOP
 
@@ -790,27 +796,32 @@ float Temperature::get_pid_output(const int8_t e) {
 
     #if ENABLED(PID_DEBUG)
       SERIAL_ECHO_START();
-      SERIAL_ECHOPAIR(MSG_PID_DEBUG, HOTEND_INDEX);
-      SERIAL_ECHOPAIR(MSG_PID_DEBUG_INPUT, current_temperature[HOTEND_INDEX]);
-      SERIAL_ECHOPAIR(MSG_PID_DEBUG_OUTPUT, pid_output);
+      SERIAL_ECHOPAIR(
+        MSG_PID_DEBUG, HOTEND_INDEX,
+        MSG_PID_DEBUG_INPUT, current_temperature[HOTEND_INDEX],
+        MSG_PID_DEBUG_OUTPUT, pid_output
+      );
       #if DISABLED(PID_OPENLOOP)
-        SERIAL_ECHOPAIR(MSG_PID_DEBUG_PTERM, work_pid[HOTEND_INDEX].Kp);
-        SERIAL_ECHOPAIR(MSG_PID_DEBUG_ITERM, work_pid[HOTEND_INDEX].Ki);
-        SERIAL_ECHOPAIR(MSG_PID_DEBUG_DTERM, work_pid[HOTEND_INDEX].Kd);
-        #if ENABLED(PID_EXTRUSION_SCALING)
-          SERIAL_ECHOPAIR(MSG_PID_DEBUG_CTERM, work_pid[HOTEND_INDEX].Kc);
-        #endif
+        SERIAL_ECHOPAIR(
+          MSG_PID_DEBUG_PTERM, work_pid[HOTEND_INDEX].Kp,
+          MSG_PID_DEBUG_ITERM, work_pid[HOTEND_INDEX].Ki,
+          MSG_PID_DEBUG_DTERM, work_pid[HOTEND_INDEX].Kd
+          #if ENABLED(PID_EXTRUSION_SCALING),
+            MSG_PID_DEBUG_CTERM, work_pid[HOTEND_INDEX].Kc
+          #endif
+        );
       #endif
       SERIAL_EOL();
     #endif // PID_DEBUG
 
   #else /* PID off */
     #if HEATER_IDLE_HANDLER
-      if (heater_idle_timeout_exceeded[HOTEND_INDEX])
-        pid_output = 0;
-      else
+      #define _TIMED_OUT_TEST heater_idle_timeout_exceeded[HOTEND_INDEX]
+    #else
+      #define _TIMED_OUT_TEST false
     #endif
-    pid_output = (current_temperature[HOTEND_INDEX] < target_temperature[HOTEND_INDEX]) ? BANG_MAX : 0;
+    pid_output = (!_TIMED_OUT_TEST && current_temperature[HOTEND_INDEX] < target_temperature[HOTEND_INDEX]) ? BANG_MAX : 0;
+    #undef _TIMED_OUT_TEST
   #endif
 
   return pid_output;
@@ -851,13 +862,14 @@ float Temperature::get_pid_output(const int8_t e) {
 
     #if ENABLED(PID_BED_DEBUG)
       SERIAL_ECHO_START();
-      SERIAL_ECHOPAIR(" PID_BED_DEBUG : Input ", current_temperature_bed);
-      SERIAL_ECHOPAIR(" Output ", pid_output);
-      #if DISABLED(PID_OPENLOOP)
-        SERIAL_ECHOPAIR(MSG_PID_DEBUG_PTERM, work_pid.Kp);
-        SERIAL_ECHOPAIR(MSG_PID_DEBUG_ITERM, work_pid.Ki);
-        SERIAL_ECHOLNPAIR(MSG_PID_DEBUG_DTERM, work_pid.Kd);
-      #endif
+      SERIAL_ECHOLNPAIR(
+        " PID_BED_DEBUG : Input ", current_temperature_bed, " Output ", pid_output,
+        #if DISABLED(PID_OPENLOOP)
+          MSG_PID_DEBUG_PTERM, work_pid.Kp,
+          MSG_PID_DEBUG_ITERM, work_pid.Ki,
+          MSG_PID_DEBUG_DTERM, work_pid.Kd,
+        #endif
+      );
     #endif
 
     return pid_output;
@@ -1604,10 +1616,7 @@ void Temperature::init() {
         SERIAL_ECHO_START();
         SERIAL_ECHOPGM("Thermal Thermal Runaway Running. Heater ID: ");
         if (heater_id < 0) SERIAL_ECHOPGM("bed"); else SERIAL_ECHO(heater_id);
-        SERIAL_ECHOPAIR(" ;  State:", *state);
-        SERIAL_ECHOPAIR(" ;  Timer:", *timer);
-        SERIAL_ECHOPAIR(" ;  Temperature:", current);
-        SERIAL_ECHOPAIR(" ;  Target Temp:", target);
+        SERIAL_ECHOPAIR(" ;  State:", *state, " ;  Timer:", *timer, " ;  Temperature:", current, " ;  Target Temp:", target);
         if (heater_id >= 0)
           SERIAL_ECHOPAIR(" ;  Idle Timeout:", heater_idle_timeout_exceeded[heater_id]);
         else
@@ -2664,6 +2673,7 @@ void Temperature::isr() {
     void Temperature::auto_report_temperatures() {
       if (auto_report_temp_interval && ELAPSED(millis(), next_temp_report_ms)) {
         next_temp_report_ms = millis() + 1000UL * auto_report_temp_interval;
+        PORT_REDIRECT(SERIAL_BOTH);
         print_heater_states(active_extruder);
         SERIAL_EOL();
       }
