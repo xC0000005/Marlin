@@ -212,7 +212,7 @@ G29_TYPE GcodeSuite::G29() {
   #endif
 
   #if HAS_SOFTWARE_ENDSTOPS && ENABLED(PROBE_MANUALLY)
-    ABL_VAR bool enable_soft_endstops = true;
+    ABL_VAR bool saved_soft_endstops_state = true;
   #endif
 
   #if ABL_GRID
@@ -320,6 +320,9 @@ G29_TYPE GcodeSuite::G29() {
           z_values[i][j] = rz;
           #if ENABLED(ABL_BILINEAR_SUBDIVISION)
             bed_level_virt_interpolate();
+          #endif
+          #if ENABLED(EXTENSIBLE_UI)
+            ExtUI::onMeshUpdate(i, j, rz);
           #endif
           set_bed_leveling_enabled(abl_should_enable);
           if (abl_should_enable) report_current_position();
@@ -491,7 +494,7 @@ G29_TYPE GcodeSuite::G29() {
     if (seenA && g29_in_progress) {
       SERIAL_ECHOLNPGM("Manual G29 aborted");
       #if HAS_SOFTWARE_ENDSTOPS
-        soft_endstops_enabled = enable_soft_endstops;
+        soft_endstops_enabled = saved_soft_endstops_state;
       #endif
       set_bed_leveling_enabled(abl_should_enable);
       g29_in_progress = false;
@@ -516,7 +519,7 @@ G29_TYPE GcodeSuite::G29() {
     if (abl_probe_index == 0) {
       // For the initial G29 S2 save software endstop state
       #if HAS_SOFTWARE_ENDSTOPS
-        enable_soft_endstops = soft_endstops_enabled;
+        saved_soft_endstops_state = soft_endstops_enabled;
       #endif
       // Move close to the bed before the first point
       do_blocking_move_to_z(0);
@@ -548,6 +551,9 @@ G29_TYPE GcodeSuite::G29() {
       #elif ENABLED(AUTO_BED_LEVELING_BILINEAR)
 
         z_values[xCount][yCount] = measured_z + zoffset;
+        #if ENABLED(EXTENSIBLE_UI)
+          ExtUI::onMeshUpdate(xCount, yCount, z_values[xCount][yCount]);
+        #endif
 
         #if ENABLED(DEBUG_LEVELING_FEATURE)
           if (DEBUGGING(LEVELING)) {
@@ -611,7 +617,7 @@ G29_TYPE GcodeSuite::G29() {
 
         // Re-enable software endstops, if needed
         #if HAS_SOFTWARE_ENDSTOPS
-          soft_endstops_enabled = enable_soft_endstops;
+          soft_endstops_enabled = saved_soft_endstops_state;
         #endif
       }
 
@@ -635,7 +641,7 @@ G29_TYPE GcodeSuite::G29() {
 
         // Re-enable software endstops, if needed
         #if HAS_SOFTWARE_ENDSTOPS
-          soft_endstops_enabled = enable_soft_endstops;
+          soft_endstops_enabled = saved_soft_endstops_state;
         #endif
 
         if (!dryrun) {
@@ -723,6 +729,9 @@ G29_TYPE GcodeSuite::G29() {
           #elif ENABLED(AUTO_BED_LEVELING_BILINEAR)
 
             z_values[xCount][yCount] = measured_z + zoffset;
+            #if ENABLED(EXTENSIBLE_UI)
+              ExtUI::onMeshUpdate(xCount, yCount, z_values[xCount][yCount]);
+            #endif
 
           #endif
 

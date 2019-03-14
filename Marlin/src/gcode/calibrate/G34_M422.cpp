@@ -119,7 +119,7 @@ void GcodeSuite::G34() {
       tool_change(0, 0, true);
     #endif
 
-    #if ENABLED(DUAL_X_CARRIAGE) || ENABLED(DUAL_NOZZLE_DUPLICATION_MODE)
+    #if HAS_DUPLICATION_MODE
       extruder_duplication_enabled = false;
     #endif
 
@@ -230,13 +230,13 @@ void GcodeSuite::G34() {
 
     // Restore the active tool after homing
     #if HOTENDS > 1
-      tool_change(old_tool_index, 0,
+      tool_change(old_tool_index, 0, (
         #if ENABLED(PARKING_EXTRUDER)
           false // Fetch the previous toolhead
         #else
           true
         #endif
-      );
+      ));
     #endif
 
     #if HAS_LEVELING

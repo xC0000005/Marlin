@@ -238,7 +238,7 @@ static void lcd_factory_settings() {
       MENU_ITEM_EDIT(int3, MSG_NOZZLE, &ui.preheat_hotend_temp[material], MINTEMP_ALL, MAXTEMP_ALL - 15);
     #endif
     #if HAS_HEATED_BED
-      MENU_ITEM_EDIT(int3, MSG_BED, &ui.preheat_bed_temp[material], BED_MINTEMP, BED_MAXTEMP - 15);
+      MENU_ITEM_EDIT(int3, MSG_BED, &ui.preheat_bed_temp[material], BED_MINTEMP, BED_MAXTEMP - 10);
     #endif
     #if ENABLED(EEPROM_SETTINGS)
       MENU_ITEM(function, MSG_STORE_EEPROM, lcd_store_settings);
@@ -299,7 +299,7 @@ void menu_configuration() {
   // Set Case light on/off/brightness
   //
   #if ENABLED(MENU_ITEM_CASE_LIGHT)
-    if (USEABLE_HARDWARE_PWM(CASE_LIGHT_PIN))
+    if (PWM_PIN(CASE_LIGHT_PIN))
       MENU_ITEM(submenu, MSG_CASE_LIGHT, menu_case_light);
     else
       MENU_ITEM_EDIT_CALLBACK(bool, MSG_CASE_LIGHT, (bool*)&case_light_on, update_case_light);

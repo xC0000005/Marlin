@@ -728,7 +728,7 @@ void MarlinSettings::postprocess() {
         const PID_t bed_pid = { DUMMY_PID_VALUE, DUMMY_PID_VALUE, DUMMY_PID_VALUE };
         EEPROM_WRITE(bed_pid);
       #else
-        EEPROM_WRITE(thermalManager.bed_pid);
+        EEPROM_WRITE(thermalManager.temp_bed.pid);
       #endif
     }
 
@@ -1448,7 +1448,7 @@ void MarlinSettings::postprocess() {
         EEPROM_READ(pid);
         #if ENABLED(PIDTEMPBED)
           if (!validating && pid.Kp != DUMMY_PID_VALUE)
-            memcpy(&thermalManager.bed_pid, &pid, sizeof(pid));
+            memcpy(&thermalManager.temp_bed.pid, &pid, sizeof(pid));
         #endif
       }
 
@@ -2028,15 +2028,7 @@ void MarlinSettings::reset() {
   #endif
 
   #if HAS_HOTEND_OFFSET
-    constexpr float tmp4[XYZ][HOTENDS] = { HOTEND_OFFSET_X, HOTEND_OFFSET_Y, HOTEND_OFFSET_Z };
-    static_assert(
-      tmp4[X_AXIS][0] == 0 && tmp4[Y_AXIS][0] == 0 && tmp4[Z_AXIS][0] == 0,
-      "Offsets for the first hotend must be 0.0."
-    );
-    LOOP_XYZ(i) HOTEND_LOOP() hotend_offset[i][e] = tmp4[i][e];
-    #if ENABLED(DUAL_X_CARRIAGE)
-      hotend_offset[X_AXIS][1] = MAX(X2_HOME_POS, X2_MAX_POS);
-    #endif
+    reset_hotend_offsets();
   #endif
 
   #if EXTRUDERS > 1
@@ -2181,9 +2173,9 @@ void MarlinSettings::reset() {
   //
 
   #if ENABLED(PIDTEMPBED)
-    thermalManager.bed_pid.Kp = DEFAULT_bedKp;
-    thermalManager.bed_pid.Ki = scalePID_i(DEFAULT_bedKi);
-    thermalManager.bed_pid.Kd = scalePID_d(DEFAULT_bedKd);
+    thermalManager.temp_bed.pid.Kp = DEFAULT_bedKp;
+    thermalManager.temp_bed.pid.Ki = scalePID_i(DEFAULT_bedKi);
+    thermalManager.temp_bed.pid.Kd = scalePID_d(DEFAULT_bedKd);
   #endif
 
   //
@@ -2726,9 +2718,9 @@ void MarlinSettings::reset() {
       #if ENABLED(PIDTEMPBED)
         CONFIG_ECHO_START();
         SERIAL_ECHOLNPAIR(
-            "  M304 P", thermalManager.bed_pid.Kp
-          , " I", unscalePID_i(thermalManager.bed_pid.Ki)
-          , " D", unscalePID_d(thermalManager.bed_pid.Kd)
+            "  M304 P", thermalManager.temp_bed.pid.Kp
+          , " I", unscalePID_i(thermalManager.temp_bed.pid.Ki)
+          , " D", unscalePID_d(thermalManager.temp_bed.pid.Kd)
         );
       #endif
 
