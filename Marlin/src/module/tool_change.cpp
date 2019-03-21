@@ -49,7 +49,7 @@
   #include "../gcode/gcode.h" // for dwell()
 #endif
 
-#if ENABLED(SWITCHING_EXTRUDER) || ENABLED(SWITCHING_NOZZLE) || ENABLED(SWITCHING_TOOLHEAD)
+#if ANY(SWITCHING_EXTRUDER, SWITCHING_NOZZLE, SWITCHING_TOOLHEAD)
   #include "servo.h"
 #endif
 
@@ -505,10 +505,10 @@ inline void invalid_extruder_error(const uint8_t e) {
     if (DEBUGGING(LEVELING)) {
       DEBUG_ECHOPGM("Dual X Carriage Mode ");
       switch (dual_x_carriage_mode) {
-        case DXC_FULL_CONTROL_MODE: DEBUG_ECHOLNPGM("DXC_FULL_CONTROL_MODE"); break;
-        case DXC_AUTO_PARK_MODE: DEBUG_ECHOLNPGM("DXC_AUTO_PARK_MODE"); break;
-        case DXC_DUPLICATION_MODE: DEBUG_ECHOLNPGM("DXC_DUPLICATION_MODE"); break;
-        case DXC_SCALED_DUPLICATION_MODE: DEBUG_ECHOLNPGM("DXC_SCALED_DUPLICATION_MODE"); break;
+        case DXC_FULL_CONTROL_MODE: DEBUG_ECHOLNPGM("FULL_CONTROL"); break;
+        case DXC_AUTO_PARK_MODE:    DEBUG_ECHOLNPGM("AUTO_PARK");    break;
+        case DXC_DUPLICATION_MODE:  DEBUG_ECHOLNPGM("DUPLICATION");  break;
+        case DXC_MIRRORED_MODE:     DEBUG_ECHOLNPGM("MIRRORED");     break;
       }
     }
 
@@ -596,7 +596,7 @@ void tool_change(const uint8_t tmp_extruder, const float fr_mm_s/*=0.0*/, bool n
 
     planner.synchronize();
 
-    #if ENABLED(DUAL_X_CARRIAGE)  // Only T0 allowed if the Printer is in DXC_DUPLICATION_MODE or DXC_SCALED_DUPLICATION_MODE
+    #if ENABLED(DUAL_X_CARRIAGE)  // Only T0 allowed if the Printer is in DXC_DUPLICATION_MODE or DXC_MIRRORED_MODE
       if (tmp_extruder != 0 && dxc_is_duplicating())
          return invalid_extruder_error(tmp_extruder);
     #endif
@@ -740,7 +740,7 @@ void tool_change(const uint8_t tmp_extruder, const float fr_mm_s/*=0.0*/, bool n
           singlenozzle_temp[active_extruder] = thermalManager.temp_hotend[0].target;
           if (singlenozzle_temp[tmp_extruder] && singlenozzle_temp[tmp_extruder] != singlenozzle_temp[active_extruder]) {
             thermalManager.setTargetHotend(singlenozzle_temp[tmp_extruder], 0);
-            #if ENABLED(ULTRA_LCD) || ENABLED(EXTENSIBLE_UI)
+            #if EITHER(ULTRA_LCD, EXTENSIBLE_UI)
               thermalManager.set_heating_message(0);
             #endif
             (void)thermalManager.wait_for_hotend(0, false);  // Wait for heating or cooling
