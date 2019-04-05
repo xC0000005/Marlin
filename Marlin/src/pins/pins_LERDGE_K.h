@@ -24,8 +24,8 @@
   #error "Oops! Select an STM32F4 board in 'Tools > Board.'"
 #endif
 
-#define DEFAULT_MACHINE_NAME "LERDGE"
-#define BOARD_NAME "Lerdge X"
+#define DEFAULT_MACHINE_NAME "LERDGEK"
+#define BOARD_NAME "Lerdge K"
 
 #define I2C_EEPROM
 
