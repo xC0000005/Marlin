@@ -569,13 +569,15 @@ void GcodeSuite::G26() {
   bool g26_continue_with_closest = parser.boolval('C'),
        g26_keep_heaters_on       = parser.boolval('K');
 
-  if (parser.seenval('B')) {
-    g26_bed_temp = parser.value_celsius();
-    if (g26_bed_temp && !WITHIN(g26_bed_temp, 40, (BED_MAXTEMP - 10))) {
-      SERIAL_ECHOLNPAIR("?Specified bed temperature not plausible (40-", int(BED_MAXTEMP - 10), "C).");
-      return;
+  #if HAS_HEATED_BED
+    if (parser.seenval('B')) {
+      g26_bed_temp = parser.value_celsius();
+      if (g26_bed_temp && !WITHIN(g26_bed_temp, 40, (BED_MAXTEMP - 10))) {
+        SERIAL_ECHOLNPAIR("?Specified bed temperature not plausible (40-", int(BED_MAXTEMP - 10), "C).");
+        return;
+      }
     }
-  }
+  #endif
 
   if (parser.seenval('L')) {
     g26_layer_height = parser.value_linear_units();
@@ -686,6 +688,12 @@ void GcodeSuite::G26() {
     set_current_from_destination();
   }
 
+  #if DISABLED(NO_VOLUMETRICS)
+    bool volumetric_was_enabled = parser.volumetric_enabled;
+    parser.volumetric_enabled = false;
+    planner.calculate_volumetric_multipliers();
+  #endif
+
   if (turn_on_heaters() != G26_OK) goto LEAVE;
 
   current_position[E_AXIS] = 0.0;
@@ -760,6 +768,7 @@ void GcodeSuite::G26() {
       #if ENABLED(ARC_SUPPORT)
 
         #define ARC_LENGTH(quarters)  (INTERSECTION_CIRCLE_RADIUS * M_PI * (quarters) / 2)
+        #define INTERSECTION_CIRCLE_DIAM  ((INTERSECTION_CIRCLE_RADIUS) * 2)
         float sx = circle_x + INTERSECTION_CIRCLE_RADIUS,   // default to full circle
               ex = circle_x + INTERSECTION_CIRCLE_RADIUS,
               sy = circle_y, ey = circle_y,
@@ -767,10 +776,8 @@ void GcodeSuite::G26() {
 
         // Figure out where to start and end the arc - we always print counterclockwise
         if (xi == 0) {                             // left edge
-          sx = f ? circle_x + INTERSECTION_CIRCLE_RADIUS : circle_x;
-          ex = b ? circle_x + INTERSECTION_CIRCLE_RADIUS : circle_x;
-          sy = f ? circle_y : circle_y - (INTERSECTION_CIRCLE_RADIUS);
-          ey = b ? circle_y : circle_y + INTERSECTION_CIRCLE_RADIUS;
+          if (!f) { sx = circle_x; sy -= INTERSECTION_CIRCLE_RADIUS; }
+          if (!b) { ex = circle_x; ey += INTERSECTION_CIRCLE_RADIUS; }
           arc_length = (f || b) ? ARC_LENGTH(1) : ARC_LENGTH(2);
         }
         else if (r) {                             // right edge
@@ -781,30 +788,23 @@ void GcodeSuite::G26() {
           arc_length = (f || b) ? ARC_LENGTH(1) : ARC_LENGTH(2);
         }
         else if (f) {
-          sx = circle_x + INTERSECTION_CIRCLE_RADIUS;
-          ex = circle_x - (INTERSECTION_CIRCLE_RADIUS);
-          sy = ey = circle_y;
+          ex -= INTERSECTION_CIRCLE_DIAM;
           arc_length = ARC_LENGTH(2);
         }
         else if (b) {
-          sx = circle_x - (INTERSECTION_CIRCLE_RADIUS);
-          ex = circle_x + INTERSECTION_CIRCLE_RADIUS;
-          sy = ey = circle_y;
+          sx -= INTERSECTION_CIRCLE_DIAM;
           arc_length = ARC_LENGTH(2);
         }
-        const float arc_offset[2] = {
-          circle_x - sx,
-          circle_y - sy
-        };
 
-        const float dx_s = current_position[X_AXIS] - sx,   // find our distance from the start of the actual circle
+        const float arc_offset[2] = { circle_x - sx, circle_y - sy },
+                    dx_s = current_position[X_AXIS] - sx,   // find our distance from the start of the actual circle
                     dy_s = current_position[Y_AXIS] - sy,
-                    dist_start = HYPOT2(dx_s, dy_s);
-        const float endpoint[XYZE] = {
-          ex, ey,
-          g26_layer_height,
-          current_position[E_AXIS] + (arc_length * g26_e_axis_feedrate * g26_extrusion_multiplier)
-        };
+                    dist_start = HYPOT2(dx_s, dy_s),
+                    endpoint[XYZE] = {
+                      ex, ey,
+                      g26_layer_height,
+                      current_position[E_AXIS] + (arc_length * g26_e_axis_feedrate * g26_extrusion_multiplier)
+                    };
 
         if (dist_start > 2.0) {
           retract_filament(destination);
@@ -908,6 +908,11 @@ void GcodeSuite::G26() {
 
   move_to(destination, 0);                                    // Move back to the starting position
   //debug_current_and_destination(PSTR("done doing X/Y move."));
+
+  #if DISABLED(NO_VOLUMETRICS)
+    parser.volumetric_enabled = volumetric_was_enabled;
+    planner.calculate_volumetric_multipliers();
+  #endif
 
   #if HAS_LCD_MENU
     ui.release();                                             // Give back control of the LCD

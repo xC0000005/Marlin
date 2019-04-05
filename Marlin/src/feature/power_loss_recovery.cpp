@@ -125,6 +125,9 @@ void PrintJobRecovery::save(const bool force/*=false*/, const bool save_queue/*=
     millis_t ms = millis();
   #endif
 
+  // Did Z change since the last call?
+  const float zmoved = current_position[Z_AXIS] - info.current_position[Z_AXIS];
+
   if (force
     #if DISABLED(SAVE_EACH_CMD_MODE)      // Always save state when enabled
       #if PIN_EXISTS(POWER_LOSS)          // Save if power loss pin is triggered
@@ -133,8 +136,8 @@ void PrintJobRecovery::save(const bool force/*=false*/, const bool save_queue/*=
       #if SAVE_INFO_INTERVAL_MS > 0       // Save if interval is elapsed
         || ELAPSED(ms, next_save_ms)
       #endif
-      // Save every time Z is higher than the last call
-      || current_position[Z_AXIS] > info.current_position[Z_AXIS]
+      || zmoved > 0                       // Z moved up (including Z-hop)
+      || zmoved < -5                      // Z moved down a lot (for some reason)
     #endif
   ) {
 
@@ -185,6 +188,10 @@ void PrintJobRecovery::save(const bool force/*=false*/, const bool save_queue/*=
       info.retract_hop = fwretract.current_hop;
     #endif
 
+    //relative mode
+    info.relative_mode = relative_mode;
+    info.relative_modes_e = gcode.axis_relative_modes[E_AXIS];
+
     // Commands in the queue
     info.commands_in_queue = save_queue ? commands_in_queue : 0;
     info.cmd_queue_index_r = cmd_queue_index_r;
@@ -218,6 +225,8 @@ void PrintJobRecovery::write() {
   open(false);
   file.seekSet(0);
   const int16_t ret = file.write(&info, sizeof(info));
+  close();
+
   #if ENABLED(DEBUG_POWER_LOSS_RECOVERY)
     if (ret == -1) SERIAL_ECHOLNPGM("Power-loss file write failed.");
   #else
@@ -338,6 +347,10 @@ void PrintJobRecovery::resume() {
   // Restore the feedrate
   sprintf_P(cmd, PSTR("G1 F%d"), info.feedrate);
   gcode.process_subcommands_now(cmd);
+
+  //relative mode
+  if (info.relative_mode) relative_mode = true;
+  if (info.relative_modes_e) gcode.axis_relative_modes[E_AXIS] = true;
 
   // Process commands from the old pending queue
   uint8_t c = info.commands_in_queue, r = info.cmd_queue_index_r;
