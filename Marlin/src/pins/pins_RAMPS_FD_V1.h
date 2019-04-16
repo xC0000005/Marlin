@@ -156,7 +156,10 @@
     #define LCD_PINS_D7    29
   #endif
 
-  #if ENABLED(MINIPANEL)
+  #if ENABLED(FYSETC_MINI_12864)
+    #define DOGLCD_CS      LCD_PINS_ENABLE
+    #define DOGLCD_A0      LCD_PINS_RS
+  #elif ENABLED(MINIPANEL)
     #define DOGLCD_CS      25
     #define DOGLCD_A0      27
   #endif
@@ -198,9 +201,9 @@
 //
 // M3/M4/M5 - Spindle/Laser Control
 //
-#if ENABLED(SPINDLE_LASER_ENABLE) && !PIN_EXISTS(SPINDLE_LASER_ENABLE)
+#if ENABLED(SPINDLE_LASER_ENABLE) && !PIN_EXISTS(SPINDLE_LASER_ENA)
   #if HOTENDS < 3
-    #define SPINDLE_LASER_ENABLE_PIN  45   // Use E2 ENA
+    #define SPINDLE_LASER_ENA_PIN     45   // Use E2 ENA
     #define SPINDLE_LASER_PWM_PIN     12   // MUST BE HARDWARE PWM
     #define SPINDLE_DIR_PIN           47   // Use E2 DIR
   #endif

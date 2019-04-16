@@ -19,7 +19,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-#pragma once
 
 //
 // Serial aliases for debugging.
@@ -47,6 +46,7 @@
 #undef DEBUG_DELAY
 
 #if DEBUG_OUT
+  #define DEBUG_PRINT_P(P)        serialprintPGM(P)
   #define DEBUG_ECHO_START        SERIAL_ECHO_START
   #define DEBUG_ERROR_START       SERIAL_ERROR_START
   #define DEBUG_CHAR              SERIAL_CHAR
@@ -66,6 +66,7 @@
   #define DEBUG_XYZ               SERIAL_XYZ
   #define DEBUG_DELAY(ms)         serial_delay(ms)
 #else
+  #define DEBUG_PRINT_P(P)        NOOP
   #define DEBUG_ECHO_START()      NOOP
   #define DEBUG_ERROR_START()     NOOP
   #define DEBUG_CHAR(...)         NOOP
