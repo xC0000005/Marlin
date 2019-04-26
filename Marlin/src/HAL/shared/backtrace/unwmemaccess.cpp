@@ -41,15 +41,15 @@
 #define END_FLASH_ADDR    0x00080000
 #endif
 
-#if 0
-// For STM32F103CBT6
+#if defined(STM32F1xx) || defined(STM32F0xx)
+// For STM32F103CBT6 and 070
 //  SRAM  (0x20000000 - 0x20005000) (20kb)
 //  FLASH (0x00000000 - 0x00020000) (128kb)
 //
 #define START_SRAM_ADDR   0x20000000
 #define END_SRAM_ADDR     0x20005000
-#define START_FLASH_ADDR  0x00000000
-#define END_FLASH_ADDR    0x00020000
+#define START_FLASH_ADDR  0x08000000
+#define END_FLASH_ADDR    0x08080000
 #endif
 
 #ifdef __STM32F1__
