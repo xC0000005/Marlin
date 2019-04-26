@@ -58,6 +58,7 @@
 #include "../module/configuration_store.h"
 
 #include "../Marlin.h"
+#include "../module/memoryserial.h"
 
 #if ENABLED(SDSUPPORT)
   #include "../sd/cardreader.h"
@@ -69,6 +70,7 @@
 // On the Malyan M200, this will be Serial1. On a RAMPS board,
 // it might not be.
 #define LCD_SERIAL Serial1
+#define PASSTHROUGHSERIAL MemorySerial1
 
 // This is based on longest sys command + a filename, plus some buffer
 // in case we encounter some data we don't recognize
@@ -427,6 +429,12 @@ void MarlinUI::update() {
   // now drain commands...
   while (LCD_SERIAL.available()) {
     const byte b = (byte)LCD_SERIAL.read() & 0x7F;
+
+    if (b & 0x7F == 0) {
+      PASSTHROUGHSERIAL.write(b);
+      continue;
+    }
+
     inbound_buffer[inbound_count++] = b;
     if (b == '}' || inbound_count == sizeof(inbound_buffer) - 1) {
       inbound_buffer[inbound_count - 1] = '\0';

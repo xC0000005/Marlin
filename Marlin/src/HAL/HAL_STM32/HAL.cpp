@@ -33,6 +33,10 @@
 #include "../../inc/MarlinConfig.h"
 #include "../shared/Delay.h"
 
+#if ENABLED(WIFI_PRINTING)
+  #include "../../module/memoryserial.h"
+#endif
+
 #if ENABLED(EEPROM_EMULATED_WITH_SRAM)
   #if STM32F7xx
     #include "stm32f7xx_ll_pwr.h"
@@ -64,6 +68,10 @@
 // --------------------------------------------------------------------------
 
 uint16_t HAL_adc_result;
+
+#if ENABLED(WIFI_PRINTING)
+  MemorySerial MemorySerial1;
+#endif
 
 // --------------------------------------------------------------------------
 // Private Variables
