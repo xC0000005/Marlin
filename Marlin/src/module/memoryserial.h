@@ -23,6 +23,7 @@
 
 #include <stdarg.h>
 #include <stdio.h>
+#include "Stream.h"
 
 /**
  * Generic RingBuffer
@@ -33,8 +34,15 @@
 template <typename T, uint32_t S> class RingBuffer {
 public:
   RingBuffer() { index_read = index_write = 0; }
-  uint32_t available() volatile { return index_write - index_read; }
-  uint32_t free() volatile      { return buffer_size - available(); }
+  uint32_t available() volatile {
+    uint32_t result = index_write-index_read;
+    if (result < 0) result += buffer_size;
+    return result;
+  }
+  uint32_t free() volatile      {
+    return buffer_size - available();
+  }
+
   bool empty() volatile         { return index_read == index_write; }
   bool full() volatile          { return available() == buffer_size; }
   void clear() volatile         { index_read = index_write = 0; }
@@ -47,13 +55,17 @@ public:
   }
 
   int read() volatile {
-    if (empty()) return -1;
-    return buffer[mask(index_read++)];
+    int value = -1;
+    if (empty()) return value;
+    value = buffer[mask(index_read++)];
+    index_read %= buffer_size;
+    return value;
   }
 
   bool write(T value) volatile {
     if (full()) return false;
     buffer[mask(index_write++)] = value;
+    index_write %= buffer_size;
     return true;
   }
 
@@ -69,7 +81,7 @@ private:
   volatile uint32_t index_read;
 };
 
-class MemorySerial {
+class MemorySerial : public Stream  {
 public:
 
   MemorySerial() { host_connected = true; }
@@ -77,124 +89,67 @@ public:
   void begin(int32_t baud) {
   }
 
-  int peek() {
-    uint8_t value;
-    return receive_buffer.peek(&value) ? value : -1;
+  int available() {
+    return (uint16_t)receive_buffer->available();
   }
 
-  int read() { return receive_buffer.read(); }
+  int peek() {
+    uint8_t value;
+    return receive_buffer->peek(&value) ? value : -1;
+  }
 
-  size_t write(char c) {
-    if (!host_connected) return 0;
-    while (!transmit_buffer.free());
-    return transmit_buffer.write(c);
+  int read() { return receive_buffer->read(); }
+
+  int availableForWrite(void){
+    return transmit_buffer->free() > 255 ? 255 : (uint8_t)transmit_buffer->free();
+  }
+
+  void flush() { /*receive_buffer->clear();*/ }
+
+  size_t write(uint8_t c) {
+//    if (!host_connected) return 0;
+//    while (!transmit_buffer.free());
+    return transmit_buffer->write(c);
   }
 
   operator bool() { return host_connected; }
 
-  uint16_t available() {
-    return (uint16_t)receive_buffer.available();
-  }
-
-  void flush() { receive_buffer.clear(); }
-
-  uint8_t availableForWrite(void){
-    return transmit_buffer.free() > 255 ? 255 : (uint8_t)transmit_buffer.free();
-  }
 
   void flushTX(void){
-    if (host_connected)
-      while (transmit_buffer.available()) { /* nada */ }
+//    if (host_connected)
+//      while (transmit_buffer.available()) { /* nada */ }
   }
 
-  void printf(const char *format, ...) {
-    static char buffer[256];
-    va_list vArgs;
-    va_start(vArgs, format);
-    int length = vsnprintf((char *) buffer, 256, (char const *) format, vArgs);
-    va_end(vArgs);
-    if (length > 0 && length < 256) {
-      if (host_connected) {
-        for (int i = 0; i < length;) {
-          if (transmit_buffer.write(buffer[i])) {
-            ++i;
-          }
-        }
-      }
-    }
+  using Print::write; // pull in write(str) and write(buf, size) from Print
+
+  void set_receive_buffer(RingBuffer<uint8_t, 128> *recv_buffer) {
+    this->receive_buffer = recv_buffer;
   }
 
-  #define DEC 10
-  #define HEX 16
-  #define OCT 8
-  #define BIN 2
-
-  void print_bin(uint32_t value, uint8_t num_digits) {
-    uint32_t mask = 1 << (num_digits -1);
-    for (uint8_t i = 0; i < num_digits; i++) {
-      if (!(i % 4) && i)    write(' ');
-      if (!(i % 16)  && i)  write(' ');
-      if (value & mask)     write('1');
-      else                  write('0');
-      value <<= 1;
-    }
+  void set_transmit_buffer(RingBuffer<uint8_t, 128> *trans_buffer) {
+    this->transmit_buffer = trans_buffer;
   }
 
-  void print(const char value[]) { printf("%s" , value); }
-  void print(char value, int nbase = 0) {
-    if (nbase == BIN) print_bin(value, 8);
-    else if (nbase == OCT) printf("%3o", value);
-    else if (nbase == HEX) printf("%2X", value);
-    else if (nbase == DEC ) printf("%d", value);
-    else printf("%c" , value);
-  }
-  void print(unsigned char value, int nbase = 0) {
-    if (nbase == BIN) print_bin(value, 8);
-    else if (nbase == OCT) printf("%3o", value);
-    else if (nbase == HEX) printf("%2X", value);
-    else printf("%u" , value);
-  }
-  void print(int value, int nbase = 0) {
-    if (nbase == BIN) print_bin(value, 16);
-    else if (nbase == OCT) printf("%6o", value);
-    else if (nbase == HEX) printf("%4X", value);
-    else printf("%d", value);
-  }
-  void print(unsigned int value, int nbase = 0) {
-    if (nbase == BIN) print_bin(value, 16);
-    else if (nbase == OCT) printf("%6o", value);
-    else if (nbase == HEX) printf("%4X", value);
-    else printf("%u" , value);
-  }
-  void print(long value, int nbase = 0) {
-    if (nbase == BIN) print_bin(value, 32);
-    else if (nbase == OCT) printf("%11o", value);
-    else if (nbase == HEX) printf("%8X", value);
-    else printf("%ld" , value);
-  }
-  void print(unsigned long value, int nbase = 0) {
-    if (nbase == BIN) print_bin(value, 32);
-    else if (nbase == OCT) printf("%11o", value);
-    else if (nbase == HEX) printf("%8X", value);
-    else printf("%lu" , value);
-  }
-  void print(float value, int round = 6)  { printf("%f" , value); }
-  void print(double value, int round = 6) { printf("%f" , value); }
-
-  void println(const char value[]) { printf("%s\n" , value); }
-  void println(char value, int nbase = 0) { print(value, nbase); println(); }
-  void println(unsigned char value, int nbase = 0) { print(value, nbase); println(); }
-  void println(int value, int nbase = 0) { print(value, nbase); println(); }
-  void println(unsigned int value, int nbase = 0) { print(value, nbase); println(); }
-  void println(long value, int nbase = 0) { print(value, nbase); println(); }
-  void println(unsigned long value, int nbase = 0) { print(value, nbase); println(); }
-  void println(float value, int round = 6) { printf("%f\n" , value); }
-  void println(double value, int round = 6) { printf("%f\n" , value); }
-  void println(void) { print('\n'); }
-
-  volatile RingBuffer<uint8_t, 128> receive_buffer;
-  volatile RingBuffer<uint8_t, 128> transmit_buffer;
-  volatile bool host_connected;
+  RingBuffer<uint8_t, 128> *receive_buffer;
+  RingBuffer<uint8_t, 128> *transmit_buffer;
+  bool host_connected;
 };
 
-extern MemorySerial MemorySerial1;
+class PassthroughSerialPair {
+public:
+  RingBuffer<uint8_t, 128> buffer0;
+  RingBuffer<uint8_t, 128> buffer1;
+
+  MemorySerial SerialA;
+  MemorySerial SerialB;
+
+  PassthroughSerialPair() {
+    this->SerialA.set_transmit_buffer(&this->buffer0);
+    this->SerialB.set_receive_buffer(&this->buffer0);
+
+    this->SerialB.set_transmit_buffer(&this->buffer1);
+    this->SerialA.set_receive_buffer(&this->buffer1);
+  }
+};
+
+extern PassthroughSerialPair PassThroughSerial;

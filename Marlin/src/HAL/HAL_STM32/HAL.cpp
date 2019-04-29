@@ -70,7 +70,7 @@
 uint16_t HAL_adc_result;
 
 #if ENABLED(WIFI_PRINTING)
-  MemorySerial MemorySerial1;
+  PassthroughSerialPair PassThroughSerial;
 #endif
 
 // --------------------------------------------------------------------------

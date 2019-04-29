@@ -278,7 +278,7 @@ void GcodeSuite::process_parsed_command(
         case 58: G58(); break;
         case 59: G59(); break;
       #endif
-      
+
       #if ENABLED(GCODE_MOTION_MODES)
         case 80: G80(); break;                                    // G80: Reset the current motion mode
       #endif
@@ -641,6 +641,11 @@ void GcodeSuite::process_parsed_command(
 
       #if ENABLED(ABORT_ON_ENDSTOP_HIT_FEATURE_ENABLED)
         case 540: M540(); break;                                  // M540: Set abort on endstop hit for SD printing
+      #endif
+
+      #if ENABLED(WIFI_PRINTING)
+        case 550: M550(); break;                                  // M550: Set wifi SSDI
+        case 551: M551(); break;                                  // M551: Set wifi PASSWORD
       #endif
 
       #if HAS_BED_PROBE

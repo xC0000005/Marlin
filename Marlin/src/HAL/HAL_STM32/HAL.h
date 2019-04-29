@@ -71,34 +71,37 @@
 #endif
 
 #ifdef SERIAL_PORT_2
-  #if ENABLED(WIFI_PRINTING) && ENABLED(MALYAN_LCD)
-    #define MYSERIAL2 MemorySerial1
-  #else
-    #if SERIAL_PORT_2 == 0
-      #error "Serial port 0 does not exist"
-    #endif
+  #if SERIAL_PORT_2 == 0
+    #error "Serial port 0 does not exist"
+  #endif
 
-    #if !WITHIN(SERIAL_PORT_2, -1, 6)
-      #error "SERIAL_PORT_2 must be from -1 to 6"
-    #elif SERIAL_PORT_2 == SERIAL_PORT
-      #error "SERIAL_PORT_2 must be different than SERIAL_PORT"
+  #if !WITHIN(SERIAL_PORT_2, -2, 6)
+    #error "SERIAL_PORT_2 must be from -2 to 6"
+  #elif SERIAL_PORT_2 == SERIAL_PORT
+    #error "SERIAL_PORT_2 must be different than SERIAL_PORT"
+  #endif
+  #define NUM_SERIAL 2
+
+  #if SERIAL_PORT_2 == -2
+    #if ENABLED(WIFI_PRINTING) && ENABLED(MALYAN_LCD)
+      #define MYSERIAL1 PassThroughSerial.SerialA
+    #else
+      #error "SERIAL_PORT_2 as wifi passthrough requires WIFI_PRINTING and MALYAN_LCD"
     #endif
-    #define NUM_SERIAL 2
-    #if SERIAL_PORT_2 == -1
-      #define MYSERIAL1 SerialUSB
-    #elif SERIAL_PORT_2 == 1
-      #define MYSERIAL1 Serial1
-    #elif SERIAL_PORT_2 == 2
-      #define MYSERIAL1 Serial2
-    #elif SERIAL_PORT_2 == 3
-      #define MYSERIAL1 Serial3
-    #elif SERIAL_PORT_2 == 4
-      #define MYSERIAL1 Serial4
-    #elif SERIAL_PORT_2 == 5
-      #define MYSERIAL1 Serial5
-    #elif SERIAL_PORT_2 == 6
-      #define MYSERIAL1 Serial6
-    #endif
+  #elif SERIAL_PORT_2 == -1
+    #define MYSERIAL1 SerialUSB
+  #elif SERIAL_PORT_2 == 1
+    #define MYSERIAL1 Serial1
+  #elif SERIAL_PORT_2 == 2
+    #define MYSERIAL1 Serial2
+  #elif SERIAL_PORT_2 == 3
+    #define MYSERIAL1 Serial3
+  #elif SERIAL_PORT_2 == 4
+    #define MYSERIAL1 Serial4
+  #elif SERIAL_PORT_2 == 5
+    #define MYSERIAL1 Serial5
+  #elif SERIAL_PORT_2 == 6
+    #define MYSERIAL1 Serial6
   #endif
 #else
   #define NUM_SERIAL 1

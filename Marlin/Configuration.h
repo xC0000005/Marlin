@@ -110,10 +110,11 @@
  * Select a secondary serial port on the board to use for communication with the host.
  * This allows the connection of wireless adapters (for instance) to non-default port pins.
  * Serial port -1 is the USB emulated serial port, if available.
+ * Serial port -2 is the WIFI passthrough serial port, if available.
  *
- * :[-1, 0, 1, 2, 3, 4, 5, 6, 7]
+ * :[-2, -1, 0, 1, 2, 3, 4, 5, 6, 7]
  */
-//#define SERIAL_PORT_2 -1
+#define SERIAL_PORT_2 -2
 
 /**
  * This setting determines the communication speed of the printer.
@@ -148,7 +149,7 @@
 #define EXTRUDERS 1
 
 // Generally expected filament diameter (1.75, 2.85, 3.0, ...). Used for Volumetric, Filament Width Sensor, etc.
-#define DEFAULT_NOMINAL_FILAMENT_DIA 3.0
+#define DEFAULT_NOMINAL_FILAMENT_DIA 1.75
 
 // For Cyclops or any "multi-extruder" that shares a single nozzle.
 //#define SINGLENOZZLE
@@ -700,7 +701,7 @@
  * Override with M203
  *                                      X, Y, Z, E0 [, E1[, E2[, E3[, E4[, E5]]]]]
  */
-#define DEFAULT_MAX_FEEDRATE          { 100, 100, 1.5, 50 }
+#define DEFAULT_MAX_FEEDRATE          { 150, 150, 1.5, 50 }
 
 /**
  * Default Max Acceleration (change/s) change = mm/s
@@ -949,8 +950,8 @@
 
 // Disables axis stepper immediately when it's not being used.
 // WARNING: When motors turn off there is a chance of losing position accuracy!
-#define DISABLE_X true
-#define DISABLE_Y true
+#define DISABLE_X false
+#define DISABLE_Y false
 #define DISABLE_Z false
 
 // Warn on display about possibly reduced accuracy
@@ -1974,6 +1975,9 @@
 // LCD for Malyan M200 printers.
 //
 #define MALYAN_LCD
+
+// The Malyan LCD supports WIFI printing through an ESP8266 bridge
+#define WIFI_PRINTING
 
 //
 // CONTROLLER TYPE: Keypad / Add-on

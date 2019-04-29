@@ -70,7 +70,10 @@
 // On the Malyan M200, this will be Serial1. On a RAMPS board,
 // it might not be.
 #define LCD_SERIAL Serial1
-#define PASSTHROUGHSERIAL MemorySerial1
+
+#if ENABLED(WIFI_PRINTING)
+#define PASSTHROUGHSERIAL PassThroughSerial.SerialB
+#endif
 
 // This is based on longest sys command + a filename, plus some buffer
 // in case we encounter some data we don't recognize
@@ -189,7 +192,7 @@ void process_lcd_eb_command(const char* command) {
  * X, Y, Z, A (extruder)
  */
 void process_lcd_j_command(const char* command) {
-  static bool steppers_enabled = false;
+  //static bool steppers_enabled = false;
   char axis = command[0];
 
   switch (axis) {
@@ -197,8 +200,8 @@ void process_lcd_j_command(const char* command) {
       // enable or disable steppers
       // switch to relative
       enqueue_and_echo_commands_now_P(PSTR("G91"));
-      enqueue_and_echo_commands_now_P(steppers_enabled ? PSTR("M18") : PSTR("M17"));
-      steppers_enabled = !steppers_enabled;
+      //enqueue_and_echo_commands_now_P(steppers_enabled ? PSTR("M18") : PSTR("M17"));
+      //steppers_enabled = !steppers_enabled;
       break;
     case 'A':
       axis = 'E';
@@ -410,7 +413,7 @@ void update_usb_status(const bool forceUpdate) {
   // This is more logical.
   if (last_usb_connected_status != Serial || forceUpdate) {
     last_usb_connected_status = Serial;
-    write_to_lcd_P(last_usb_connected_status ? PSTR("{R:UC}\r\n") : PSTR("{R:UD}\r\n"));
+    //write_to_lcd_P(last_usb_connected_status ? PSTR("{R:UC}\r\n") : PSTR("{R:UD}\r\n"));
   }
 }
 
@@ -428,12 +431,16 @@ void MarlinUI::update() {
 
   // now drain commands...
   while (LCD_SERIAL.available()) {
-    const byte b = (byte)LCD_SERIAL.read() & 0x7F;
+    byte b = (byte)LCD_SERIAL.read();
 
-    if (b & 0x7F == 0) {
+    if ((b & 0x80) == 0) {
+      #if ENABLED(WIFI_PRINTING)
       PASSTHROUGHSERIAL.write(b);
+      #endif
       continue;
     }
+
+    b = b & 0x7F;
 
     inbound_buffer[inbound_count++] = b;
     if (b == '}' || inbound_count == sizeof(inbound_buffer) - 1) {
@@ -443,6 +450,14 @@ void MarlinUI::update() {
       inbound_buffer[0] = 0;
     }
   }
+
+  #if ENABLED(WIFI_PRINTING)
+  // TODO - don't do this a byte at a time.
+  while (PASSTHROUGHSERIAL.available()) {
+    const byte b = (byte)PASSTHROUGHSERIAL.read();
+    LCD_SERIAL.write(b);
+  }
+  #endif
 
   #if ENABLED(SDSUPPORT)
     // The way last printing status works is simple:
@@ -492,6 +507,24 @@ void MarlinUI::set_alert_status_P(PGM_P const message) {
   write_to_lcd_P(PSTR("{E:"));
   write_to_lcd_P(message);
   write_to_lcd_P("}");
+}
+
+/**
+ * To set the wifi SSID, the printer sends {WS:<ssid>}
+ */
+void MALYANLCD_set_wifi_ssd(char *ssd) {
+  char message_buffer[33];
+  sprintf_P(message_buffer, PSTR("{WS:%s}"), ssd);
+  write_to_lcd(message_buffer);
+}
+
+/**
+ * To set the wifi SSID, the printer sends {WP:<password>}
+ */
+void MALYANLCD_set_wifi_password(char *password) {
+  char message_buffer[65];
+  sprintf_P(message_buffer, PSTR("{WP:%s}"), password);
+  write_to_lcd(message_buffer);
 }
 
 #endif // MALYAN_LCD
