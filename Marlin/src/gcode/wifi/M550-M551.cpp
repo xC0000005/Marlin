@@ -32,31 +32,6 @@ extern void MALYANLCD_set_wifi_ssd(char *ssd);
 
 extern void MALYANLCD_set_wifi_password(char *password);
 
-void ShowOneMemorySerial(MemorySerial *ms) {
-  char message[1024];
-  sprintf(message, "TXBUFF: %08x", (int)(ms->transmit_buffer));
-  SERIAL_ECHOLN(message);
-
-  sprintf(message, "RXBUFF: %08x", (int)(ms->receive_buffer));
-  SERIAL_ECHOLN(message);
-  SERIAL_ECHOLNPAIR("Available:", ms->available());
-}
-
-void ShowPTS(PassthroughSerialPair *pts) {
-  char message[1024];
-  sprintf(message, "RB0: %08x", (int)(&(pts->buffer0)));
-  SERIAL_ECHOLN(message);
-
-  sprintf(message, "RB1: %08x", (int)(&(pts->buffer1)));
-  SERIAL_ECHOLN(message);
-
-  SERIAL_ECHOLN("SerialA");
-  ShowOneMemorySerial(&pts->SerialA);
-
-  SERIAL_ECHOLN("SerialB");
-  ShowOneMemorySerial(&pts->SerialB);
-}
-
 /**
  * M550: Store settings in EEPROM
  */
@@ -70,9 +45,6 @@ void GcodeSuite::M550() {
  */
 void GcodeSuite::M551() {
   MALYANLCD_set_wifi_password(parser.string_arg);
-//  SERIAL_ECHOLNPAIR("Passing:", parser.string_arg);
-//  for (int i = 0; i < strlen(parser.string_arg); i++)
-//    MYSERIAL1.write(parser.string_arg[i]);
 }
 
 #endif
