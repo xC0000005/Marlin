@@ -423,6 +423,12 @@
 #elif MB(MKS_ROBIN)
   #include "pins_MKS_ROBIN.h"         // STM32F1                                    env:mks_robin
 
+  //
+  // STM32 ARM Cortex-M0
+  //
+#elif MB(MALYAN_M300)
+  #include "pins_MALYAN_M300.h"       // STM32F070                                  env:malyanm200
+
 //
 // STM32 ARM Cortex-M4F
 //

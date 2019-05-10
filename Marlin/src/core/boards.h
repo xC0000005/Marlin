@@ -244,6 +244,7 @@
 #define BOARD_GTM32_PRO_VB     1805   // STM32f103VET6 controller
 #define BOARD_MORPHEUS         1806   // STM32F103C8/STM32F103CB Libmaple based stm32f1 controller
 #define BOARD_MKS_ROBIN        1808   // MKS Robin / STM32F103ZET6
+#define BOARD_MALYAN_M300      1808   // STM32F070 based delta
 
 //
 // STM32 ARM Cortex-M4F
