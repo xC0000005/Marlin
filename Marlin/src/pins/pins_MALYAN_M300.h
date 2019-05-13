@@ -24,7 +24,7 @@
  * MALYAN M300 pin assignments
  */
 
-#if !defined(STM32F0xx)
+#if !defined(__STM32F1__) && !defined(STM32F1xx) && !defined(STM32F0xx)
   #error "Oops! You must be compiling for STM32F070."
 #endif
 
@@ -70,7 +70,7 @@
 
 #define E0_STEP_PIN        PA7
 #define E0_DIR_PIN         PA6
-#define E0_ENABLE_PIN      -1
+#define E0_ENABLE_PIN      PA3
 
 //
 // Temperature Sensors
