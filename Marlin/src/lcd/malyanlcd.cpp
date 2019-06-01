@@ -197,11 +197,9 @@ void process_lcd_j_command(const char* command) {
 
   switch (axis) {
     case 'E':
+      SERIAL_ECHOLNPAIR("ECOMMAND:", command);
       // enable or disable steppers
       // switch to relative
-      enqueue_and_echo_commands_now_P(PSTR("G91"));
-      //enqueue_and_echo_commands_now_P(steppers_enabled ? PSTR("M18") : PSTR("M17"));
-      //steppers_enabled = !steppers_enabled;
       break;
     case 'A':
       axis = 'E';
@@ -212,6 +210,9 @@ void process_lcd_j_command(const char* command) {
       // G0 <AXIS><distance>
       // The M200 class UI seems to send movement in .1mm values.
       char cmd[20];
+      enqueue_and_echo_commands_now_P(PSTR("G91"));
+      //enqueue_and_echo_commands_now_P(steppers_enabled ? PSTR("M18") : PSTR("M17"));
+      //steppers_enabled = !steppers_enabled;
       sprintf_P(cmd, PSTR("G1 %c%03.1f"), axis, atof(command + 1) / 10.0);
       enqueue_and_echo_command_now(cmd);
     } break;
