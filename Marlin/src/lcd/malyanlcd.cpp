@@ -67,6 +67,8 @@
   #define LONG_FILENAME_LENGTH 0
 #endif
 
+bool allow_lcd_writes = true;
+
 // On the Malyan M200, this will be Serial1. On a RAMPS board,
 // it might not be.
 #define LCD_SERIAL Serial1
@@ -446,7 +448,9 @@ void MarlinUI::update() {
     inbound_buffer[inbound_count++] = b;
     if (b == '}' || inbound_count == sizeof(inbound_buffer) - 1) {
       inbound_buffer[inbound_count - 1] = '\0';
-      process_lcd_command(inbound_buffer);
+
+      if (allow_lcd_writes)
+        process_lcd_command(inbound_buffer);
       inbound_count = 0;
       inbound_buffer[0] = 0;
     }

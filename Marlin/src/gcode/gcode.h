@@ -704,6 +704,10 @@ private:
     static bool M364();
   #endif
 
+  #if ENABLED(MALYAN_LCD)
+    static void M375();
+  #endif
+
   #if EITHER(EXT_SOLENOID, MANUAL_SOLENOID_CONTROL)
     static void M380();
     static void M381();
