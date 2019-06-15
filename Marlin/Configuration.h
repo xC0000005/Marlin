@@ -114,7 +114,7 @@
  *
  * :[-2, -1, 0, 1, 2, 3, 4, 5, 6, 7]
  */
-#define SERIAL_PORT_2 -2
+//#define SERIAL_PORT_2 -2
 
 /**
  * This setting determines the communication speed of the printer.
@@ -125,7 +125,7 @@
  *
  * :[2400, 9600, 19200, 38400, 57600, 115200, 250000, 500000, 1000000]
  */
-#define BAUDRATE 500000
+#define BAUDRATE 115200
 
 // Enable the Bluetooth serial interface on AT90USB devices
 //#define BLUETOOTH
@@ -1977,7 +1977,7 @@
 #define MALYAN_LCD
 
 // The Malyan LCD supports WIFI printing through an ESP8266 bridge
-#define WIFI_PRINTING
+//#define WIFI_PRINTING
 
 //
 // CONTROLLER TYPE: Keypad / Add-on

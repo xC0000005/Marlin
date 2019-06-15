@@ -713,7 +713,7 @@ class Temperature {
       #endif
     #endif
 
-    #if EITHER(ULTRA_LCD, EXTENSIBLE_UI)
+    #if ANY(ULTRA_LCD, EXTENSIBLE_UI, MALYAN_LCD)
       static void set_heating_message(const uint8_t e);
     #endif
 

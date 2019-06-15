@@ -372,11 +372,15 @@ public:
     static void reset_status();
 
   #else // MALYAN_LCD or NO LCD
-
     static inline void refresh() {}
     static inline void set_status(const char* const message, const bool persist=false) { UNUSED(message); UNUSED(persist); }
-    static inline void set_status_P(PGM_P const message, const int8_t level=0) { UNUSED(message); UNUSED(level); }
-    static inline void status_printf_P(const uint8_t level, PGM_P const fmt, ...) { UNUSED(level); UNUSED(fmt); }
+    #if ENABLED(MALYAN_LCD)
+      static void set_status_P(PGM_P const message, const int8_t level=0);
+      static void status_printf_P(const uint8_t level, PGM_P const fmt, ...);
+    #else // NO LCD
+      static inline void set_status_P(PGM_P const message, const int8_t level=0) { UNUSED(level); UNUSED(message); }
+      static inline void status_printf_P(const uint8_t level, PGM_P const fmt, ...) { UNUSED(level); UNUSED(fmt); }
+    #endif
     static inline void reset_status() {}
     static inline void reset_alert_level() {}
     static constexpr bool has_status() { return false; }

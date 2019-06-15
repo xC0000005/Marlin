@@ -514,6 +514,25 @@ void MarlinUI::set_alert_status_P(PGM_P const message) {
   write_to_lcd_P("}");
 }
 
+void MarlinUI::set_status_P(PGM_P const message, const int8_t level) {
+  UNUSED(level);
+  if (strcmp_P(message, PSTR(MSG_BED_HEATING)) == 0 ||
+      strcmp_P(message, PSTR(MSG_BED_COOLING)) == 0 ||
+      strcmp_P(message, PSTR("E " MSG_HEATING)) == 0 ||
+      strcmp_P(message, PSTR("E " MSG_COOLING)) == 0) {
+      write_to_lcd_P(PSTR("{SYS:BUILD}"));
+  }
+}
+
+void MarlinUI::status_printf_P(const uint8_t level, PGM_P const fmt, ...) {
+  UNUSED(level);
+  UNUSED(fmt);
+  if (strlen_P(fmt) > 3 &&
+     (strcmp_P(fmt + 3, PSTR(MSG_HEATING)) == 0 || strcmp_P(fmt + 3, PSTR(MSG_COOLING)) == 0)) {
+     write_to_lcd_P(PSTR("{SYS:BUILD}"));
+   }
+}
+
 /**
  * To set the wifi SSID, the printer sends {WS:<ssid>}
  */
