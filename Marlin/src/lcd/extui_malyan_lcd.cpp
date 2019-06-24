@@ -113,7 +113,8 @@ void write_to_lcd(const char * const message) {
  */
 void process_lcd_c_command(const char* command) {
   switch (command[0]) {
-    case 'C': {
+    case 'C': // Cope with both V1 early rev and later LCDs.
+    case 'S': {
       int raw_feedrate = atoi(command + 1);
       feedrate_percentage = raw_feedrate * 10;
       feedrate_percentage = constrain(feedrate_percentage, 10, 999);
@@ -319,11 +320,6 @@ void process_lcd_s_command(const char* command) {
       write_to_lcd(message_buffer);
     } break;
 
-    case 'H':
-      // Home all axis
-      queue.inject_P(PSTR("G28"));
-      break;
-
     case 'L': {
       #if ENABLED(SDSUPPORT)
         if (!card.isDetected()) card.initsd();
@@ -336,6 +332,16 @@ void process_lcd_s_command(const char* command) {
         // little reason not to do it this way.
         char message_buffer[MAX_CURLY_COMMAND];
         uint16_t file_count = card.get_num_Files();
+
+        // If the SD card is swapped out, since there's no detect
+        // pin, re-mount. The downside is that subdirectory listings
+        // will wipe the state, but moving up from a sub subdirectory
+        // always resets to root anyway.
+        if (file_count == 0) {
+          card.release();
+          card.initsd();
+          file_count = card.get_num_Files();
+        }
         for (uint16_t i = 0; i < file_count; i++) {
           card.getfilename(i);
           sprintf_P(message_buffer, card.flag.filenameIsDir ? PSTR("{DIR:%s}") : PSTR("{FILE:%s}"), card.longest_filename());
@@ -474,14 +480,15 @@ namespace ExtUI {
     #endif
   }
 
-  void onStatusChanged(const char * const msg) {
+  // {E:<msg>} is for error states.
+  void onPrinterKilled(PGM_P msg) {
     write_to_lcd_P(PSTR("{E:"));
-    write_to_lcd(msg);
+    write_to_lcd_P(msg);
     write_to_lcd_P("}");
   }
 
   // Not needed for Malyan LCD
-  void onPrinterKilled(PGM_P const msg) { UNUSED(msg); }
+  void onStatusChanged(const char * const msg) { UNUSED(msg); }
   void onMediaInserted() {};
   void onMediaError() {};
   void onMediaRemoved() {};
