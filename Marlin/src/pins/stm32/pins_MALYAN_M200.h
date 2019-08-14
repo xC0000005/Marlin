@@ -50,7 +50,14 @@
 //
 #define X_MIN_PIN          PB4
 #define Y_MIN_PIN          PA15
-#define Z_MIN_PIN          PB5
+
+// On the V3, the Z_MN_PROBE pin should be defined in configuration.h as PB5
+// and that will enable the endstop on PA2.
+#ifdef Z_MIN_PROBE_PIN
+  #define Z_MIN_PIN          PA2
+#else
+  #define Z_MIN_PIN          PB5
+#endif
 
 //
 // Steppers
