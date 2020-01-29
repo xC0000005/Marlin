@@ -31,7 +31,7 @@
 #define FORCE_INLINE __attribute__((always_inline)) inline
 
 #define hal_timer_t uint32_t
-#define HAL_TIMER_TYPE_MAX 0xFFFFFFFF // Timers can be 16 or 32 bit
+#define HAL_TIMER_TYPE_MAX 0xFFFF // Timers can be 16 or 32 bit
 
 
 #ifdef STM32F0xx
@@ -39,11 +39,11 @@
   #define HAL_TIMER_RATE (F_CPU) // frequency of timer peripherals
 
   #ifndef STEP_TIMER
-    #define STEP_TIMER 16
+    #define STEP_TIMER 1
   #endif
 
   #ifndef TEMP_TIMER
-    #define TEMP_TIMER 17
+    #define TEMP_TIMER 3
   #endif
 
 #elif defined(STM32F1xx)
@@ -51,11 +51,11 @@
   #define HAL_TIMER_RATE (F_CPU) // frequency of timer peripherals
 
   #ifndef STEP_TIMER
-    #define STEP_TIMER 4
+    #define STEP_TIMER 1
   #endif
 
   #ifndef TEMP_TIMER
-    #define TEMP_TIMER 2
+    #define TEMP_TIMER 3
   #endif
 
 #elif defined(STM32F4xx) || defined(STM32F7xx)

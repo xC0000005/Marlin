@@ -41,6 +41,17 @@
 // Private Variables
 // ------------------------
 
+extern "C"
+{
+void HardFault_Handler(void)
+{
+  /* Go to infinite loop when Hard Fault exception occurs */
+  while (1)
+  {
+  }
+}
+}
+
 HardwareTimer *timer_instance[NUM_HARDWARE_TIMERS] = { NULL };
 bool timer_enabled[NUM_HARDWARE_TIMERS] = { false };
 
@@ -68,12 +79,12 @@ void HAL_timer_start(const uint8_t timer_num, const uint32_t frequency) {
          * (for example when steppers are turned on)
          */
         timer_instance[timer_num]->setPrescaleFactor(STEPPER_TIMER_PRESCALE); //the -1 is done internally
-        timer_instance[timer_num]->setOverflow(_MIN(hal_timer_t(HAL_TIMER_TYPE_MAX), (HAL_TIMER_RATE) / (STEPPER_TIMER_PRESCALE) /* /frequency */), TICK_FORMAT);
+        timer_instance[timer_num]->setOverflow (_MIN(hal_timer_t(HAL_TIMER_TYPE_MAX), (HAL_TIMER_RATE) / (STEPPER_TIMER_PRESCALE) /* /frequency */), TICK_FORMAT);
         break;
       case TEMP_TIMER_NUM: // TEMP TIMER - any available 16bit timer
         timer_instance[timer_num] = new HardwareTimer(TEMP_TIMER_DEV);
         // The prescale factor is computed automatically for HERTZ_FORMAT
-        timer_instance[timer_num]->setOverflow(frequency, HERTZ_FORMAT);
+        timer_instance[timer_num]->setOverflow(frequency, MICROSEC_FORMAT);
         break;
     }
 
@@ -86,6 +97,7 @@ void HAL_timer_start(const uint8_t timer_num, const uint32_t frequency) {
      * a call to HAL_timer_enable_interrupt() which means that there isn't
      * a case in which you want the timer to run without a callback.
      */
+    //timer_instance[timer_num]->setCount(0); // So it will be called.
     timer_instance[timer_num]->resume(); // First call to resume() MUST follow the attachInterrupt()
 
     // This is fixed in Arduino_Core_STM32 1.8.
