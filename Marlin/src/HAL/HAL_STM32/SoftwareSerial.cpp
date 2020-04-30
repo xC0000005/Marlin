@@ -34,7 +34,7 @@
 //
 // Includes
 //
-#if defined(ARDUINO_ARCH_STM32) && !defined(STM32GENERIC)
+#if defined(ARDUINO_ARCH_STM32) && !defined(STM32GENERIC) && 0
 
 #include "SoftwareSerial.h"
 #include "timers.h"

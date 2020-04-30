@@ -43,7 +43,9 @@
 
 HardwareTimer *timer_instance[NUM_HARDWARE_TIMERS] = { NULL };
 bool timer_enabled[NUM_HARDWARE_TIMERS] = { false };
-
+bool timer_available[TIMER_NUM] = { false };
+int selected_step_timer = -1;
+int selected_temp_timer = -1;
 // ------------------------
 // Public functions
 // ------------------------
@@ -134,6 +136,84 @@ TIM_TypeDef * HAL_timer_device(const uint8_t timer_num) {
     case TEMP_TIMER_NUM: return TEMP_TIMER_DEV;
   }
   return nullptr;
+}
+
+void mark_timer_unavailable(pin_t pin) {
+  PinName name = digitalPinToPinName(pin);
+  TIM_TypeDef *instance = (TIM_TypeDef *)pinmap_peripheral(name, PinMap_PWM);
+  uint32_t index = get_timer_index(instance);
+  timer_available[index] = false;
+}
+
+// Determine which timers are available.
+void select_timers() {
+  // For each PWM pin (bed, heaters, fans if not soft PWM), mark the timers as unavailable
+  // then select one for temp and stepper
+  for (int j = 0; j < TIMER_NUM; j++) timer_available[j] = true;
+
+#if HAS_HEATER_0 
+  mark_timer_unavailable(HEATER_0_PIN);
+#endif
+
+#if HAS_HEATER_1
+  mark_timer_unavailable(HEATER_1_PIN);
+#endif
+
+#if HAS_HEATER_2 
+  mark_timer_unavailable(HEATER_2_PIN);
+#endif
+
+#if HAS_HEATER_3
+  mark_timer_unavailable(HEATER_3_PIN);
+#endif
+
+#if HAS_HEATER_4
+  mark_timer_unavailable(HEATER_4_PIN);
+#endif
+
+#if HAS_HEATER_5
+  mark_timer_unavailable(HEATER_5_PIN);
+#endif
+
+#if HAS_HEATER_BED
+  mark_timer_unavailable(HEATER_BED_PIN);
+#endif
+
+#if ENABLED(FAN_SOFT_PWM)
+  #if HAS_FAN0
+    mark_timer_unavailable(FAN0_PIN);
+  #endif
+
+  #if HAS_FAN1
+    mark_timer_unavailable(FAN1_PIN);
+  #endif
+
+  #if HAS_FAN2
+    mark_timer_unavailable(FAN2_PIN);
+  #endif
+#endif
+
+  // Now select the first available for temperature
+  for (int i = 0; i < TIMER_NUM; i++) {
+    if (!timer_available[i]) continue;
+
+    if (selected_step_timer == -1) {
+      selected_step_timer = i;
+      timer_available[i] = false;
+      continue;
+    }
+
+    if (selected_temp_timer == -1) {
+      selected_temp_timer = i;
+      timer_available[i] = false;
+      continue;
+    }
+
+    // Validate we were able to find timers
+    if (selected_temp_timer == -1 || selected_step_timer == -1) {
+      //kill(PSTR("TIMER ERROR"));
+    }
+  }
 }
 
 #endif // ARDUINO_ARCH_STM32 && !STM32GENERIC

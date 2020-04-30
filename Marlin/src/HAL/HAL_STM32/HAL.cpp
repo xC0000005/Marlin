@@ -69,10 +69,13 @@ uint16_t HAL_adc_result;
   }
 #endif
 
+extern void select_timers();
+
 // HAL initialization task
 void HAL_init() {
   FastIO_init();
-
+  select_timers();
+  
   #if ENABLED(SDSUPPORT)
     OUT_WRITE(SDSS, HIGH); // Try to set SDSS inactive before any other SPI users start up
   #endif

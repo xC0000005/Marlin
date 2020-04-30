@@ -717,6 +717,10 @@ void GcodeSuite::process_parsed_command(const bool no_ok/*=false*/) {
         case 575: M575(); break;                                  // M575: Set serial baudrate
       #endif
 
+      #if defined(ARDUINO_ARCH_STM32) && !defined(STM32GENERIC)
+        case 576: M576();
+      #endif
+
       #if HAS_BED_PROBE
         case 851: M851(); break;                                  // M851: Set Z Probe Z Offset
       #endif
