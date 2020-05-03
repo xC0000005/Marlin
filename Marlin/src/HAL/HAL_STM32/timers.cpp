@@ -29,13 +29,18 @@
 // ------------------------
 // Local defines
 // ------------------------
+#define AUTO_TIMER_SELECT
 
 #define NUM_HARDWARE_TIMERS 2
-
+#if ENABLED(AUTO_TIMER_SELECT)
+TIM_TypeDef* STEP_TIMER_DEV;
+TIM_TypeDef* TEMP_TIMER_DEV;
+#else
 #define __TIMER_DEV(X) TIM##X
 #define _TIMER_DEV(X) __TIMER_DEV(X)
 #define STEP_TIMER_DEV _TIMER_DEV(STEP_TIMER)
 #define TEMP_TIMER_DEV _TIMER_DEV(TEMP_TIMER)
+#endif
 
 // ------------------------
 // Private Variables
@@ -129,20 +134,86 @@ bool HAL_timer_interrupt_enabled(const uint8_t timer_num) {
   return HAL_timer_initialized(timer_num) && timer_enabled[timer_num];
 }
 
-// Only for use within the HAL
-TIM_TypeDef * HAL_timer_device(const uint8_t timer_num) {
-  switch (timer_num) {
-    case STEP_TIMER_NUM: return STEP_TIMER_DEV;
-    case TEMP_TIMER_NUM: return TEMP_TIMER_DEV;
-  }
-  return nullptr;
-}
-
 void mark_timer_unavailable(pin_t pin) {
   PinName name = digitalPinToPinName(pin);
   TIM_TypeDef *instance = (TIM_TypeDef *)pinmap_peripheral(name, PinMap_PWM);
   uint32_t index = get_timer_index(instance);
   timer_available[index] = false;
+}
+
+TIM_TypeDef* get_timer_by_index(timer_index_t index)
+{
+  switch (index) {
+#if defined(TIM1_BASE)
+  case TIMER1_INDEX: return TIM1;
+#endif
+#if defined(TIM2_BASE)
+  case TIMER2_INDEX: return TIM2;
+#endif
+#if defined(TIM3_BASE)
+  case TIMER3_INDEX: return TIM3;
+#endif
+#if defined(TIM4_BASE)
+  case TIMER4_INDEX: return TIM4;
+#endif
+#if defined(TIM5_BASE)
+  case TIMER5_INDEX: return TIM5;
+#endif
+#if defined(TIM6_BASE)
+  case TIMER6_INDEX: return TIM6;
+#endif
+#if defined(TIM7_BASE)
+  case TIMER7_INDEX: return TIM7;
+#endif
+#if defined(TIM8_BASE)
+  case TIMER8_INDEX: return TIM8;
+#endif
+#if defined(TIM9_BASE)
+  case TIMER9_INDEX: return TIM9;
+#endif
+#if defined(TIM10_BASE)
+  case TIMER10_INDEX: return TIM10;
+#endif
+#if defined(TIM11_BASE)
+  case TIMER11_INDEX: return TIM11;
+#endif
+#if defined(TIM12_BASE)
+  case TIMER12_INDEX: return TIM12;
+#endif
+#if defined(TIM13_BASE)
+  case TIMER13_INDEX: return TIM13;
+#endif
+#if defined(TIM14_BASE)
+  case TIMER14_INDEX: return TIM14;
+#endif
+#if defined(TIM15_BASE)
+  case TIMER15_INDEX: return TIM15;
+#endif
+#if defined(TIM16_BASE)
+  case TIMER16_INDEX: return TIM16;
+#endif
+#if defined(TIM17_BASE)
+  case TIMER17_INDEX: return TIM17;
+#endif
+#if defined(TIM18_BASE)
+  case TIMER18_INDEX: return TIM18;
+#endif
+#if defined(TIM19_BASE)
+  case TIMER19_INDEX: return TIM19;
+#endif
+#if defined(TIM20_BASE)
+  case TIMER20_INDEX: return TIM20;
+#endif
+#if defined(TIM21_BASE)
+  case TIMER21_INDEX: return TIM21;
+#endif
+#if defined(TIM22_BASE)
+  case TIMER2_INDEX: return TIM22;
+#endif
+  }
+
+  // call error handler
+  return TIM1;
 }
 
 // Determine which timers are available.
@@ -208,6 +279,9 @@ void select_timers() {
       timer_available[i] = false;
       continue;
     }
+
+    STEP_TIMER_DEV = get_timer_by_index((timer_index_t)selected_step_timer);
+    TEMP_TIMER_DEV = get_timer_by_index((timer_index_t)selected_temp_timer);
 
     // Validate we were able to find timers
     if (selected_temp_timer == -1 || selected_step_timer == -1) {
