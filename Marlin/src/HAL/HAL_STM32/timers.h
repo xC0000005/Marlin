@@ -34,6 +34,7 @@
 #define hal_timer_t uint32_t
 #define HAL_TIMER_TYPE_MAX 0xFFFFFFFF // Timers can be 16 or 32 bit
 
+#define AUTO_TIMER_SELECT
 
 #ifdef STM32F0xx
 
@@ -103,11 +104,11 @@
 #define __TIMER_IRQ_NAME(X) TIM##X##_IRQn
 #define _TIMER_IRQ_NAME(X) __TIMER_IRQ_NAME(X)
 
-#define STEP_TIMER_IRQ_NAME _TIMER_IRQ_NAME(STEP_TIMER)
-#define TEMP_TIMER_IRQ_NAME _TIMER_IRQ_NAME(TEMP_TIMER)
+void HAL_step_timer_enable_interrupt();
+void HAL_temp_timer_disable_interrupt();
+#define ENABLE_STEPPER_DRIVER_INTERRUPT() HAL_step_timer_enable_interrupt()
+#define DISABLE_STEPPER_DRIVER_INTERRUPT() HAL_temp_timer_disable_interrupt()
 
-#define ENABLE_STEPPER_DRIVER_INTERRUPT() HAL_timer_enable_interrupt(STEP_TIMER_NUM)
-#define DISABLE_STEPPER_DRIVER_INTERRUPT() HAL_timer_disable_interrupt(STEP_TIMER_NUM)
 #define STEPPER_ISR_ENABLED() HAL_timer_interrupt_enabled(STEP_TIMER_NUM)
 
 #define ENABLE_TEMPERATURE_INTERRUPT() HAL_timer_enable_interrupt(TEMP_TIMER_NUM)

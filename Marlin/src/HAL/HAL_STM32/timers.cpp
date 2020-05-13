@@ -32,14 +32,17 @@
 #define AUTO_TIMER_SELECT
 
 #define NUM_HARDWARE_TIMERS 2
-#if ENABLED(AUTO_TIMER_SELECT)
-TIM_TypeDef* STEP_TIMER_DEV;
-TIM_TypeDef* TEMP_TIMER_DEV;
+#ifdef AUTO_TIMER_SELECT
+  TIM_TypeDef* STEP_TIMER_DEV;
+  TIM_TypeDef* TEMP_TIMER_DEV;
+
+  IRQn_Type STEP_TIMER_IRQ_NAME;
+  IRQn_Type TEMP_TIMER_IRQ_NAME;
 #else
-#define __TIMER_DEV(X) TIM##X
-#define _TIMER_DEV(X) __TIMER_DEV(X)
-#define STEP_TIMER_DEV _TIMER_DEV(STEP_TIMER)
-#define TEMP_TIMER_DEV _TIMER_DEV(TEMP_TIMER)
+  #define __TIMER_DEV(X) TIM##X
+  #define _TIMER_DEV(X) __TIMER_DEV(X)
+  #define STEP_TIMER_DEV _TIMER_DEV(STEP_TIMER)
+  #define TEMP_TIMER_DEV _TIMER_DEV(TEMP_TIMER)
 #endif
 
 // ------------------------
@@ -121,6 +124,19 @@ void HAL_timer_enable_interrupt(const uint8_t timer_num) {
       break;
     }
   }
+}
+
+#ifndef AUTO_TIMER_SELECT
+  #define STEP_TIMER_IRQ_NAME _TIMER_IRQ_NAME(STEP_TIMER)
+  #define TEMP_TIMER_IRQ_NAME _TIMER_IRQ_NAME(TEMP_TIMER)
+#endif
+
+void HAL_step_timer_enable_interrupt(){
+  HAL_timer_enable_interrupt(STEP_TIMER_NUM);
+}
+
+void HAL_temp_timer_disable_interrupt(){
+  HAL_timer_disable_interrupt(STEP_TIMER_NUM);
 }
 
 void HAL_timer_disable_interrupt(const uint8_t timer_num) {
@@ -282,6 +298,9 @@ void select_timers() {
 
     STEP_TIMER_DEV = get_timer_by_index((timer_index_t)selected_step_timer);
     TEMP_TIMER_DEV = get_timer_by_index((timer_index_t)selected_temp_timer);
+
+    STEP_TIMER_IRQ_NAME = getTimerUpIrq(STEP_TIMER_DEV);
+    TEMP_TIMER_IRQ_NAME = getTimerUpIrq(TEMP_TIMER_DEV);
 
     // Validate we were able to find timers
     if (selected_temp_timer == -1 || selected_step_timer == -1) {
