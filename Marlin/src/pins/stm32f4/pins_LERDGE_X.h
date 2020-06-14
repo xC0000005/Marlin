@@ -27,6 +27,9 @@
 #define BOARD_INFO_NAME      "Lerdge X"
 #define DEFAULT_MACHINE_NAME "LERDGE"
 
+#define STEP_TIMER 4
+#define TEMP_TIMER 2
+
 //#define I2C_EEPROM
 
 //
@@ -109,7 +112,7 @@
 #ifndef FAN_PIN
   //#define FAN_PIN                         PC15
 #endif
-#define FAN1_PIN                            PC15
+#define FAN1_PIN                            PC_15
 #define FAN2_PIN                            PA0
 
 #ifndef E0_AUTO_FAN_PIN
@@ -138,15 +141,15 @@
 #define KILL_PIN                            -1
 #define POWER_LOSS_PIN                      -1    // Power-loss / nAC_FAULT
 
-#define SCK_PIN                             PC12
+#define SCK_PIN                             PC_12
 #define MISO_PIN                            PC8
 #define MOSI_PIN                            PD2
-#define SS_PIN                              PC11
+#define SS_PIN                              PC_11
 
 //
 // SD support
 //
-#define SDIO_SUPPORT
+//#define SDIO_SUPPORT
 
 //
 // LCD / Controller
@@ -162,10 +165,12 @@
 
 #define LCD_RESET_PIN                       PD6
 #define LCD_BACKLIGHT_PIN                   PD3
-#define FSMC_CS_PIN                         PD4
-#define FSMC_RS_PIN                         PD11
-#define TOUCH_CS                            PB6
-
+#define TFT_CS_PIN                         PD4
+#define TFT_RS_PIN                         PD11
+#define TOUCH_CS_PIN                            PB6
+#define TOUCH_SCK_PIN  PB3
+#define TOUCH_MOSI_PIN  PB5
+#define TOUCH_MISO_PIN PB4
 //
 // ST7920 Delays
 //
