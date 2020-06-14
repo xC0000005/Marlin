@@ -112,7 +112,7 @@
 #ifndef FAN_PIN
   //#define FAN_PIN                         PC15
 #endif
-#define FAN1_PIN                            PC_15
+#define FAN1_PIN                            PC15
 #define FAN2_PIN                            PA0
 
 #ifndef E0_AUTO_FAN_PIN
@@ -141,10 +141,10 @@
 #define KILL_PIN                            -1
 #define POWER_LOSS_PIN                      -1    // Power-loss / nAC_FAULT
 
-#define SCK_PIN                             PC_12
+#define SCK_PIN                             PC12
 #define MISO_PIN                            PC8
 #define MOSI_PIN                            PD2
-#define SS_PIN                              PC_11
+#define SS_PIN                              PC11
 
 //
 // SD support
