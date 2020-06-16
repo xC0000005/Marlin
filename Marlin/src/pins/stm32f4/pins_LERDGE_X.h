@@ -157,15 +157,15 @@
 
 // The LCD is initialized in FSMC mode
 #define SD_DETECT_PIN                       -1
-#define BEEPER_PIN                          PD12
+//#define BEEPER_PIN                          PD12
 
 #define BTN_EN1                             PE3
 #define BTN_EN2                             PE4
 #define BTN_ENC                             PE2
 
-#define LCD_RESET_PIN                       PD6
-#define LCD_BACKLIGHT_PIN                   PD3
-#define TFT_CS_PIN                         PD4
+#define TFT_RESET_PIN                       PD6
+#define TFT_BACKLIGHT_PIN                   PD3
+#define TFT_CS_PIN                         PD7
 #define TFT_RS_PIN                         PD11
 #define TOUCH_CS_PIN                            PB6
 #define TOUCH_SCK_PIN  PB3

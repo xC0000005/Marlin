@@ -32,18 +32,21 @@
 #include "ili9341.h"
 #include "ili9488.h"
 
-//#define DEBUG_GRAPHICAL_TFT
+#define DEBUG_GRAPHICAL_TFT
 #define DEBUG_OUT ENABLED(DEBUG_GRAPHICAL_TFT)
-#include "../../../core/debug_out.h"
+#include "../../core/debug_out.h"
 
 uint16_t TFT::buffer[];
 uint32_t TFT::lcd_id = 0xFFFFFFFF;
 
 void TFT::init() {
+  SERIAL_ECHO_MSG("Starting LCD");
   if (lcd_id != 0xFFFFFFFF) return;
 
   io.Init();
   lcd_id = io.GetID() & 0xFFFF;
+
+  SERIAL_ECHOLNPAIR("ID via :", lcd_id);
 
   switch (lcd_id) {
     case 0x7796:    // ST7796     480x320
@@ -70,8 +73,9 @@ void TFT::init() {
       DEBUG_ECHO_MSG(" ILI9488");
       write_esc_sequence(ili9488_init);
       break;
-    default:
-      lcd_id = 0;
+    default:  
+      lcd_id = 0x7796;    
+      write_esc_sequence(lerdge_st7796s_init);
   }
 }
 

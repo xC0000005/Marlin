@@ -67,17 +67,17 @@ void TFT_FSMC::Init() {
     SRAMx.Init.PageSize = FSMC_PAGE_SIZE_NONE;
   #endif
   /* Read Timing - relatively slow to ensure ID information is correctly read from TFT controller */
-  Timing.AddressSetupTime = 4;
-  Timing.AddressHoldTime = 4;
-  Timing.DataSetupTime = 8;
+  Timing.AddressSetupTime = 10;
+  Timing.AddressHoldTime = 15;
+  Timing.DataSetupTime = 10;
   Timing.BusTurnAroundDuration = 0;
   Timing.CLKDivision = 16;
   Timing.DataLatency = 17;
   Timing.AccessMode = FSMC_ACCESS_MODE_A;
   /* Write Timing */
-  ExtTiming.AddressSetupTime = 0;
-  ExtTiming.AddressHoldTime = 0;
-  ExtTiming.DataSetupTime = 1;
+  ExtTiming.AddressSetupTime = 10;
+  ExtTiming.AddressHoldTime = 15;
+  ExtTiming.DataSetupTime = 10;
   ExtTiming.BusTurnAroundDuration = 0;
   ExtTiming.CLKDivision = 16;
   ExtTiming.DataLatency = 17;
@@ -138,12 +138,15 @@ void TFT_FSMC::Init() {
   DMAtx.Init.Priority = DMA_PRIORITY_HIGH;
 
   LCD = (LCD_CONTROLLER_TypeDef *)controllerAddress;
+
+  SERIAL_ECHOLNPAIR("LCD ID:", GetID());
 }
 
 uint32_t TFT_FSMC::GetID() {
   uint32_t id;
   WriteReg(0x0000);
   id = LCD->RAM;
+  SERIAL_ECHOLNPAIR("LCD ID Read1:", id);
 
   if (id == 0)
     id = ReadID(LCD_READ_ID);
@@ -170,7 +173,7 @@ bool TFT_FSMC::isBusy() {
   return __IS_DMA_ENABLED(&DMAtx);
 }
 
-void TFT_FSMC::TransmitDMA(uint32_t MemoryIncrease, uint16_t *Data, uint16_t Count) {
+void TFT_FSMC::TransmitDMA(uint32_t MemoryIncrease, uint16_t *Data, uint16_t Count) {  
   DMAtx.Init.PeriphInc = MemoryIncrease;
   HAL_DMA_Init(&DMAtx);
 
