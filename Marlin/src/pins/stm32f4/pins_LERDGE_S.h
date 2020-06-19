@@ -41,21 +41,24 @@
 //
 // Limit Switches
 //
-#define X_STOP_PIN                          PB12 //unchecked, most likely wrong
-#define Y_STOP_PIN                          PB13 //unchecked, most likely wrong
-#define Z_STOP_PIN                          PB14 //unchecked, most likely wrong
+#define X_MIN_PIN                          PG9 //confirmed
+#define Y_MIN_PIN                          PG10 //confirmed
+#define Z_MIN_PIN                          PG11 //confirmed
+#define X_MAX_PIN                          PG12 //confirmed
+#define Y_MAX_PIN                          PG13 //confirmed
+#define Z_MAX_PIN                          PG14 //confirmed
 
 //
 // Filament runout
 //
-#define FIL_RUNOUT_PIN                      PE1 //unchecked, most likely wrong
+#define FIL_RUNOUT_PIN                      PC5 //confirmed
 
 //
 // Z Probe (when not Z_MIN_PIN)
 //
-//#ifndef Z_MIN_PROBE_PIN
-//  #define Z_MIN_PROBE_PIN  PB15 //unchecked, most likely wrong, board has a probe switch connector
-//#endif
+#ifndef Z_MIN_PROBE_PIN
+  #define Z_MIN_PROBE_PIN  PG815 //confirmed
+#endif
 
 //
 // Steppers
@@ -98,9 +101,9 @@
 //
 // Temperature Sensors
 //
-#define TEMP_0_PIN                          PC3   // Analog Input //guessing
-#define TEMP_1_PIN                          PC4    // Analog Input //guessing
-#define TEMP_BED_PIN                        PC5   // Analog Input //guessing
+#define TEMP_0_PIN                          PC0   // Analog Input //may need switch for thermocouple/thermistor mode - unconfirmed
+#define TEMP_1_PIN                          PC1   // Analog Input //may need switch for thermocouple/thermistor mode - unconfirmed
+#define TEMP_BED_PIN                        PC3   // Analog Input //bed is thermistor mode only, confirmed
 
 //
 // Heaters / Fans
@@ -129,16 +132,16 @@
 //
 // LED / Lighting
 //
-//#define CASE_LIGHT_PIN_CI                 -1 //has two LED strip connectors (one RGB and one white only) - need to check those pins next
+#define CASE_LIGHT_PIN                 PC7 //board has two LED strip connectors (this is the on/off)
 //#define CASE_LIGHT_PIN_DO                 -1
-//#define NEOPIXEL_PIN                      -1
+//#define NEOPIXEL_PIN                      -1 //board supports RGB lightstrip, need to check pins 
 
 //
 // Misc. Functions
 //
 #define SDSS                                PC11 //unchecked, will test sd access later
-#define LED_PIN                             PC6   //confirmed
-#define PS_ON_PIN                           -1    //board has a power monitor socket, usage unclear
+#define LED_PIN                             PC6   //onboard LED , confirmed
+#define PS_ON_PIN                           -1    //board has a power monitor socket, pin PB2
 #define KILL_PIN                            -1
 #define POWER_LOSS_PIN                      -1    // Power-loss / nAC_FAULT
 
@@ -151,7 +154,7 @@
 // SD support
 //
 //#define SDIO_SUPPORT
-#define SD_DETECT_PIN                       -1 //unchecked, will test sd access later
+#define SD_DETECT_PIN                       PG15 //maybe? will test sd access later
 
 //
 // LCD / Controller
@@ -160,9 +163,9 @@
 // The LCD is initialized in FSMC mode
 #define BEEPER_PIN                          PD13 //confirmed
 
-#define BTN_EN1                             PE3 //unchecked, most likely wrong
-#define BTN_EN2                             PE4 //unchecked, most likely wrong
-#define BTN_ENC                             PE2 //unchecked, most likely wrong
+#define BTN_EN1                             PC14 //confirmed
+#define BTN_EN2                             PC15 //confirmed
+#define BTN_ENC                             PC13 //confirmed
 
 #define TFT_RESET_PIN                       PD6 //unchecked, most likely wrong
 #define TFT_BACKLIGHT_PIN                   PD3  //confirmed (well, the LCD is off, but I cannot see if it is only the backlight)
