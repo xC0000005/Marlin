@@ -101,8 +101,8 @@
 //
 // Temperature Sensors
 //
-#define TEMP_0_PIN                          PC0   // Analog Input //may need switch for thermocouple/thermistor mode - unconfirmed
-#define TEMP_1_PIN                          PC1   // Analog Input //may need switch for thermocouple/thermistor mode - unconfirmed
+#define TEMP_0_PIN                          PC0   // Analog Input //may need switch for thermocouple/thermistor mode - correct pin, wrong values
+#define TEMP_1_PIN                          PC1   // Analog Input //may need switch for thermocouple/thermistor mode - correct pin, wrong values
 #define TEMP_BED_PIN                        PC3   // Analog Input //bed is thermistor mode only, confirmed
 
 //
@@ -112,15 +112,18 @@
 #define HEATER_1_PIN                        PA1 //confirmed
 #define HEATER_BED_PIN                      PA3 //confirmed
 
+
 #ifndef FAN_PIN
-  //#define FAN_PIN                         PA15
+  #define FAN_PIN                         PA15
 #endif
-#define FAN1_PIN                            PA15 //heater 0 fan 1 //confirmed
-#define FAN2_PIN                            PB10 //heater 1 fan 2 //confirmed
-#define FAN3_PIN                            PF5  //heater 0 fan 2 and heater 1 fan 2 (two sockets, switched together) //confirmed
+
+//#define FAN0_PIN                            PA15 //heater 0 fan 1 //confirmed
+#define FAN1_PIN                            PB10 //heater 1 fan 2 //confirmed
+#define FAN2_PIN                            PF5  //heater 0 fan 2 and heater 1 fan 2 (two sockets, switched together) //confirmed
+
 
 #ifndef E0_AUTO_FAN_PIN
-  #define E0_AUTO_FAN_PIN                   PF5  // FAN3_PIN
+  #define E0_AUTO_FAN_PIN                   FAN2_PIN
 #endif
 
 //
