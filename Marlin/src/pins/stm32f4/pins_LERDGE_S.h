@@ -35,18 +35,19 @@
 //
 // Servos
 //
-//#define SERVO0_PIN                        PD12 //unchecked, most likely wrong, board has a servo connector
+#define SERVO0_PIN                          PD12 //confirmed
 //#define SERVO1_PIN                        -1
 
 //
 // Limit Switches
 //
-#define X_MIN_PIN                          PG9 //confirmed
-#define Y_MIN_PIN                          PG10 //confirmed
-#define Z_MIN_PIN                          PG11 //confirmed
-#define X_MAX_PIN                          PG12 //confirmed
-#define Y_MAX_PIN                          PG13 //confirmed
-#define Z_MAX_PIN                          PG14 //confirmed
+#define X_MIN_PIN                           PG9 //confirmed
+#define Y_MIN_PIN                           PG10 //confirmed
+#define Z_MIN_PIN                           PG11 //confirmed
+
+#define X_MAX_PIN                           PG12 //confirmed
+#define Y_MAX_PIN                           PG13 //confirmed
+#define Z_MAX_PIN                           PG14 //confirmed
 
 //
 // Filament runout
@@ -57,7 +58,7 @@
 // Z Probe (when not Z_MIN_PIN)
 //
 #ifndef Z_MIN_PROBE_PIN
-  #define Z_MIN_PROBE_PIN  PG8 //confirmed
+  #define Z_MIN_PROBE_PIN                   PG8 //confirmed
 #endif
 
 //
@@ -72,7 +73,7 @@
 
 #define Y_STEP_PIN                          PF10 //confirmed 
 #define Y_DIR_PIN                           PF11 //confirmed 
-#define Y_ENABLE_PIN                        PF9  //confirmed 
+#define Y_ENABLE_PIN                        PF9 //confirmed 
 //#ifndef Y_CS_PIN
 //  #define Y_CS_PIN                        -1 //no idea
 //#endif
@@ -113,18 +114,14 @@
 #define HEATER_BED_PIN                      PA3 //confirmed
 
 
-#ifndef FAN_PIN
-  #define FAN_PIN                         PA15
-#endif
-
-//#define FAN0_PIN                            PA15 //heater 0 fan 1 //confirmed
+#define FAN_PIN                             PA15 //heater 0 fan 1 //confirmed
 #define FAN1_PIN                            PB10 //heater 1 fan 2 //confirmed
-#define FAN2_PIN                            PF5  //heater 0 fan 2 and heater 1 fan 2 (two sockets, switched together) //confirmed
+#define FAN2_PIN                            PF5  //heater 0 fan 2 and heater 1 fan 1 (two sockets, switched together) //confirmed
 
 
-#ifndef E0_AUTO_FAN_PIN
-  #define E0_AUTO_FAN_PIN                   FAN2_PIN
-#endif
+//#ifndef E0_AUTO_FAN_PIN
+//  #define E0_AUTO_FAN_PIN                   FAN2_PIN
+//#endif
 
 //
 // Prusa i3 MK2 Multi Material Multiplexer Support
@@ -135,29 +132,35 @@
 //
 // LED / Lighting
 //
-#define CASE_LIGHT_PIN                 PC7 //board has two LED strip connectors (this is the on/off)
-//#define CASE_LIGHT_PIN_DO                 -1
-//#define NEOPIXEL_PIN                      -1 //board supports RGB lightstrip, need to check pins 
+//Lerdge-S board has two LED connectors (this is the one on the mainboard)
+#define CASE_LIGHT_PIN                      PC7 //confirmed
+
+//on the dual extrusion addon board is a RGB connector
+#define RGB_LED_R_PIN                       PC7 //shared with the mainboard LED connector, confirmed
+#define RGB_LED_G_PIN                       PB0 //confirmed
+#define RGB_LED_B_PIN                       PB1 //confirmed
+
 
 //
 // Misc. Functions
 //
 #define SDSS                                PC11 //unchecked, will test sd access later
-#define LED_PIN                             PC6   //onboard LED , confirmed
-#define PS_ON_PIN                           -1    //board has a power monitor socket, pin PB2
-#define KILL_PIN                            -1
-#define POWER_LOSS_PIN                      -1    // Power-loss / nAC_FAULT
-
-#define SCK_PIN                             PC12 //unchecked, will test sd access later
-#define MISO_PIN                            PC8  //unchecked, will test sd access later
-#define MOSI_PIN                            PD2 //unchecked, will test sd access later
-#define SS_PIN                              PC11 //unchecked, will test sd access later
+#define LED_PIN                             PC6   //mainboard LED, confirmed
+#define PS_ON_PIN                           PB2   //board has a power module connector, confirmed
+#define KILL_PIN                            -1    //there is no reset button on the lcd
+#define POWER_LOSS_PIN                      -1    //PB2 could be used for this as well
 
 //
 // SD support
 //
-//#define SDIO_SUPPORT
-#define SD_DETECT_PIN                       PG15 //maybe? will test sd access later
+#define SDIO_SUPPORT
+
+#define SCK_PIN                             PC12 //confirmed working 
+#define MISO_PIN                            PC8 //confirmed working 
+#define MOSI_PIN                            PD2 //confirmed working 
+#define SS_PIN                              PC11 //confirmed working 
+
+#define SD_DETECT_PIN                       PG15 //confirmed
 
 //
 // LCD / Controller
@@ -170,11 +173,11 @@
 #define BTN_EN2                             PC15 //confirmed
 #define BTN_ENC                             PC13 //confirmed
 
-#define TFT_RESET_PIN                       PD6 //unchecked, most likely wrong
-#define TFT_BACKLIGHT_PIN                   PD3  //confirmed (well, the LCD is off, but I cannot see if it is only the backlight)
+#define TFT_RESET_PIN                       PD6 //unchecked, unsure how to test
+#define TFT_BACKLIGHT_PIN                   PD3 //confirmed (well, this pin switches the LCD off, but I cannot see if it is only the backlight)
 
-#define TFT_CS_PIN                         PD7 //TFT works, so all ok?
-#define TFT_RS_PIN                         PD11 //TFT works, so all ok?
+#define TFT_CS_PIN                          PD7 //TFT works
+#define TFT_RS_PIN                          PD11 //TFT works
 
 #define TOUCH_CS_PIN                        PB6 //there is touch, but calibration is off
 #define TOUCH_SCK_PIN                       PB3 //there is touch, but calibration is off
