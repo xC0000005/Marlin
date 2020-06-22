@@ -102,13 +102,17 @@
 //
 // Temperature Sensors
 //
-#define TEMP_0_PIN                          PC0   //needs some kind of setting for thermocouple/thermistor mode - correct pin, wrong values
-#define TEMP_1_PIN                          PC1   //needs some kind of setting for thermocouple/thermistor mode - correct pin, wrong values
-#define TEMP_BED_PIN                        PC3   //bed is thermistor mode only, confirmed
+#define TEMP_0_PIN                          PC0   //see below for activation of thermistor readings
+#define TEMP_1_PIN                          PC1   //see below for activation of thermistor readings
+#define TEMP_BED_PIN                        PC3   //confirmed
 
 //
 // Lergde-S comes with the ability to choose thermocouple/thermistor mode in software
-// To use thermistors, PIN PF3 must be output and low (e.g. using M42 P99 S0)
+// To use thermistors, pins PF3/PF4 must be output and low (e.g. using M42 P99 S0)
+// this puts PF3/PF4 low if the user chose a thermistor in Configuration.h 
+
+#define TEMP_0_TR_ENABLE_PIN               PF3
+#define TEMP_1_TR_ENABLE_PIN               PF4
 
 
 // Board contains a MAX6675 Cold-Junction-Compensated K-Thermocoupleto-Digital Converter (0°C to +1024°C) 
@@ -140,9 +144,9 @@
 #define FAN2_PIN                            PF5  //heater 0 fan 2 and heater 1 fan 1 (two sockets, switched together) //confirmed
 
 
-//#ifndef E0_AUTO_FAN_PIN
-//  #define E0_AUTO_FAN_PIN                   FAN2_PIN
-//#endif
+#ifndef E0_AUTO_FAN_PIN
+  #define E0_AUTO_FAN_PIN                   PF5
+#endif
 
 //
 // Prusa i3 MK2 Multi Material Multiplexer Support

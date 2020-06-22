@@ -447,28 +447,28 @@
 
 // Below this temperature the heater will be switched off
 // because it probably indicates a broken thermistor wire.
-#define HEATER_0_MINTEMP   -200
-#define HEATER_1_MINTEMP   -200
-#define HEATER_2_MINTEMP   -200
-#define HEATER_3_MINTEMP   -200
-#define HEATER_4_MINTEMP   -200
-#define HEATER_5_MINTEMP   -200
-#define HEATER_6_MINTEMP   -200
-#define HEATER_7_MINTEMP   -200
-#define BED_MINTEMP        -200
+#define HEATER_0_MINTEMP   -20
+#define HEATER_1_MINTEMP   -20
+#define HEATER_2_MINTEMP   -20
+#define HEATER_3_MINTEMP   -20
+#define HEATER_4_MINTEMP   -20
+#define HEATER_5_MINTEMP   -20
+#define HEATER_6_MINTEMP   -20
+#define HEATER_7_MINTEMP   -20
+#define BED_MINTEMP        -20
 
 // Above this temperature the heater will be switched off.
 // This can protect components from overheating, but NOT from shorts and failures.
 // (Use MINTEMP for thermistor short/failure protection.)
-#define HEATER_0_MAXTEMP 700
-#define HEATER_1_MAXTEMP 700
-#define HEATER_2_MAXTEMP 700
-#define HEATER_3_MAXTEMP 700
-#define HEATER_4_MAXTEMP 700
-#define HEATER_5_MAXTEMP 700
-#define HEATER_6_MAXTEMP 700
-#define HEATER_7_MAXTEMP 700
-#define BED_MAXTEMP      700
+#define HEATER_0_MAXTEMP 275
+#define HEATER_1_MAXTEMP 275
+#define HEATER_2_MAXTEMP 275
+#define HEATER_3_MAXTEMP 275
+#define HEATER_4_MAXTEMP 275
+#define HEATER_5_MAXTEMP 275
+#define HEATER_6_MAXTEMP 275
+#define HEATER_7_MAXTEMP 275
+#define BED_MAXTEMP      120
 
 //===========================================================================
 //============================= PID Settings ================================
@@ -598,8 +598,8 @@
  * details can be tuned in Configuration_adv.h
  */
 
-//#define THERMAL_PROTECTION_HOTENDS // Enable thermal protection for all extruders
-//#define THERMAL_PROTECTION_BED     // Enable thermal protection for the heated bed
+#define THERMAL_PROTECTION_HOTENDS // Enable thermal protection for all extruders
+#define THERMAL_PROTECTION_BED     // Enable thermal protection for the heated bed
 //#define THERMAL_PROTECTION_CHAMBER // Enable thermal protection for the heated chamber
 
 //===========================================================================
@@ -2252,15 +2252,15 @@
  * LED Type. Enable only one of the following two options.
  *
  */
-//#define RGB_LED
+#define RGB_LED
 //#define RGBW_LED
 
-#if EITHER(RGB_LED, RGBW_LED)
+//#if EITHER(RGB_LED, RGBW_LED)
   //#define RGB_LED_R_PIN 34
   //#define RGB_LED_G_PIN 43
   //#define RGB_LED_B_PIN 35
   //#define RGB_LED_W_PIN -1
-#endif
+//#endif
 
 // Support for Adafruit Neopixel LED driver
 //#define NEOPIXEL_LED
@@ -2318,3 +2318,5 @@
 
 // Allow servo angle to be edited and saved to EEPROM
 //#define EDITABLE_SERVO_ANGLES
+
+
