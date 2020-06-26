@@ -94,6 +94,10 @@
   #include "../feature/powerloss.h"
 #endif
 
+#if ENABLED(POWER_MONITOR)
+  #include "../feature/power_monitor.h"
+#endif
+
 #include "../feature/pause.h"
 
 #if ENABLED(BACKLASH_COMPENSATION)
@@ -134,6 +138,10 @@
 #if ENABLED(CASE_LIGHT_MENU) && DISABLED(CASE_LIGHT_NO_BRIGHTNESS)
   #include "../feature/caselight.h"
   #define HAS_CASE_LIGHT_BRIGHTNESS 1
+#endif
+
+#if ENABLED(TOUCH_SCREEN_CALIBRATION)
+  #include "../lcd/tft/touch.h"
 #endif
 
 #pragma pack(push, 1) // No padding between variables
@@ -302,6 +310,11 @@ typedef struct SettingsDataStruct {
   #endif
 
   //
+  // Power monitor
+  //
+  uint8_t power_monitor_flags;                          // M430 I V W
+
+  //
   // HAS_LCD_CONTRAST
   //
   int16_t lcd_contrast;                                 // M250 C
@@ -391,6 +404,13 @@ typedef struct SettingsDataStruct {
   //
   #if HAS_CASE_LIGHT_BRIGHTNESS
     uint8_t case_light_brightness;
+  #endif
+
+  //
+  // TOUCH_SCREEN_CALIBRATION
+  //
+  #if ENABLED(TOUCH_SCREEN_CALIBRATION)
+    touch_calibration_t touch_calibration;
   #endif
 
 } SettingsData;
@@ -882,6 +902,19 @@ void MarlinSettings::postprocess() {
     #endif
 
     //
+    // Power monitor
+    //
+    {
+      #if HAS_POWER_MONITOR
+        const uint8_t &power_monitor_flags = power_monitor.flags;
+      #else
+        constexpr uint8_t power_monitor_flags = 0x00;
+      #endif
+      _FIELD_TEST(power_monitor_flags);
+      EEPROM_WRITE(power_monitor_flags);
+    }
+
+    //
     // LCD Contrast
     //
     {
@@ -1328,6 +1361,13 @@ void MarlinSettings::postprocess() {
     #endif
 
     //
+    // TOUCH_SCREEN_CALIBRATION
+    //
+    #if ENABLED(TOUCH_SCREEN_CALIBRATION)
+      EEPROM_WRITE(touch.calibration);
+    #endif
+
+    //
     // Validate CRC and Data Size
     //
     if (!eeprom_error) {
@@ -1746,6 +1786,19 @@ void MarlinSettings::postprocess() {
       #endif
 
       //
+      // Power monitor
+      //
+      {
+        #if HAS_POWER_MONITOR
+          uint8_t &power_monitor_flags = power_monitor.flags;
+        #else
+          uint8_t power_monitor_flags;
+        #endif
+        _FIELD_TEST(power_monitor_flags);
+        EEPROM_READ(power_monitor_flags);
+      }
+
+      //
       // LCD Contrast
       //
       {
@@ -2161,6 +2214,14 @@ void MarlinSettings::postprocess() {
         EEPROM_READ(case_light_brightness);
       #endif
 
+      //
+      // TOUCH_SCREEN_CALIBRATION
+      //
+      #if ENABLED(TOUCH_SCREEN_CALIBRATION)
+        _FIELD_TEST(touch.calibration);
+        EEPROM_READ(touch.calibration);
+      #endif
+
       eeprom_error = size_error(eeprom_index - (EEPROM_OFFSET));
       if (eeprom_error) {
         DEBUG_ECHO_START();
@@ -2464,6 +2525,11 @@ void MarlinSettings::reset() {
   TERN_(HAS_CASE_LIGHT_BRIGHTNESS, case_light_brightness = CASE_LIGHT_DEFAULT_BRIGHTNESS);
 
   //
+  // TOUCH_SCREEN_CALIBRATION
+  //
+  TERN_(TOUCH_SCREEN_CALIBRATION, touch.calibration_reset());
+
+  //
   // Magnetic Parking Extruder
   //
   TERN_(MAGNETIC_PARKING_EXTRUDER, mpe_settings_init());
@@ -2603,6 +2669,11 @@ void MarlinSettings::reset() {
   // User-Defined Thermistors
   //
   TERN_(HAS_USER_THERMISTORS, thermalManager.reset_user_thermistors());
+
+  //
+  // Power Monitor
+  //
+  TERN_(POWER_MONITOR, power_monitor.reset());
 
   //
   // LCD Contrast

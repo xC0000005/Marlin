@@ -321,6 +321,10 @@ void GcodeSuite::process_parsed_command(const bool no_ok/*=false*/) {
         case 34: G34(); break;                                    // G34: Z Stepper automatic alignment using probe
       #endif
 
+      #if ENABLED(ASSISTED_TRAMMING)
+        case 35: G35(); break;                                    // G35: Read four bed corners to help adjust bed screws
+      #endif
+
       #if ENABLED(G38_PROBE_TARGET)
         case 38:                                                  // G38.2, G38.3: Probe towards target
           if (WITHIN(parser.subcode, 2,
@@ -720,6 +724,10 @@ void GcodeSuite::process_parsed_command(const bool no_ok/*=false*/) {
         case 428: M428(); break;                                  // M428: Apply current_position to home_offset
       #endif
 
+      #if HAS_POWER_MONITOR
+        case 430: M430(); break;                                  // M430: Read the system current (A), voltage (V), and power (W)
+      #endif
+
       #if ENABLED(CANCEL_OBJECTS)
         case 486: M486(); break;                                  // M486: Identify and cancel objects
       #endif
@@ -869,6 +877,10 @@ void GcodeSuite::process_parsed_command(const bool no_ok/*=false*/) {
         case 422: M422(); break;                                  // M422: Set Z Stepper automatic alignment position using probe
       #endif
 
+      #if ENABLED(TOUCH_SCREEN_CALIBRATION)
+        case 995: M995(); break;                                  // M995: Touch screen calibration for TFT display
+      #endif
+      
       #if ENABLED(PLATFORM_M997_SUPPORT)
         case 997: M997(); break;                                  // M997: Perform in-application firmware update
       #endif

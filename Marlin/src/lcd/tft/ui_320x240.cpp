@@ -22,7 +22,7 @@
 
 #include "../../inc/MarlinConfigPre.h"
 
-#ifdef TFT_320x240
+#ifdef UI_320x240
 
 #include "ui_320x240.h"
 
@@ -49,7 +49,7 @@
   #error "Seriously? High resolution TFT screen without menu?"
 #endif
 
-bool draw_menu_navigation = false;
+static bool draw_menu_navigation = false;
 
 void MarlinUI::tft_idle() {
   #if ENABLED(TOUCH_SCREEN)
@@ -582,6 +582,53 @@ void MenuItem_confirm::draw_select_screen(PGM_P const yes, PGM_P const no, const
   }
 #endif // AUTO_BED_LEVELING_UBL
 
+#if ENABLED(TOUCH_SCREEN_CALIBRATION)
+  void MarlinUI::touch_calibration() {
+    static uint16_t x, y;
+
+    calibrationState calibration_stage = touch.get_calibration_state();
+
+    if (calibration_stage == CALIBRATION_NONE) {
+      defer_status_screen(true);
+      clear_lcd();
+      calibration_stage = touch.calibration_start();
+    }
+    else {
+      tft.canvas(x - 15, y - 15, 31, 31);
+      tft.set_background(COLOR_BACKGROUND);
+    }
+
+    x = 20; y = 20;
+    touch.clear();
+
+    if (calibration_stage < CALIBRATION_SUCCESS) {
+      switch(calibration_stage) {
+        case CALIBRATION_POINT_1: tft_string.set("Top Left"); break;
+        case CALIBRATION_POINT_2: y = TFT_HEIGHT - 21; tft_string.set("Bottom Left"); break;
+        case CALIBRATION_POINT_3: x = TFT_WIDTH  - 21; tft_string.set("Top Right"); break;
+        case CALIBRATION_POINT_4: x = TFT_WIDTH  - 21; y = TFT_HEIGHT - 21; tft_string.set("Bottom Right"); break;
+        default: break;
+      }
+
+      tft.canvas(x - 15, y - 15, 31, 31);
+      tft.set_background(COLOR_BACKGROUND);
+      tft.add_bar(0, 15, 31, 1, COLOR_TOUCH_CALIBRATION);
+      tft.add_bar(15, 0, 1, 31, COLOR_TOUCH_CALIBRATION);
+
+      touch.add_control(CALIBRATE, 0, 0, TFT_WIDTH, TFT_HEIGHT, uint32_t(x) << 16 | uint32_t(y));
+    }
+    else {
+      tft_string.set(calibration_stage == CALIBRATION_SUCCESS ? "Calibration Completed" : "Calibration Failed");
+      defer_status_screen(false);
+      touch.calibration_end();
+      touch.add_control(BACK, 0, 0, TFT_WIDTH, TFT_HEIGHT);
+    }
+
+    tft.canvas(0, (TFT_HEIGHT - tft_string.font_height()) >> 1, TFT_WIDTH, tft_string.font_height());
+    tft.set_background(COLOR_BACKGROUND);
+    tft.add_text(tft_string.width() > TFT_WIDTH ? 0 : (TFT_WIDTH - tft_string.width()) / 2, 0, COLOR_MENU_TEXT, tft_string);
+  }
+#endif // TOUCH_SCREEN_CALIBRATION
 
 void menu_line(const uint8_t row, uint16_t color) {
   tft.canvas(0, 2 + 34 * row, TFT_WIDTH, 32);
@@ -594,7 +641,7 @@ void menu_item(const uint8_t row, bool sel ) {
   #if ENABLED(TOUCH_SCREEN)
     if (row == 0) {
       touch.clear();
-      draw_menu_navigation = ui.currentScreen != menu_pause_option;
+      draw_menu_navigation = TERN(ADVANCED_PAUSE_FEATURE, ui.currentScreen != menu_pause_option, true);
     }
   #endif
 
@@ -622,4 +669,4 @@ void menu_item(const uint8_t row, bool sel ) {
   }
 #endif // TOUCH_SCREEN
 
-#endif // TFT_320x240
+#endif // UI_320x240
