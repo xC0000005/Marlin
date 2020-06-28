@@ -129,6 +129,7 @@ class Touch {
     static millis_t now;
     static millis_t time_to_hold;
     static millis_t repeat_delay;
+    static millis_t click_begin;
     static bool wait_for_unclick;
 
     static inline bool get_point(int16_t *x, int16_t *y);
@@ -136,6 +137,7 @@ class Touch {
     static void hold(touch_control_t *control, millis_t delay = 0);
 
     #if ENABLED(TOUCH_SCREEN_CALIBRATION)
+      static millis_t long_click_end;
       static calibrationState calibration_state;
       static touch_calibration_point_t calibration_points[4];
 

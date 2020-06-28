@@ -42,6 +42,7 @@ uint16_t Touch::controls_count;
 millis_t Touch::now = 0;
 millis_t Touch::time_to_hold;
 millis_t Touch::repeat_delay;
+millis_t Touch::long_click_end;
 bool Touch::wait_for_unclick;
 touch_calibration_t Touch::calibration;
 #if ENABLED(TOUCH_SCREEN_CALIBRATION)
@@ -79,7 +80,13 @@ void Touch::idle() {
       ui.return_to_status_ms = now + LCD_TIMEOUT_TO_STATUS;
     #endif
 
-    if (wait_for_unclick) return;
+    if (wait_for_unclick) {
+      #if ENABLED(TOUCH_SCREEN_CALIBRATION)
+        if (now > long_click_end) ui.goto_screen(touch_screen_calibration);
+      #endif
+      return;
+    }
+
     if (time_to_hold == 0) time_to_hold = now + MINIMUM_HOLD_TIME;
     if (PENDING(now, time_to_hold)) return;
 
@@ -105,8 +112,12 @@ void Touch::idle() {
         }
       }
 
-      if (current_control == NULL)
+      if (current_control == NULL) {
         wait_for_unclick = true;
+        #if ENABLED(TOUCH_SCREEN_CALIBRATION)
+          long_click_end = now + (1000 * 3);
+        #endif
+      }
     }
     x = _x;
     y = _y;
