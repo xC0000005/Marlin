@@ -106,13 +106,11 @@
 #define TEMP_1_PIN                          PC1   //see below for activation of thermistor readings
 #define TEMP_BED_PIN                        PC3   //confirmed
 
-//
-// Lergde-S comes with the ability to choose thermocouple/thermistor mode in software
-// To use thermistors, pins PF3/PF4 must be output and low (e.g. using M42 P99 S0)
-// this puts PF3/PF4 low if the user chose a thermistor in Configuration.h 
-
-#define TEMP_0_TR_ENABLE_PIN               PF3
-#define TEMP_1_TR_ENABLE_PIN               PF4
+// Lergde-S can choose thermocouple/thermistor mode in software.
+// For use with thermistors, these pins must be OUT/LOW.
+// This is done automatically.
+#define TEMP_0_TR_ENABLE_PIN                PF3
+#define TEMP_1_TR_ENABLE_PIN                PF4
 
 
 // Board contains a MAX6675 Cold-Junction-Compensated K-Thermocoupleto-Digital Converter (0°C to +1024°C) 
@@ -224,8 +222,8 @@
 #define BTN_EN2                             PC15 //confirmed
 #define BTN_ENC                             PC13 //confirmed
 
-#define TFT_RESET_PIN                       PD6 //unchecked, unsure how to test
-#define TFT_BACKLIGHT_PIN                   PD3 //confirmed (well, this pin switches the LCD off, but I cannot see if it is only the backlight)
+#define TFT_RESET_PIN                       PD6   //confirmed
+#define TFT_BACKLIGHT_PIN                   PD3   //confirmed
 
 #define TFT_CS_PIN                          PD7 //TFT works
 #define TFT_RS_PIN                          PD11 //TFT works

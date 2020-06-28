@@ -30,13 +30,12 @@
 #define STEP_TIMER 4
 #define TEMP_TIMER 2
 
-//#define I2C_EEPROM
+#define I2C_EEPROM
 
 //
 // Servos
 //
-//#define SERVO0_PIN                        PD12
-//#define SERVO1_PIN                        -1
+//#define SERVO0_PIN                        PD13
 
 //
 // Limit Switches
@@ -63,30 +62,18 @@
 #define X_STEP_PIN                          PB10
 #define X_DIR_PIN                           PB2
 #define X_ENABLE_PIN                        PB11
-//#ifndef X_CS_PIN
-//  #define X_CS_PIN                        PD1
-//#endif
 
 #define Y_STEP_PIN                          PB0
 #define Y_DIR_PIN                           PC5
 #define Y_ENABLE_PIN                        PB1
-//#ifndef Y_CS_PIN
-//  #define Y_CS_PIN                        PE12
-//#endif
 
 #define Z_STEP_PIN                          PA7
 #define Z_DIR_PIN                           PA6
 #define Z_ENABLE_PIN                        PC4
-//#ifndef Z_CS_PIN
-//  #define Z_CS_PIN                        PD5
-//#endif
 
 #define E0_STEP_PIN                         PA4
 #define E0_DIR_PIN                          PA3
 #define E0_ENABLE_PIN                       PA5
-//#ifndef E0_CS_PIN
-//  #define E0_CS_PIN                       PB4
-//#endif
 
 #define E1_STEP_PIN                         -1
 #define E1_DIR_PIN                          -1
@@ -120,12 +107,6 @@
 #endif
 
 //
-// Prusa i3 MK2 Multi Material Multiplexer Support
-//
-//#define E_MUX0_PIN                        -1
-//#define E_MUX1_PIN                        -1
-
-//
 // LED / Lighting
 //
 //#define CASE_LIGHT_PIN_CI                 -1
@@ -139,7 +120,9 @@
 #define LED_PIN                             PC7   // Alive
 #define PS_ON_PIN                           -1
 #define KILL_PIN                            -1
-#define POWER_LOSS_PIN                      -1    // Power-loss / nAC_FAULT
+
+// Lerdge supports auto-power off and power loss sense through a single pin.
+#define POWER_LOSS_PIN                      PC14    // Power-loss / nAC_FAULT
 
 #define SCK_PIN                             PC12
 #define MISO_PIN                            PC8
@@ -149,8 +132,8 @@
 //
 // SD support
 //
-//#define SDIO_SUPPORT
-#define SD_DETECT_PIN                       -1
+#define SDIO_SUPPORT
+#define SD_DETECT_PIN                       PA8
 
 //
 // LCD / Controller

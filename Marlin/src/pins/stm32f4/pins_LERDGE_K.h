@@ -29,13 +29,10 @@
 
 #define I2C_EEPROM
 
-// Ignore temp readings during develpment.
-//#define BOGUS_TEMPERATURE_GRACE_PERIOD 2000
-
 //
 // Servos
 //
-//#define SERVO0_PIN                        PD12
+//#define SERVO0_PIN                        PB11
 
 //
 // Limit Switches
@@ -48,14 +45,14 @@
 // Z Probe (when not Z_MIN_PIN)
 //
 //#ifndef Z_MIN_PROBE_PIN
-//  #define Z_MIN_PROBE_PIN  PB15
+//  #define Z_MIN_PROBE_PIN  PG6
 //#endif
 
 //
 // Filament runout
 //
-#define FIL_RUNOUT_PIN                      PE6
-#define FIL_RUNOUT2_PIN                     PE7
+#define FIL_RUNOUT_PIN                      PE5
+#define FIL_RUNOUT2_PIN                     PE6
 
 //
 // Steppers
@@ -110,10 +107,10 @@
 #define HEATER_BED_PIN                      PA2
 
 #ifndef FAN_PIN
-  #define FAN_PIN                           PC15
+  #define FAN_PIN                           PF7
 #endif
 #define FAN1_PIN                            PF6
-#define FAN2_PIN                            PF7
+#define FAN2_PIN                            PF8
 
 #ifndef E0_AUTO_FAN_PIN
   #define E0_AUTO_FAN_PIN                   PF6
@@ -125,12 +122,15 @@
 //#define CASE_LIGHT_PIN_CI                 -1
 //#define CASE_LIGHT_PIN_DO                 -1
 //#define NEOPIXEL_PIN                      -1
-
-//
-// Prusa i3 MK2 Multi-Material Multiplexer Support
-//
-//#define E_MUX0_PIN                        -1
-//#define E_MUX1_PIN                        -1
+#ifndef RGB_LED_R_PIN
+  #define RGB_LED_R_PIN     PB7
+#endif
+#ifndef RGB_LED_G_PIN
+  #define RGB_LED_G_PIN     PB8
+#endif
+#ifndef RGB_LED_B_PIN
+  #define RGB_LED_B_PIN     PB9
+#endif
 
 //
 // SD support
@@ -141,45 +141,34 @@
 // Misc. Functions
 //
 #define SDSS                                PC11
-#define LED_PIN                             PC7   // Alive
+#define LED_PIN                             PA15   // Alive
 #define PS_ON_PIN                           -1
 #define KILL_PIN                            -1
-#define POWER_LOSS_PIN                      -1    // Power-loss / nAC_FAULT
+#define POWER_LOSS_PIN                      PA4    // Power-loss / nAC_FAULT
 
 #define SCK_PIN                             PC12
 #define MISO_PIN                            PC8
 #define MOSI_PIN                            PD2
 #define SS_PIN                              PC11
 
+#define SD_DETECT_PIN                       PA8
+#define BEEPER_PIN                          PC7
+
 //
 // LCD / Controller
 //
 
-// TODO: Replace these with the correct FSMC pins, once known
-#define SD_DETECT_PIN                       -1
-#define BEEPER_PIN                          PD12
-#define LCD_PINS_RS                         -1
-#define LCD_PINS_ENABLE                     -1
-#define LCD_PINS_D4                         -1
-#define LCD_PINS_D5                         -1
-#define LCD_PINS_D6                         -1
-#define LCD_PINS_D7                         -1
+#define TFT_RESET_PIN                       PD6
+#define TFT_BACKLIGHT_PIN                   PD3
 
-#define BTN_EN1                             PE3
-#define BTN_EN2                             PE4
-#define BTN_ENC                             PE2
+#define TFT_CS_PIN                         PD7
+#define TFT_RS_PIN                         PD11
 
-//
-// ST7920 Delays
-//
-#if HAS_GRAPHICAL_LCD
-  #ifndef BOARD_ST7920_DELAY_1
-    #define BOARD_ST7920_DELAY_1  DELAY_NS(96)
-  #endif
-  #ifndef BOARD_ST7920_DELAY_2
-    #define BOARD_ST7920_DELAY_2  DELAY_NS(48)
-  #endif
-  #ifndef BOARD_ST7920_DELAY_3
-    #define BOARD_ST7920_DELAY_3 DELAY_NS(715)
-  #endif
-#endif
+#define TOUCH_CS_PIN                        PG15
+#define TOUCH_SCK_PIN                       PB3
+#define TOUCH_MOSI_PIN                      PB5
+#define TOUCH_MISO_PIN                      PB4
+
+#define BTN_EN1                             PG10
+#define BTN_EN2                             PG11
+#define BTN_ENC                             PG9
