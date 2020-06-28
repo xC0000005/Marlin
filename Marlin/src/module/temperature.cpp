@@ -1606,6 +1606,17 @@ void Temperature::init() {
     last_e_position = 0;
   #endif
 
+  //thermistor activation by MCU pin
+  #if PIN_EXISTS(TEMP_0_TR_ENABLE) && TEMP_SENSOR_0 != -2
+    OUT_WRITE(TEMP_0_TR_ENABLE_PIN, LOW);
+    OUT_WRITE(MAX6675_SS_PIN, HIGH);
+  #endif
+
+  #if PIN_EXISTS(TEMP_1_TR_ENABLE) && TEMP_SENSOR_1 != -2
+    OUT_WRITE(TEMP_1_TR_ENABLE_PIN, LOW);
+    OUT_WRITE(MAX6675_SS2_PIN, HIGH);
+  #endif
+
   #if HAS_HEATER_0
     #ifdef ALFAWISE_UX0
       OUT_WRITE_OD(HEATER_0_PIN, HEATER_0_INVERTING);
