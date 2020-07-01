@@ -82,7 +82,10 @@ void Touch::idle() {
 
     if (wait_for_unclick) {
       #if ENABLED(TOUCH_SCREEN_CALIBRATION)
-        if (now > long_click_end) ui.goto_screen(touch_screen_calibration);
+        if (long_click_end && now > long_click_end && ui.on_status_screen()) {
+          long_click_end = 0;
+          ui.goto_screen(touch_screen_calibration);
+        }
       #endif
       return;
     }
@@ -115,7 +118,7 @@ void Touch::idle() {
       if (current_control == NULL) {
         wait_for_unclick = true;
         #if ENABLED(TOUCH_SCREEN_CALIBRATION)
-          long_click_end = now + (1000 * 3);
+          long_click_end = now + (1000 * HOLD_TO_CALIBRATE_DELAY);
         #endif
       }
     }
