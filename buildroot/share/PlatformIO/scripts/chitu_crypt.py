@@ -5,15 +5,15 @@ import struct
 import uuid
 
 # Relocate firmware from 0x08000000 to 0x08008800
-env['CPPDEFINES'].remove(("VECT_TAB_ADDR", "0x8000000"))
-env['CPPDEFINES'].append(("VECT_TAB_ADDR", "0x08008800"))
+#env['CPPDEFINES'].remove(("VECT_TAB_ADDR", "0x8000000"))
+env['CPPDEFINES'].append(("VECT_TAB_OFFSET", "0x8800"))
 
-custom_ld_script = os.path.abspath("buildroot/share/PlatformIO/ldscripts/chitu_f103.ld")
-for i, flag in enumerate(env["LINKFLAGS"]):
-    if "-Wl,-T" in flag:
-        env["LINKFLAGS"][i] = "-Wl,-T" + custom_ld_script
-    elif flag == "-T":
-        env["LINKFLAGS"][i + 1] = custom_ld_script
+#custom_ld_script = os.path.abspath("buildroot/share/PlatformIO/ldscripts/chitu_f103.ld")
+#for i, flag in enumerate(env["LINKFLAGS"]):
+#    if "-Wl,-T" in flag:
+#        env["LINKFLAGS"][i] = "-Wl,-T" + custom_ld_script
+#    elif flag == "-T":
+#        env["LINKFLAGS"][i + 1] = custom_ld_script
 
 
 def calculate_crc(contents, seed):

@@ -12,6 +12,7 @@
  */
 
 #include "pins_arduino.h"
+#include <string.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -174,6 +175,20 @@ const uint32_t analogInputPin[] = {
 extern "C" {
 #endif
 
+void sys_init()
+{
+    asm("CPSID I");
+    /* Disable all interrupts and clear pending bits  */
+    RCC->CIR = 0x009F0000U;
+    SysTick->CTRL &= ~SysTick_CTRL_ENABLE_Msk;
+    USART1->CR1 = 0;
+    USART1->CR2 = 0;
+    USART1->CR3 = 0;
+    memset((void *)SDIO_BASE, 0, sizeof(SDIO_TypeDef));
+    asm("CPSIE I");
+}
+
+
 /**
   * @brief  System Clock Configuration
   * @param  None
@@ -215,7 +230,6 @@ WEAK void SystemClock_Config(void)
     Error_Handler();
   }
 }
-
 
 #ifdef __cplusplus
 }

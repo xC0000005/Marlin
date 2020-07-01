@@ -21,7 +21,7 @@
  */
 #pragma once
 
-#if !defined(__STM32F1__) && !defined(__STM32F4__)
+#if !defined(__STM32F1__) && !defined(__STM32F4__) && !defined(STM32F1xx)
   #error "Oops! Select an STM32F1/4 board in 'Tools > Board.'"
 #endif
 
@@ -42,10 +42,13 @@
   // SoC Flash (framework-arduinoststm32-maple/STM32F1/libraries/EEPROM/EEPROM.h)
   #define EEPROM_START_ADDRESS (0x8000000UL + (512 * 1024) - 2 * EEPROM_PAGE_SIZE)
   #define EEPROM_PAGE_SIZE     (0x800U)     // 2KB, but will use 2x more (4KB)
-  #define MARLIN_EEPROM_SIZE    EEPROM_PAGE_SIZE
+  #define MARLIN_EEPROM_S IZE    EEPROM_PAGE_SIZE
 #else
   #define MARLIN_EEPROM_SIZE 0x800U               // On SD, Limit to 2KB, require this amount of RAM
 #endif
+
+#define STEP_TIMER 3
+#define TEMP_TIMER 1
 
 //
 // Limit Switches
@@ -89,6 +92,8 @@
 #define HEATER_0_PIN                        PG12  // HEATER1
 #define HEATER_BED_PIN                      PG11  // HOT BED
 
+#define BOGUS_TEMPERATURE_GRACE_PERIOD 20000
+
 //
 // Fans
 //
@@ -110,24 +115,24 @@
 //#define FSMC_GRAPHICAL_TFT
 //#define TOUCH_BUTTONS
 
-#if ENABLED(FSMC_GRAPHICAL_TFT)
+#if ENABLED(HAS_GRAPHICAL_TFT)
   #define FSMC_UPSCALE 3
   #define LCD_FULL_PIXEL_WIDTH 480
   #define LCD_PIXEL_OFFSET_X 48
   #define LCD_FULL_PIXEL_HEIGHT 320
   #define LCD_PIXEL_OFFSET_Y 48
 
-  #define LCD_RESET_PIN                     PF11
+  #define TFT_RESET_PIN                     PF11
   #define NO_LCD_REINIT
-  #define LCD_BACKLIGHT_PIN                 PD13
-  #define FSMC_CS_PIN                       PD7
-  #define FSMC_RS_PIN                       PD11
+  #define TFT_BACKLIGHT_PIN                 PD13
+  #define TFT_CS_PIN                       PD7
+  #define TFT_RS_PIN                       PD11
 
   #define LCD_USE_DMA_FSMC                        // Use DMA transfers to send data to the TFT
   #define FSMC_DMA_DEV                      DMA2
   #define FSMC_DMA_CHANNEL               DMA_CH5
 
-  #if ENABLED(TOUCH_BUTTONS)
+  #if ENABLED(TOUCH_SCREEN)
     #define TOUCH_CS_PIN                    PB7   // SPI1_NSS
     #define TOUCH_SCK_PIN                   PA5   // SPI1_SCK
     #define TOUCH_MISO_PIN                  PA6   // SPI1_MISO
