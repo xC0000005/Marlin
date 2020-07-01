@@ -2180,6 +2180,10 @@
   #define XPT2046_Y_OFFSET        257
 #endif
 
+#if ENABLED(TOUCH_SCREEN_CALIBRATION)
+  #define HOLD_TO_CALIBRATE_DELAY 5 // seconds to hold on status screen to calibrate
+#endif
+
 //
 // RepRapWorld REPRAPWORLD_KEYPAD v1.1
 // http://reprapworld.com/?products_details&products_id=202&cPath=1591_1626
