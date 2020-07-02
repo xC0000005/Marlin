@@ -178,6 +178,8 @@ extern "C" {
 void sys_init()
 {
     asm("CPSID I");
+    asm("CPSID F");
+
     /* Disable all interrupts and clear pending bits  */
     RCC->CIR = 0x009F0000U;
     SysTick->CTRL &= ~SysTick_CTRL_ENABLE_Msk;
@@ -185,6 +187,10 @@ void sys_init()
     USART1->CR2 = 0;
     USART1->CR3 = 0;
     memset((void *)SDIO_BASE, 0, sizeof(SDIO_TypeDef));
+    memset((void *)ADC1_BASE, 0, sizeof(ADC_TypeDef));
+    memset((void *)DMA1_BASE, 0, sizeof(DMA_TypeDef));
+    memset((void *)DMA2_BASE, 0, sizeof(DMA_TypeDef));
+
     asm("CPSIE I");
 }
 
