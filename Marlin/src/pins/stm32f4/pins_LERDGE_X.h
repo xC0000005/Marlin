@@ -31,6 +31,8 @@
 #define TEMP_TIMER 2
 
 #define I2C_EEPROM
+#define EEPROM_SDA_PIN PB9
+#define EEPROM_SCL_PIN PB8
 
 //
 // Servos
