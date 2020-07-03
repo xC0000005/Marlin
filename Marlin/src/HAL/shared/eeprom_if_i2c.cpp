@@ -32,16 +32,7 @@
 #include "eeprom_if.h"
 #include <Wire.h>
 
-void eeprom_init() {
-  #if defined(ARDUINO_ARCH_STM32)
-    #if PIN_EXISTS(EEPROM_SCL_PIN) && PIN_EXISTS(EEPROM_SDA_PIN)
-      Wire.setSDA(EEPROM_SDA_PIN);
-      Wire.setSCL(EEPROM_SCL_PIN);
-    #endif
-  #endif
-
-  Wire.begin(); 
-  }
+void eeprom_init() { Wire.begin(); }
 
 #if ENABLED(USE_SHARED_EEPROM)
 
