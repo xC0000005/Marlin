@@ -234,13 +234,39 @@
   #define IS_ULTIPANEL
 #endif
 
-// FSMC/SPI TFT Panels
+// FSMC/SPI TFT Panels (HAL STM32F1)
 #if ENABLED(FSMC_GRAPHICAL_TFT)
   #define DOGLCD
   #define IS_ULTIPANEL
   #define DELAYED_BACKLIGHT_INIT
 #elif ENABLED(SPI_GRAPHICAL_TFT)
   #define DELAYED_BACKLIGHT_INIT
+#endif
+
+// FSMC/SPI TFT Panels (HAL STM32)
+#if ENABLED(TFT_320x240) || ENABLED(TFT_480x320)
+  #define HAS_FSMC_TFT 1
+#elif ENABLED(TFT_320x240_SPI) || ENABLED(TFT_480x320_SPI)
+  #define HAS_SPI_TFT 1
+#endif
+
+#if ENABLED(TFT_320x240) || ENABLED(TFT_320x240_SPI)
+  #define UI_320x240
+  #define LCD_HEIGHT  TERN(TOUCH_SCREEN, 6, 7)
+#elif ENABLED(TFT_480x320) || ENABLED(TFT_480x320_SPI)
+  #define UI_480x320
+  #define LCD_HEIGHT  TERN(TOUCH_SCREEN, 6, 7)
+#endif
+
+#if HAS_FSMC_TFT || HAS_SPI_TFT
+  #define HAS_GRAPHICAL_TFT 1
+  #define IS_ULTIPANEL
+  #define NO_LCD_REINIT
+#endif
+
+#if ENABLED(TOUCH_SCREEN) && defined(ARDUINO_ARCH_STM32F1)
+  #undef TOUCH_SCREEN
+  #define TOUCH_BUTTONS
 #endif
 
 /**
@@ -372,7 +398,7 @@
     #define HAS_SPI_LCD 1
     #if ENABLED(DOGLCD)
       #define HAS_GRAPHICAL_LCD 1
-    #else
+    #elif DISABLED(HAS_GRAPHICAL_TFT)
       #define HAS_CHARACTER_LCD 1
     #endif
   #endif

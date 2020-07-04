@@ -69,8 +69,10 @@ static void _lcd_mesh_fine_tune(PGM_P const msg) {
   }
 
   if (ui.should_draw()) {
-    MenuEditItemBase::draw_edit_screen(msg, ftostr43sign(mesh_edit_value));
-    TERN_(MESH_EDIT_GFX_OVERLAY, _lcd_zoffset_overlay_gfx(mesh_edit_value));
+    const float rounded_f = rounded_mesh_value();
+    MenuEditItemBase::draw_edit_screen(msg, ftostr43sign(rounded_f));
+    TERN_(MESH_EDIT_GFX_OVERLAY, _lcd_zoffset_overlay_gfx(rounded_f));
+    TERN_(HAS_GRAPHICAL_TFT, ui.refresh(LCDVIEW_NONE));
   }
 }
 
@@ -87,8 +89,9 @@ float lcd_mesh_edit() {
 }
 
 void lcd_mesh_edit_setup(const float &initial) {
-  mesh_edit_value = mesh_edit_accumulator = initial;
-  lcd_limbo();
+  TERN_(HAS_GRAPHICAL_TFT, ui.clear_lcd());
+  mesh_edit_accumulator = initial;
+  ui.goto_screen([]{ _lcd_mesh_fine_tune(GET_TEXT(MSG_MESH_EDIT_Z)); });
 }
 
 void _lcd_z_offset_edit() {
@@ -450,7 +453,10 @@ void _lcd_ubl_output_map_lcd() {
     ui.refresh(LCDVIEW_REDRAW_NOW);
   }
 
-  #define KEEP_LOOPING ENABLED(IS_KINEMATIC) // Loop until a valid point is found
+    do {
+      // Now, keep the encoder position within range
+      if (int32_t(ui.encoderPosition) < 0) ui.encoderPosition = TERN(TOUCH_SCREEN, ui.encoderPosition + GRID_MAX_POINTS, GRID_MAX_POINTS - 1);
+      if (int32_t(ui.encoderPosition) > GRID_MAX_POINTS - 1) ui.encoderPosition = TERN(TOUCH_SCREEN, ui.encoderPosition - GRID_MAX_POINTS, 0);
 
   do {
     // Encoder to the right (++)
