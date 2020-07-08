@@ -78,7 +78,9 @@
 
   SD_HandleTypeDef hsd;  // create SDIO structure
 
-  #define TRANSFER_CLOCK_DIV (uint8_t(SDIO_INIT_CLK_DIV) / 40)
+  #ifndef TRANSFER_CLOCK_DIV
+    #define TRANSFER_CLOCK_DIV (uint8_t(SDIO_INIT_CLK_DIV) / 40)
+  #endif
 
   #ifndef USBD_OK
     #define USBD_OK 0
