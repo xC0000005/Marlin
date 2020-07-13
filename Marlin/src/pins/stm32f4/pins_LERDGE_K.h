@@ -60,37 +60,44 @@
 #define X_STEP_PIN                          PG1
 #define X_DIR_PIN                           PB10
 #define X_ENABLE_PIN                        PG0
-//#ifndef X_CS_PIN
-//  #define X_CS_PIN       PE0
-//#endif
+#ifndef X_CS_PIN
+  #define X_CS_PIN       PB2
+#endif
 
 #define Y_STEP_PIN                          PF14
 #define Y_DIR_PIN                           PF15
 #define Y_ENABLE_PIN                        PF13
-//#ifndef Y_CS_PIN
-//  #define Y_CS_PIN       PE1
-//#endif
+#ifndef Y_CS_PIN
+  #define Y_CS_PIN       PE2
+#endif
 
 #define Z_STEP_PIN                          PF11
 #define Z_DIR_PIN                           PF12
 #define Z_ENABLE_PIN                        PC5
-//#ifndef Z_CS_PIN
-//  #define Z_CS_PIN       PE2
-//#endif
+#ifndef Z_CS_PIN
+  #define Z_CS_PIN       PE3
+#endif
 
 #define E0_STEP_PIN                         PC14
 #define E0_DIR_PIN                          PC13
 #define E0_ENABLE_PIN                       PC15
-//#ifndef E0_CS_PIN
-//  #define E0_CS_PIN      PE3
-//#endif
+#ifndef E0_CS_PIN
+  #define E0_CS_PIN      PE4
+#endif
 
 #define E1_STEP_PIN                         PF1
 #define E1_DIR_PIN                          PF0
 #define E1_ENABLE_PIN                       PF2
-//#ifndef E1_CS_PIN
-//  #define E1_CS_PIN      PE4
-//#endif
+#ifndef E1_CS_PIN
+  #define E1_CS_PIN      PE1
+#endif
+
+#define E2_STEP_PIN                         PF4
+#define E2_DIR_PIN                          PF3
+#define E2_ENABLE_PIN                       PF5
+#ifndef E2_CS_PIN
+  #define E2_CS_PIN      PE0
+#endif
 
 //
 // Temperature Sensors
