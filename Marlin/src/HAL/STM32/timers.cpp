@@ -130,6 +130,10 @@ void HAL_timer_start(const uint8_t timer_num, const uint32_t frequency) {
         break;
     }
 
+    // Disable preload. Leaving it default-enabled can cause the timer to stop if it happens
+    // to exit the ISR after the start time for the next interrupt has already passed.
+    timer_instance[timer_num]->setPreloadEnable(false);
+
     HAL_timer_enable_interrupt(timer_num);
 
     // Start the timer.
