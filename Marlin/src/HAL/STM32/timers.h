@@ -31,7 +31,7 @@
 #define FORCE_INLINE __attribute__((always_inline)) inline
 
 #define hal_timer_t uint32_t
-#define HAL_TIMER_TYPE_MAX 0xFFFFFFFF // Timers can be 16 or 32 bit
+#define HAL_TIMER_TYPE_MAX 0xFFFF // Timers can be 16 or 32 bit
 
 #ifndef STEP_TIMER_NUM
   #define STEP_TIMER_NUM        0  // Timer Index for Stepper
