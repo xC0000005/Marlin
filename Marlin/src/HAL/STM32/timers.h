@@ -61,14 +61,14 @@
 #define ENABLE_TEMPERATURE_INTERRUPT() HAL_timer_enable_interrupt(TEMP_TIMER_NUM)
 #define DISABLE_TEMPERATURE_INTERRUPT() HAL_timer_disable_interrupt(TEMP_TIMER_NUM)
 
-extern void Step_Handler(HardwareTimer *htim);
-extern void Temp_Handler(HardwareTimer *htim);
+extern void Step_Handler();
+extern void Temp_Handler();
 
 #ifndef HAL_STEP_TIMER_ISR
-  #define HAL_STEP_TIMER_ISR() void Step_Handler(HardwareTimer *htim)
+  #define HAL_STEP_TIMER_ISR() void Step_Handler()
 #endif
 #ifndef HAL_TEMP_TIMER_ISR
-  #define HAL_TEMP_TIMER_ISR() void Temp_Handler(HardwareTimer *htim)
+  #define HAL_TEMP_TIMER_ISR() void Temp_Handler()
 #endif
 
 // ------------------------
@@ -89,8 +89,6 @@ bool HAL_timer_interrupt_enabled(const uint8_t timer_num);
 // Configure timer priorities for peripherals such as Software Serial or Servos.
 // Exposed here to allow all timer priority information to reside in timers.cpp
 void SetTimerInterruptPriorities();
-
-//TIM_TypeDef* HAL_timer_device(const uint8_t timer_num); no need to be public for now. not public = not used externally
 
 // FORCE_INLINE because these are used in performance-critical situations
 FORCE_INLINE bool HAL_timer_initialized(const uint8_t timer_num) {
