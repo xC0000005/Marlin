@@ -165,9 +165,6 @@ void HAL_timer_start(const uint8_t timer_num, const uint32_t frequency) {
         timer_instance[timer_num]->setInterruptPriority(TEMP_TIMER_IRQ_PRIO, 0);
         break;
     }
-    
-    timer_instance[timer_num]->setCount(0);
-    timer_instance[timer_num]->refresh();
   }
 }
 
